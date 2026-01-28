@@ -1,0 +1,168 @@
+.container {
+    padding: var(--space-lg);
+}
+
+.header {
+    margin-bottom: var(--space-lg);
+}
+
+.header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+/* Filters */
+.filters {
+    display: flex;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+    flex-wrap: wrap;
+}
+
+.searchBox {
+    flex: 1;
+    min-width: 250px;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+}
+
+.searchBox input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    outline: none;
+}
+
+.searchBox svg {
+    color: var(--text-muted);
+}
+
+.filterGroup {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.filterGroup select {
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    background: var(--bg-card);
+    cursor: pointer;
+}
+
+/* Table */
+.tableCard {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.table th {
+    text-align: left;
+    padding: var(--space-sm) var(--space-md);
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-subtle);
+    white-space: nowrap;
+}
+
+.table td {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: middle;
+}
+
+.table tbody tr:hover {
+    background: var(--bg-elevated);
+}
+
+/* Participant Cell */
+.participantCell {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold-warm), var(--gold-light));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+}
+
+.participantInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.email {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* Level Badge */
+.levelBadge {
+    font-weight: 500;
+    font-size: 13px;
+}
+
+/* Momentum Cell */
+.momentumCell {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.momentumCell svg {
+    color: var(--gold-warm);
+}
+
+.lowMomentum {
+    color: var(--accent-danger);
+}
+
+/* View Button */
+.viewBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+}
+
+.viewBtn:hover {
+    background: var(--bg-elevated);
+    color: var(--navy-deep);
+}

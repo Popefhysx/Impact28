@@ -1,0 +1,262 @@
+.container {
+    padding: var(--space-lg);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-lg);
+}
+
+.header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+/* Stats Grid */
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+@media (max-width: 768px) {
+    .statsGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.statCard {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.statIcon {
+    color: #10b981;
+}
+
+.pendingIcon {
+    color: #f59e0b;
+}
+
+.recordsIcon {
+    color: #6366f1;
+}
+
+.statInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.statValue {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--navy-deep);
+}
+
+.statLabel {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* Form */
+.formCard {
+    margin-bottom: var(--space-lg);
+}
+
+.formCard h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.formHint {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-lg);
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+}
+
+@media (max-width: 600px) {
+    .formRow {
+        grid-template-columns: 1fr;
+    }
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.formGroup label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.formGroup input,
+.formGroup select,
+.formGroup textarea {
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: var(--font-sans);
+    background: var(--bg-card);
+    transition: border-color 0.2s ease;
+}
+
+.formGroup input:focus,
+.formGroup select:focus,
+.formGroup textarea:focus {
+    outline: none;
+    border-color: var(--gold-warm);
+}
+
+.uploadArea {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-xl);
+    border: 2px dashed var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-elevated);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-secondary);
+}
+
+.uploadArea:hover {
+    border-color: var(--gold-warm);
+    background: var(--gold-pale);
+}
+
+.uploadArea small {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.formActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+}
+
+/* Records */
+.recordsCard h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: var(--space-md);
+}
+
+.recordsList {
+    display: flex;
+    flex-direction: column;
+}
+
+.recordItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md) 0;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.recordItem:last-child {
+    border-bottom: none;
+}
+
+.recordMain {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.recordAmount {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--navy-deep);
+    min-width: 120px;
+}
+
+.recordDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.recordDesc {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.recordMeta {
+    display: flex;
+    gap: var(--space-sm);
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.recordStatus {
+    display: flex;
+    align-items: center;
+}
+
+/* Info Box */
+.infoBox {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-md);
+    margin-top: var(--space-lg);
+    padding: var(--space-md);
+    background: rgba(197, 173, 103, 0.1);
+    border: 1px solid var(--gold-light);
+    border-radius: var(--radius-md);
+}
+
+.infoBox svg {
+    color: var(--gold-warm);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.infoBox strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    margin-bottom: 4px;
+}
+
+.infoBox p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}

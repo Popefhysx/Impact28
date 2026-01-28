@@ -1,0 +1,996 @@
+// Impact OS Database Schema
+// Behavioral Operating System for Economic Transformation
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================================
+// APPLICANT & INTAKE
+// ============================================================================
+
+model Applicant {
+  id                   String          @id @default(cuid())
+  
+  // === SECTION 1: IDENTITY ===
+  firstName            String          @db.VarChar(25)
+  lastName             String          @db.VarChar(25)
+  whatsapp             String
+  email                String          @unique
+  age                  Int
+  country              String          @default("Nigeria")
+  state                String?
+  gender               Gender
+  source               LeadSource      @default(WEBSITE)
+  
+  // === SECTION 2: CURRENT SITUATION ===
+  currentStatus        CurrentStatus?
+  educationLevel       EducationLevel?
+  biggestChallenge     String?         @db.VarChar(150)
+  
+  // === SECTION 3: RESOURCE CHECK ===
+  hasInternet          InternetAccess?
+  weeklyHours          WeeklyHours?
+  primaryDevice        DeviceType?
+  
+  // === SECTION 4: SKILL INTEREST ===
+  skillTrack           SkillTrack?
+  triedOnlineEarning   Boolean?
+  onlineEarningOutcome String?         @db.VarChar(200)
+  triedLearningSkill   Boolean?
+  
+  // === SECTION 5: DIAGNOSTIC PROBES ===
+  technicalProbe       String?         @db.VarChar(300)
+  commercialProbe      String?         @db.VarChar(300)
+  exposureProbe        String?         @db.VarChar(300)
+  commitmentProbe      String?         @db.VarChar(300)
+  
+  // === SECTION 6: CONSENT ===
+  consentDailyAction   Boolean         @default(false)
+  consentWeeklyCheckin Boolean         @default(false)
+  consentFailure       Boolean         @default(false)
+  consentData          Boolean         @default(false)
+  
+  // === AI DIAGNOSIS ===
+  readinessScore       Float?
+  actionOrientation    Float?
+  marketAwareness      Float?
+  rejectionResilience  Float?
+  commitmentSignal     Float?
+  diagnosticReport     Json?
+  riskFlags            String[]
+  aiRecommendation     String?
+  
+  // === DECISION ===
+  status               ApplicantStatus @default(STARTED)
+  rejectionReason      RejectionReason?
+  reviewedBy           String?
+  reviewedAt           DateTime?
+  
+  // === TRACKING ===
+  completedSections    Int             @default(0)
+  lastSectionAt        DateTime?
+  startedAt            DateTime        @default(now())
+  submittedAt          DateTime?
+  convertedAt          DateTime?
+  
+  // === RESUME FLOW ===
+  resumeToken          String?         @unique
+  resumeTokenExpiresAt DateTime?
+  resumeEmailSent      Boolean         @default(false)
+  
+  // === ATTRIBUTION ===
+  deviceDetected       String?
+  utmSource            String?
+  utmMedium            String?
+  utmCampaign          String?
+  referralCode         String?
+  
+  // === RELATIONS ===
+  cohortId             String?
+  cohort               Cohort?         @relation(fields: [cohortId], references: [id])
+  user                 User?
+  conditionalTasks     ConditionalTask[]
+  
+  // === INCOME CONTEXT ===
+  currentMonthlyIncome Int?            // NGN, 0 = no income
+  incomeSource         String?         // "None", "Freelance", "Employment", "Business"
+  
+  // === SKILL TRIAD (computed from probes) ===
+  triadTechnical       Float?          // 0-100
+  triadSoft            Float?          // 0-100
+  triadCommercial      Float?          // 0-100
+  
+  // === OFFER DECISION ===
+  offerType            OfferType?
+  receivesStipend      Boolean         @default(false)
+  primaryFocus         SkillDomain?
+  kpiTargets           Json?           // { weeklyXp, weeklyArena, incomeTarget, graduationDay }
+  
+  @@index([status])
+  @@index([email])
+  @@index([source])
+}
+
+model ConditionalTask {
+  id          String              @id @default(cuid())
+  applicantId String
+  applicant   Applicant           @relation(fields: [applicantId], references: [id])
+  
+  type        ConditionalTaskType
+  completed   Boolean             @default(false)
+  proofUrl    String?
+  submittedAt DateTime?
+  deadline    DateTime
+  
+  createdAt   DateTime            @default(now())
+}
+
+// ============================================================================
+// USER & IDENTITY
+// ============================================================================
+
+model User {
+  id              String        @id @default(cuid())
+  email           String        @unique
+  whatsapp        String?
+  firstName       String
+  lastName        String
+  
+  // Identity Level (L0-L5)
+  identityLevel   IdentityLevel @default(L1_ACTIVATED)
+  
+  // Onboarding
+  applicantId     String?       @unique
+  applicant       Applicant?    @relation(fields: [applicantId], references: [id])
+  
+  // Cohort
+  cohortId        String?
+  cohort          Cohort?       @relation(fields: [cohortId], references: [id])
+  
+  // Profile
+  skillTrack      SkillTrack?
+  avatarUrl       String?
+  bio             String?
+  
+  // Authentication
+  otpCode         String?
+  otpExpiresAt    DateTime?
+  lastLoginAt     DateTime?
+  
+  // Status
+  isActive        Boolean       @default(true)
+  pausedAt        DateTime?
+  pauseReason     String?
+  
+  // Timestamps
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  currencyLedger    CurrencyLedger[]
+  missions          MissionAssignment[]
+  incomeRecords     IncomeRecord[]
+  checkIns          CheckIn[]
+  failures          FailureRecord[]
+  supportWallet     SupportWallet?
+  supportRequests   SupportRequest[]
+  
+  @@index([email])
+  @@index([identityLevel])
+}
+
+model Cohort {
+  id            String      @id @default(cuid())
+  name          String      // e.g., "Cohort 2026-Q1"
+  startDate     DateTime
+  endDate       DateTime?
+  capacity      Int         @default(50)
+  
+  isActive      Boolean     @default(true)
+  
+  applicants    Applicant[]
+  users         User[]
+  config        CohortConfig?
+  commitmentAllocations CommitmentAllocation[]
+  
+  createdAt     DateTime    @default(now())
+}
+
+// ============================================================================
+// COHORT CONFIGURATION (Admin Managed)
+// ============================================================================
+
+model CohortConfig {
+  id                    String      @id @default(cuid())
+  cohortId              String      @unique
+  cohort                Cohort      @relation(fields: [cohortId], references: [id])
+  
+  // Application Status
+  applicationsOpen      Boolean     @default(true)
+  openDate              DateTime?   // When applications open (for countdown)
+  closeDate             DateTime?   // When applications close
+  
+  // Disabled Skill Tracks (JSON array of track names)
+  disabledTracks        String[]    // e.g., ["MUSIC_PRODUCTION", "VIDEO_PRODUCTION"]
+  
+  // Founder Success Message
+  founderMessageTitle   String      @default("Welcome to the Journey!")
+  founderMessageBody    String      @db.Text @default("I'm so excited to have you join us. You've taken the first step toward transforming your future. Check your email for next steps, and remember: every expert was once a beginner.")
+  founderName           String      @default("Pope")
+  founderImageUrl       String?     // Path to Pope.png
+  founderSignatureUrl   String?     // Path to sig.png
+  
+  // Notification Settings
+  waitlistEnabled       Boolean     @default(true)
+  
+  updatedAt             DateTime    @updatedAt
+  updatedBy             String?     // Admin who last updated
+}
+
+// ============================================================================
+// CURRENCY SYSTEM
+// ============================================================================
+
+model CurrencyLedger {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  
+  currencyType  CurrencyType
+  amount        Int
+  reason        String
+  missionId     String?
+  
+  createdAt     DateTime      @default(now())
+  
+  @@index([userId, currencyType])
+}
+
+// ============================================================================
+// SUPPORT WALLET SYSTEM
+// ============================================================================
+
+// Participant's budget allocation - invisible to participant
+model SupportWallet {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id])
+  
+  allocatedBudget   Float     // MSA - set at cohort start (e.g., $100)
+  totalSpent        Float     @default(0)
+  
+  // Bank details for cash transfers (Paystack verified)
+  bankCode          String?
+  accountNumber     String?
+  accountName       String?   // Resolved via Paystack
+  verifiedAt        DateTime?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+// Support request from participant
+model SupportRequest {
+  id              String              @id @default(cuid())
+  userId          String
+  user            User                @relation(fields: [userId], references: [id])
+  
+  type            SupportType
+  missionId       String?             // Which mission this enables
+  justification   String              @db.VarChar(200)
+  evidence        String?             // URL to uploaded proof
+  
+  status          SupportRequestStatus @default(PENDING)
+  approvalTier    ApprovalTier?
+  approverId      String?             // Admin who approved (or "SYSTEM")
+  reasonCode      String?             // For denials
+  
+  // Internal amount (never shown to participant)
+  amount          Float?
+  
+  disbursements   DisbursementLog[]
+  
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  @@index([userId, status])
+}
+
+// Audit log for all disbursements - immutable
+model DisbursementLog {
+  id              String              @id @default(cuid())
+  requestId       String
+  request         SupportRequest      @relation(fields: [requestId], references: [id])
+  userId          String
+  cohortId        String?
+  
+  type            DisbursementType
+  amount          Float
+  status          DisbursementStatus  @default(PENDING)
+  
+  // Provider details
+  providerRef     String?             // Paystack/telco reference
+  providerStatus  String?             // Raw status from provider
+  
+  createdAt       DateTime            @default(now())
+  completedAt     DateTime?
+  
+  @@index([userId])
+  @@index([status])
+}
+
+enum SupportType {
+  DATA
+  TRANSPORT
+  TOOLS
+  CASH
+}
+
+enum SupportRequestStatus {
+  PENDING
+  APPROVED
+  DENIED
+  COMPLETED
+}
+
+enum ApprovalTier {
+  AUTO        // System auto-approved
+  OPERATOR    // Operator approved
+  ADMIN       // Admin escalation
+}
+
+enum DisbursementType {
+  DATA_TOPUP
+  VOUCHER
+  TOOL_ACCESS
+  CASH_TRANSFER
+}
+
+enum DisbursementStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// ============================================================================
+// MISSION SYSTEM
+// ============================================================================
+
+model Mission {
+  id            String          @id @default(cuid())
+  title         String
+  description   String
+  
+  skillDomain   SkillDomain
+  difficulty    Difficulty
+  
+  // Rewards
+  momentum      Int             @default(0)
+  skillXp       Int             @default(0)
+  arenaPoints   Int             @default(0)
+  
+  // Requirements
+  requiredLevel IdentityLevel   @default(L1_ACTIVATED)
+  isDaily       Boolean         @default(false)
+  isWeekly      Boolean         @default(false)
+  
+  isActive      Boolean         @default(true)
+  
+  assignments   MissionAssignment[]
+  
+  createdAt     DateTime        @default(now())
+}
+
+model MissionAssignment {
+  id            String              @id @default(cuid())
+  userId        String
+  user          User                @relation(fields: [userId], references: [id])
+  missionId     String
+  mission       Mission             @relation(fields: [missionId], references: [id])
+  
+  status        MissionStatus       @default(ASSIGNED)
+  proofUrl      String?
+  proofText     String?
+  
+  assignedAt    DateTime            @default(now())
+  startedAt     DateTime?
+  completedAt   DateTime?
+  deadlineAt    DateTime?
+  
+  @@index([userId, status])
+}
+
+// ============================================================================
+// FAILURE TRACKING
+// ============================================================================
+
+model FailureRecord {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  
+  failureType   FailureType
+  context       String?
+  missionId     String?
+  
+  // AI Classification
+  aiClassified  Boolean       @default(false)
+  severity      Int?          // 1-5
+  
+  createdAt     DateTime      @default(now())
+  
+  @@index([userId, failureType])
+}
+
+// ============================================================================
+// INCOME VERIFICATION
+// ============================================================================
+
+model IncomeRecord {
+  id              String              @id @default(cuid())
+  userId          String
+  user            User                @relation(fields: [userId], references: [id])
+  
+  amount          Decimal
+  currency        String              @default("NGN")
+  amountUSD       Decimal?
+  
+  source          IncomeSource
+  platform        String?
+  clientName      String?
+  description     String
+  
+  proofUrl        String
+  proofType       ProofType
+  
+  status          VerificationStatus  @default(SUBMITTED)
+  verifiedBy      String?
+  verifiedAt      DateTime?
+  rejectionReason String?
+  
+  earnedAt        DateTime
+  submittedAt     DateTime            @default(now())
+  
+  @@index([userId, status])
+}
+
+// ============================================================================
+// CHECK-INS
+// ============================================================================
+
+model CheckIn {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  
+  type          CheckInType
+  mood          Int?          // 1-5
+  note          String?
+  
+  createdAt     DateTime      @default(now())
+  
+  @@index([userId, createdAt])
+}
+
+// ============================================================================
+// TESTIMONIALS (Website Submissions)
+// ============================================================================
+
+model Testimonial {
+  id            String              @id @default(cuid())
+  
+  // Submitter info
+  name          String
+  role          String
+  company       String?
+  location      String
+  
+  // Content
+  quote         String              @db.Text
+  skills        String[]
+  imageUrl      String?
+  
+  // Moderation
+  status        TestimonialStatus   @default(PENDING)
+  approvedBy    String?
+  approvedAt    DateTime?
+  
+  // Tracking
+  submittedAt   DateTime            @default(now())
+  displayOrder  Int?
+  isFeatured    Boolean             @default(false)
+  
+  @@index([status])
+}
+
+// ============================================================================
+// SPONSOR & PARTNER INQUIRIES
+// ============================================================================
+
+model SponsorInquiry {
+  id                String            @id @default(cuid())
+  
+  // Contact info
+  name              String
+  email             String
+  phone             String?
+  organizationType  String?           // Individual, Corporate, NGO, Church
+  
+  // Interest
+  interestType      SponsorType
+  amountInterest    String?           // e.g., "50000", "150000", "custom"
+  message           String?           @db.Text
+  
+  // Follow-up
+  status            InquiryStatus     @default(NEW)
+  assignedTo        String?
+  notes             String?           @db.Text
+  followedUpAt      DateTime?
+  convertedAt       DateTime?
+  
+  createdAt         DateTime          @default(now())
+  
+  @@index([status])
+  @@index([email])
+}
+
+model PartnerInquiry {
+  id                String            @id @default(cuid())
+  
+  // Organization info
+  organizationName  String
+  contactName       String
+  email             String
+  phone             String?
+  website           String?
+  
+  // Partnership details
+  partnershipType   PartnerType
+  description       String            @db.Text
+  
+  // Follow-up
+  status            InquiryStatus     @default(NEW)
+  assignedTo        String?
+  notes             String?           @db.Text
+  followedUpAt      DateTime?
+  partnershipStartedAt DateTime?
+  
+  createdAt         DateTime          @default(now())
+  
+  @@index([status])
+  @@index([email])
+}
+
+// ============================================================================
+// PARTNER FUNDING SYSTEM
+// ============================================================================
+
+// Partner organization (approved from inquiry)
+model Partner {
+  id                String          @id @default(cuid())
+  name              String
+  slug              String          @unique
+  
+  // Status lifecycle
+  status            PartnerStatus   @default(LEAD)
+  approvedAt        DateTime?
+  approvedBy        String?
+  
+  // Contact
+  primaryEmail      String
+  primaryPhone      String?
+  website           String?
+  
+  // Internal
+  internalNotes     String?         @db.Text
+  riskFlags         String[]
+  
+  // Relations
+  users             PartnerUser[]
+  commitments       FundingCommitment[]
+  
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  
+  @@index([status])
+}
+
+// Partner login (OTP-based, like User)
+model PartnerUser {
+  id                String          @id @default(cuid())
+  partnerId         String
+  partner           Partner         @relation(fields: [partnerId], references: [id])
+  
+  email             String          @unique
+  firstName         String
+  lastName          String
+  
+  // OTP auth (same pattern as User)
+  otpCode           String?
+  otpExpiresAt      DateTime?
+  lastLoginAt       DateTime?
+  
+  role              PartnerUserRole @default(VIEWER)
+  isActive          Boolean         @default(true)
+  
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+// Funding commitment (core abstraction)
+model FundingCommitment {
+  id                String              @id @default(cuid())
+  partnerId         String
+  partner           Partner             @relation(fields: [partnerId], references: [id])
+  
+  type              CommitmentType
+  amount            Float
+  currency          String              @default("USD")
+  cadence           CommitmentCadence?
+  
+  startDate         DateTime?
+  endDate           DateTime?
+  
+  // Cohort preferences
+  targetCohortSize  Int?
+  targetRegion      String?
+  
+  status            CommitmentStatus    @default(SUBMITTED)
+  approvedAt        DateTime?
+  approvedBy        String?
+  
+  // Utilization
+  totalAllocated    Float               @default(0)
+  totalDisbursed    Float               @default(0)
+  
+  allocations       CommitmentAllocation[]
+  ledger            FundingLedger[]
+  
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  @@index([partnerId, status])
+}
+
+// Links commitment → cohort
+model CommitmentAllocation {
+  id                String            @id @default(cuid())
+  commitmentId      String
+  commitment        FundingCommitment @relation(fields: [commitmentId], references: [id])
+  cohortId          String
+  cohort            Cohort            @relation(fields: [cohortId], references: [id])
+  
+  amount            Float
+  participantCount  Int?
+  
+  status            AllocationStatus  @default(PLANNED)
+  releaseDate       DateTime?
+  releasedBy        String?
+  notes             String?
+  
+  createdAt         DateTime          @default(now())
+  
+  @@unique([commitmentId, cohortId])
+}
+
+// Immutable funding audit log
+model FundingLedger {
+  id                String            @id @default(cuid())
+  commitmentId      String
+  commitment        FundingCommitment @relation(fields: [commitmentId], references: [id])
+  
+  type              FundingLedgerType
+  amount            Float
+  cohortId          String?
+  description       String
+  reference         String?
+  
+  createdById       String
+  createdAt         DateTime          @default(now())
+  
+  @@index([commitmentId])
+}
+
+// Partner reports (read-only)
+model PartnerReport {
+  id                String            @id @default(cuid())
+  partnerId         String
+  cohortId          String?
+  
+  type              PartnerReportType
+  title             String
+  content           Json
+  
+  isLocked          Boolean           @default(false)
+  downloadUrl       String?
+  
+  createdAt         DateTime          @default(now())
+}
+
+// ============================================================================
+// PARTNER ENUMS
+// ============================================================================
+
+enum PartnerStatus {
+  LEAD
+  QUALIFIED
+  APPROVED
+  ACTIVE
+  PAUSED
+  CHURNED
+}
+
+enum PartnerUserRole {
+  ADMIN
+  VIEWER
+}
+
+enum CommitmentType {
+  RECURRING
+  ONE_OFF
+  COHORT_SPONSOR
+  CAPACITY_POOL
+  PLEDGE_PENDING
+}
+
+enum CommitmentCadence {
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+}
+
+enum CommitmentStatus {
+  SUBMITTED
+  APPROVED
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum AllocationStatus {
+  PLANNED
+  RELEASED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum FundingLedgerType {
+  COMMITMENT_CREATED
+  ALLOCATION_RELEASED
+  DISBURSEMENT
+  ADJUSTMENT
+  REFUND
+}
+
+enum PartnerReportType {
+  COHORT_INTERIM
+  COHORT_FINAL
+  ANNUAL_IMPACT
+  CUSTOM
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_SAY
+}
+
+enum LeadSource {
+  WEBSITE
+  INSTAGRAM
+  TIKTOK
+  TWITTER
+  WHATSAPP
+  REFERRAL
+  ALUMNI
+  CHURCH
+  SCHOOL
+  EVENT
+  RADIO_TV
+  OTHER
+}
+
+enum CurrentStatus {
+  UNEMPLOYED
+  UNDEREMPLOYED
+  STUDENT
+  CAREGIVER
+  BETWEEN_JOBS
+  STRUGGLING_BUSINESS
+}
+
+enum EducationLevel {
+  SECONDARY
+  OND_HND
+  BACHELORS
+  MASTERS_PLUS
+  IN_SCHOOL
+  NO_FORMAL
+}
+
+enum InternetAccess {
+  YES
+  NO
+  SOMETIMES
+}
+
+enum WeeklyHours {
+  UNDER_5
+  FIVE_TO_TEN
+  TEN_TO_TWENTY
+  TWENTY_PLUS
+}
+
+enum DeviceType {
+  PHONE
+  LAPTOP
+  SHARED_PHONE
+  SHARED_LAPTOP
+}
+
+enum SkillTrack {
+  GRAPHICS_DESIGN
+  DIGITAL_MARKETING
+  WEB_DESIGN
+  VIDEO_PRODUCTION
+  AI_FOR_BUSINESS
+  MUSIC_PRODUCTION
+  UNDECIDED
+}
+
+enum ApplicantStatus {
+  STARTED
+  PARTIAL
+  PENDING
+  SCORING
+  ADMITTED
+  CONDITIONAL
+  REJECTED
+  WAITLIST
+  CONVERTED
+  WITHDRAWN
+}
+
+enum RejectionReason {
+  AGE_INELIGIBLE
+  LOCATION_UNSUPPORTED
+  LOW_READINESS
+  INCOMPLETE_FORM
+  DUPLICATE
+  NO_DEVICE
+  NO_INTERNET
+  NO_CONSENT
+  STAFF_DECISION
+}
+
+enum ConditionalTaskType {
+  OUTREACH_PROOF
+  WHY_STATEMENT
+  TIME_AUDIT
+  INTRO_QUIZ
+}
+
+enum IdentityLevel {
+  L0_APPLICANT
+  L1_ACTIVATED
+  L2_SKILLED
+  L3_EXPOSED
+  L4_EARNER
+  L5_CATALYST
+}
+
+enum CurrencyType {
+  MOMENTUM
+  SKILL_XP
+  ARENA_POINTS
+  INCOME_PROOF
+}
+
+enum SkillDomain {
+  TECHNICAL
+  SOFT
+  COMMERCIAL
+}
+
+enum OfferType {
+  FULL_SUPPORT      // Stipend + Training
+  SKILLS_ONLY       // Training only, has income
+  ACCELERATOR       // Market exposure focus
+  CATALYST_TRACK    // Income verification focus
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum MissionStatus {
+  ASSIGNED
+  IN_PROGRESS
+  SUBMITTED
+  VERIFIED
+  FAILED
+  EXPIRED
+}
+
+enum FailureType {
+  MARKET_REJECTION
+  NON_RESPONSE
+  OFFER_DECLINED
+  MISSED_DEADLINE
+  AVOIDANCE
+  BURNOUT_DIP
+}
+
+enum IncomeSource {
+  FREELANCE
+  CLIENT_WORK
+  RETAINER
+  CONTENT_PAYMENT
+}
+
+enum ProofType {
+  SCREENSHOT
+  BANK_STATEMENT
+  PLATFORM_EXPORT
+  CLIENT_CONFIRMATION
+}
+
+enum VerificationStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+enum CheckInType {
+  DAILY
+  WEEKLY
+}
+
+// Website Submission Enums
+enum TestimonialStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum SponsorType {
+  ONE_MONTH
+  FULL_PROGRAM
+  CUSTOM
+  CORPORATE
+}
+
+enum PartnerType {
+  TRAINING_PARTNER
+  EMPLOYMENT_PARTNER
+  VENUE_PARTNER
+  CONTENT_PARTNER
+  MEDIA_PARTNER
+  CHURCH_PARTNER
+  SCHOOL_PARTNER
+  OTHER
+}
+
+enum InquiryStatus {
+  NEW
+  CONTACTED
+  IN_DISCUSSION
+  CONVERTED
+  DECLINED
+  UNRESPONSIVE
+}

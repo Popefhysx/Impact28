@@ -1,0 +1,273 @@
+.container {
+    padding: var(--space-lg);
+}
+
+.header {
+    margin-bottom: var(--space-lg);
+}
+
+.header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.panelSubtitle {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+/* Currency Grid */
+.currencyGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+@media (max-width: 1024px) {
+    .currencyGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .currencyGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.currencyCard {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.currencyHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.currencyName {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.momentumIcon {
+    color: #f59e0b;
+}
+
+.xpIcon {
+    color: #8b5cf6;
+}
+
+.arenaIcon {
+    color: #ec4899;
+}
+
+.incomeIcon {
+    color: #10b981;
+}
+
+.currencyValue {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--navy-deep);
+}
+
+.currencyProgress {
+    height: 6px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    margin-top: var(--space-xs);
+}
+
+.progressBar {
+    height: 100%;
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    border-radius: var(--radius-full);
+    transition: width 0.3s ease;
+}
+
+.currencyHint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: var(--space-xs);
+}
+
+/* Panels */
+.panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-lg);
+}
+
+@media (max-width: 900px) {
+    .panels {
+        grid-template-columns: 1fr;
+    }
+}
+
+.triadPanel h2,
+.historyPanel h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: var(--space-md);
+}
+
+/* Skill Triad */
+.triadContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-sm) 0;
+    position: relative;
+    min-height: 280px;
+}
+
+.triadSvg {
+    width: 180px;
+    height: 180px;
+    margin-top: 50px;
+}
+
+.triadLabels {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 250px;
+    pointer-events: none;
+}
+
+.triadLabel {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.triadLabel svg {
+    color: var(--gold-warm);
+}
+
+.triadLabel strong {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy-deep);
+}
+
+.labelTop {
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.labelBottomLeft {
+    bottom: 8px;
+    left: 30px;
+}
+
+.labelBottomRight {
+    bottom: 8px;
+    right: 30px;
+}
+
+.triadStatus {
+    margin-top: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.balanced {
+    color: var(--accent-success);
+    background: rgba(22, 163, 74, 0.1);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+}
+
+.imbalanced {
+    color: var(--accent-warning);
+    background: rgba(217, 119, 6, 0.1);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+}
+
+/* Transaction History */
+.transactionList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.transaction {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.transaction:last-child {
+    border-bottom: none;
+}
+
+.txIcon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    color: var(--gold-warm);
+}
+
+.txDetails {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.txReason {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.txTime {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.txAmount {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.positive {
+    color: var(--accent-success);
+}
+
+.negative {
+    color: var(--accent-danger);
+}

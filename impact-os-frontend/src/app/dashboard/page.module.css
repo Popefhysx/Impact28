@@ -1,0 +1,226 @@
+.dashboard {
+    max-width: 1200px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-xl);
+}
+
+.header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    margin-bottom: var(--space-xs);
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.streak {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    background: rgba(217, 119, 6, 0.1);
+    color: var(--accent-warning);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-full);
+    font-weight: 500;
+    font-size: 14px;
+}
+
+/* Currency Grid */
+.currencyGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+}
+
+@media (max-width: 1000px) {
+    .currencyGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .currencyGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.currencyCard {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    box-shadow: var(--shadow-sm);
+}
+
+.currencyIcon {
+    color: var(--gold-warm);
+}
+
+.currencyInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.currencyValue {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--navy-deep);
+}
+
+.currencyLabel {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.currencyProgress {
+    height: 4px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    margin-top: var(--space-sm);
+}
+
+.progressBar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-warm), var(--gold-light));
+    border-radius: var(--radius-full);
+}
+
+/* Panels */
+.panels {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--space-lg);
+}
+
+@media (max-width: 900px) {
+    .panels {
+        grid-template-columns: 1fr;
+    }
+}
+
+.missionsPanel h2,
+.stipendPanel h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: var(--space-lg);
+    color: var(--navy-deep);
+}
+
+.missionsList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.missionCard {
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    padding: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.missionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.missionHeader h3 {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.missionMeta {
+    font-size: 13px;
+    color: var(--gold-dark);
+    font-weight: 500;
+}
+
+.missionProgress {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.progressTrack {
+    flex: 1;
+    height: 6px;
+    background: var(--border-subtle);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.progressFill {
+    height: 100%;
+    background: var(--accent-success);
+    border-radius: var(--radius-full);
+    transition: width 0.3s ease;
+}
+
+.missionProgress span {
+    font-size: 13px;
+    color: var(--text-secondary);
+    min-width: 40px;
+}
+
+/* Stipend Panel */
+.stipendStatus {
+    text-align: center;
+}
+
+.stipendBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-full);
+    font-weight: 500;
+    font-size: 14px;
+    margin-bottom: var(--space-lg);
+}
+
+.stipendBadge.eligible {
+    background: rgba(22, 163, 74, 0.1);
+    color: var(--accent-success);
+}
+
+.stipendAmount {
+    margin-bottom: var(--space-lg);
+}
+
+.amountLabel {
+    display: block;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xs);
+}
+
+.amountValue {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--accent-success);
+}
+
+.stipendInfo {
+    padding: var(--space-md);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--text-secondary);
+}

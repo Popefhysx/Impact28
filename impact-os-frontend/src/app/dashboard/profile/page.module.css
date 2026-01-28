@@ -1,0 +1,250 @@
+.container {
+    padding: var(--space-lg);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+}
+
+.header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Profile Card */
+.profileCard {
+    margin-bottom: var(--space-lg);
+}
+
+.avatarSection {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-lg);
+}
+
+.avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.avatarPlaceholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold-warm), var(--gold-light));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+}
+
+.nameSection h2 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    margin-bottom: 4px;
+}
+
+.levelBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.bio {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-lg);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.metaGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+}
+
+@media (max-width: 600px) {
+    .metaGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.metaItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.metaItem svg {
+    color: var(--gold-warm);
+}
+
+/* Panels */
+.panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-lg);
+}
+
+@media (max-width: 900px) {
+    .panels {
+        grid-template-columns: 1fr;
+    }
+}
+
+.levelCard h3,
+.trackCard h3,
+.settingsCard h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: var(--space-md);
+}
+
+/* Level Progress */
+.levelProgress {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-lg);
+}
+
+.levelStep {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: 6px 0;
+    opacity: 0.4;
+}
+
+.levelStep.completed,
+.levelStep.current {
+    opacity: 1;
+}
+
+.levelStep.current {
+    font-weight: 600;
+}
+
+.levelDot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--text-muted);
+}
+
+.levelLabel {
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.levelStatus {
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--border-subtle);
+}
+
+.levelStatus strong {
+    font-size: 14px;
+}
+
+.levelStatus p {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* Track Display */
+.trackDisplay {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.trackIcon {
+    color: var(--gold-warm);
+}
+
+.trackDisplay strong {
+    font-size: 16px;
+    color: var(--navy-deep);
+    display: block;
+    margin-bottom: 2px;
+}
+
+.trackDisplay p {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.trackStats {
+    display: flex;
+    gap: var(--space-xl);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--border-subtle);
+}
+
+.trackStat {
+    display: flex;
+    flex-direction: column;
+}
+
+.statValue {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--navy-deep);
+}
+
+.statLabel {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* Settings */
+.settingsCard {
+    max-width: 600px;
+}
+
+.settingsList {
+    display: flex;
+    flex-direction: column;
+}
+
+.settingItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 14px;
+}
+
+.settingItem:last-child {
+    border-bottom: none;
+}
+
+.settingItem span:first-child {
+    color: var(--text-primary);
+}
+
+.settingValue {
+    color: var(--accent-success);
+    font-weight: 500;
+}

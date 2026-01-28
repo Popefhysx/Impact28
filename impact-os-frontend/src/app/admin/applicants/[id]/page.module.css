@@ -1,0 +1,437 @@
+.container {
+    padding: var(--space-lg);
+    max-width: 1400px;
+}
+
+.loading,
+.error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-xl);
+    color: var(--text-muted);
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Header */
+.header {
+    margin-bottom: var(--space-lg);
+}
+
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    text-decoration: none;
+    margin-bottom: var(--space-md);
+    transition: color 0.15s;
+}
+
+.backLink:hover {
+    color: var(--navy-deep);
+}
+
+.headerInfo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-sm);
+}
+
+.avatar {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gold-warm);
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    border-radius: var(--radius-full);
+}
+
+.header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.email {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.headerMeta {
+    display: flex;
+    gap: var(--space-sm);
+    margin-top: var(--space-sm);
+}
+
+.trackBadge {
+    padding: 4px 10px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-transform: capitalize;
+}
+
+/* Content Layout */
+.content {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: var(--space-lg);
+}
+
+.detailsColumn,
+.scoresColumn {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+/* Sections */
+.section {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+}
+
+.section h2 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.section h2 svg {
+    color: var(--gold-warm);
+}
+
+/* Info Grid */
+.infoGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+}
+
+.infoItem {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.infoItem label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.infoItem span {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+/* Probes */
+.probe {
+    padding: var(--space-md);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--space-md);
+}
+
+.probe:last-child {
+    margin-bottom: 0;
+}
+
+.probe h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-sm);
+}
+
+.probe p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+/* Score Card */
+.scoreCard {
+    background: var(--bg-elevated);
+    padding: var(--space-md);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--space-md);
+}
+
+.mainScore {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.scoreLabel {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.scoreValue {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--navy-deep);
+}
+
+.scoreBreakdown {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.scoreItem {
+    display: grid;
+    grid-template-columns: 130px 1fr 40px;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: 13px;
+}
+
+.scoreItem span:first-child {
+    color: var(--text-secondary);
+}
+
+.scoreItem span:last-child {
+    text-align: right;
+    font-weight: 600;
+    color: var(--navy-deep);
+}
+
+.scoreBar {
+    height: 6px;
+    background: var(--border-subtle);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.scoreBar>div {
+    height: 100%;
+    background: var(--gold-warm);
+    border-radius: 3px;
+}
+
+/* Risk Flags */
+.riskFlags {
+    margin-bottom: var(--space-md);
+}
+
+.riskFlags h3 {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--space-sm);
+}
+
+.riskBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+    font-size: 12px;
+    border-radius: var(--radius-sm);
+    margin-right: var(--space-xs);
+}
+
+/* Recommendation */
+.recommendation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.recommendation h3 {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.recommendation .badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Skill Triad */
+.triadContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-sm);
+}
+
+.triadSvg {
+    width: 120px;
+    height: 120px;
+}
+
+.triadLabels {
+    display: flex;
+    gap: var(--space-md);
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: var(--space-sm);
+}
+
+.offerType {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    margin-top: var(--space-md);
+}
+
+.offerType span:first-child {
+    color: var(--text-secondary);
+}
+
+.offerType strong {
+    color: var(--navy-deep);
+    text-transform: capitalize;
+}
+
+/* Decision Panel */
+.decisionPanel {
+    background: var(--bg-primary);
+    border: 2px solid var(--gold-warm);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+}
+
+.decisionPanel h2 {
+    margin-bottom: var(--space-md);
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: var(--space-sm);
+}
+
+.notesField {
+    margin-bottom: var(--space-md);
+}
+
+.notesField label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xs);
+}
+
+.notesField textarea {
+    width: 100%;
+    padding: var(--space-sm);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.notesField textarea:focus {
+    outline: none;
+    border-color: var(--gold-warm);
+}
+
+/* Decision Buttons */
+.decisionButtons {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.decisionButtons button {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: var(--space-sm) var(--space-md);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.decisionButtons button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.admitButton {
+    background: #16a34a;
+    color: white;
+}
+
+.admitButton:hover:not(:disabled) {
+    background: #15803d;
+}
+
+.conditionalButton {
+    background: #ca8a04;
+    color: white;
+}
+
+.conditionalButton:hover:not(:disabled) {
+    background: #a16207;
+}
+
+.rejectButton {
+    background: #dc2626;
+    color: white;
+}
+
+.rejectButton:hover:not(:disabled) {
+    background: #b91c1c;
+}
+
+/* Responsive */
+@media (max-width: 1000px) {
+    .content {
+        grid-template-columns: 1fr;
+    }
+
+    .infoGrid {
+        grid-template-columns: 1fr;
+    }
+}
