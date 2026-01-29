@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Search, Filter, User, Zap, Star, Trophy, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { Search, Filter, User, Zap, Star, Trophy, ChevronRight, MoreHorizontal, Grid, List } from 'lucide-react';
 import styles from './page.module.css';
 
 // Mock data for participants
@@ -94,6 +94,7 @@ export default function ParticipantsPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [levelFilter, setLevelFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
+    const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
 
     const filteredParticipants = participants.filter(p => {
         const matchesSearch = searchQuery === '' ||
@@ -139,71 +140,149 @@ export default function ParticipantsPage() {
                         <option value="paused">Paused</option>
                     </select>
                 </div>
+                <div className={styles.viewToggle}>
+                    <button
+                        className={`${styles.viewToggleBtn} ${viewMode === 'table' ? styles.active : ''}`}
+                        onClick={() => setViewMode('table')}
+                        title="Table view"
+                    >
+                        <List size={16} />
+                    </button>
+                    <button
+                        className={`${styles.viewToggleBtn} ${viewMode === 'grid' ? styles.active : ''}`}
+                        onClick={() => setViewMode('grid')}
+                        title="Grid view"
+                    >
+                        <Grid size={16} />
+                    </button>
+                </div>
             </div>
 
             {/* Participants Table */}
-            <div className={`card ${styles.tableCard}`}>
-                <table className={styles.table}>
-                    <thead>
-                        <tr>
-                            <th>Participant</th>
-                            <th>Level</th>
-                            <th>Skill Track</th>
-                            <th>Momentum</th>
-                            <th>Days</th>
-                            <th>Status</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredParticipants.map((p) => (
-                            <tr key={p.id}>
-                                <td>
-                                    <div className={styles.participantCell}>
-                                        <div className={styles.avatar}>
-                                            {getInitials(p.firstName, p.lastName)}
+            {viewMode === 'table' && (
+                <div className={`card ${styles.tableCard}`}>
+                    <table className={styles.table}>
+                        <thead>
+                            <tr>
+                                <th>Participant</th>
+                                <th>Level</th>
+                                <th>Skill Track</th>
+                                <th>Momentum</th>
+                                <th>Days</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredParticipants.map((p) => (
+                                <tr key={p.id}>
+                                    <td>
+                                        <div className={styles.participantCell}>
+                                            <div className={styles.avatar}>
+                                                {getInitials(p.firstName, p.lastName)}
+                                            </div>
+                                            <div className={styles.participantInfo}>
+                                                <span className={styles.name}>{p.firstName} {p.lastName}</span>
+                                                <span className={styles.email}>{p.email}</span>
+                                            </div>
                                         </div>
-                                        <div className={styles.participantInfo}>
-                                            <span className={styles.name}>{p.firstName} {p.lastName}</span>
-                                            <span className={styles.email}>{p.email}</span>
+                                    </td>
+                                    <td>
+                                        <span
+                                            className={styles.levelBadge}
+                                            style={{ color: levelLabels[p.identityLevel]?.color }}
+                                        >
+                                            {levelLabels[p.identityLevel]?.label}
+                                        </span>
+                                    </td>
+                                    <td>{skillLabels[p.skillTrack] || p.skillTrack}</td>
+                                    <td>
+                                        <div className={styles.momentumCell}>
+                                            <Zap size={14} />
+                                            <span className={p.momentum < 50 ? styles.lowMomentum : ''}>
+                                                {p.momentum}
+                                            </span>
                                         </div>
+                                    </td>
+                                    <td>{p.daysInProgram}</td>
+                                    <td>
+                                        {p.isActive ? (
+                                            <span className="badge badge-success">Active</span>
+                                        ) : (
+                                            <span className="badge badge-warning">Paused</span>
+                                        )}
+                                    </td>
+                                    <td>
+                                        <Link href={`/admin/participants/${p.id}`} className={styles.viewBtn}>
+                                            <ChevronRight size={18} />
+                                        </Link>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {/* Grid View (Mobile-friendly) */}
+            {viewMode === 'grid' && (
+                <div className={styles.gridView}>
+                    {filteredParticipants.map((p) => (
+                        <div key={p.id} className={styles.participantCard}>
+                            <div className={styles.cardHeader}>
+                                <div className={styles.participantCell}>
+                                    <div className={styles.avatar}>
+                                        {getInitials(p.firstName, p.lastName)}
                                     </div>
-                                </td>
-                                <td>
+                                    <div className={styles.participantInfo}>
+                                        <span className={styles.name}>{p.firstName} {p.lastName}</span>
+                                        <span className={styles.email}>{p.email}</span>
+                                    </div>
+                                </div>
+                                {p.isActive ? (
+                                    <span className="badge badge-success">Active</span>
+                                ) : (
+                                    <span className="badge badge-warning">Paused</span>
+                                )}
+                            </div>
+                            <div className={styles.cardBody}>
+                                <div className={styles.cardRow}>
+                                    <span className={styles.cardLabel}>Level</span>
                                     <span
                                         className={styles.levelBadge}
                                         style={{ color: levelLabels[p.identityLevel]?.color }}
                                     >
                                         {levelLabels[p.identityLevel]?.label}
                                     </span>
-                                </td>
-                                <td>{skillLabels[p.skillTrack] || p.skillTrack}</td>
-                                <td>
+                                </div>
+                                <div className={styles.cardRow}>
+                                    <span className={styles.cardLabel}>Skill Track</span>
+                                    <span>{skillLabels[p.skillTrack] || p.skillTrack}</span>
+                                </div>
+                                <div className={styles.cardRow}>
+                                    <span className={styles.cardLabel}>Momentum</span>
                                     <div className={styles.momentumCell}>
                                         <Zap size={14} />
                                         <span className={p.momentum < 50 ? styles.lowMomentum : ''}>
                                             {p.momentum}
                                         </span>
                                     </div>
-                                </td>
-                                <td>{p.daysInProgram}</td>
-                                <td>
-                                    {p.isActive ? (
-                                        <span className="badge badge-success">Active</span>
-                                    ) : (
-                                        <span className="badge badge-warning">Paused</span>
-                                    )}
-                                </td>
-                                <td>
-                                    <Link href={`/admin/participants/${p.id}`} className={styles.viewBtn}>
-                                        <ChevronRight size={18} />
-                                    </Link>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                                </div>
+                                <div className={styles.cardRow}>
+                                    <span className={styles.cardLabel}>Days in Program</span>
+                                    <span>{p.daysInProgram}</span>
+                                </div>
+                            </div>
+                            <div className={styles.cardFooter}>
+                                <span className={styles.cohortLabel}>{p.cohort}</span>
+                                <Link href={`/admin/participants/${p.id}`} className={styles.viewBtn}>
+                                    View <ChevronRight size={16} />
+                                </Link>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

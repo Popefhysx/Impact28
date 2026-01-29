@@ -243,16 +243,16 @@ export default function ApplicantsPage() {
                     />
                 </div>
                 <div className={styles.toolbarRight}>
-                    <div className="view-toggle">
+                    <div className={styles.viewToggle}>
                         <button
-                            className={viewMode === 'table' ? 'active' : ''}
+                            className={`${styles.viewToggleBtn} ${viewMode === 'table' ? styles.active : ''}`}
                             onClick={() => setViewMode('table')}
                             title="Table view"
                         >
                             <List size={16} />
                         </button>
                         <button
-                            className={viewMode === 'grid' ? 'active' : ''}
+                            className={`${styles.viewToggleBtn} ${viewMode === 'grid' ? styles.active : ''}`}
                             onClick={() => setViewMode('grid')}
                             title="Grid view"
                         >
