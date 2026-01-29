@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, Filter, FileText, Eye, Check, X, Clock, AlertCircle, ChevronDown } from 'lucide-react';
+import { Search, Filter, FileText, Eye, Check, X, Clock, AlertCircle, ChevronDown, Users, CheckSquare, Square, UserCheck, UserX, Grid, List } from 'lucide-react';
 import styles from './page.module.css';
 
 // Types
@@ -17,6 +17,13 @@ interface Applicant {
     aiRecommendation: string | null;
     startedAt: string;
     submittedAt: string | null;
+}
+
+interface CohortCapacity {
+    capacity: number;
+    filled: number;
+    remaining: number;
+    isAtCapacity: boolean;
 }
 
 const statusColors: Record<string, string> = {
@@ -44,79 +51,42 @@ export default function ApplicantsPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('');
+    const [scoreFilter, setScoreFilter] = useState<string>('');
     const [showFilters, setShowFilters] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+    const [capacity, setCapacity] = useState<CohortCapacity>({ capacity: 50, filled: 12, remaining: 38, isAtCapacity: false });
+    const [bulkLoading, setBulkLoading] = useState(false);
 
-    // Mock data for now - will connect to backend
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+
+    // Fetch applicants and capacity
     useEffect(() => {
-        // Simulating API call
-        const mockApplicants: Applicant[] = [
-            {
-                id: 'app_1',
-                email: 'adaeze@email.com',
-                firstName: 'Adaeze',
-                lastName: 'Okonkwo',
-                status: 'PENDING',
-                skillTrack: 'DESIGN',
-                readinessScore: 78,
-                aiRecommendation: 'ADMIT',
-                startedAt: '2026-01-25T10:00:00Z',
-                submittedAt: '2026-01-25T14:30:00Z',
-            },
-            {
-                id: 'app_2',
-                email: 'chidi@email.com',
-                firstName: 'Chidi',
-                lastName: 'Eze',
-                status: 'SCORED',
-                skillTrack: 'DEVELOPMENT',
-                readinessScore: 85,
-                aiRecommendation: 'ADMIT',
-                startedAt: '2026-01-24T09:00:00Z',
-                submittedAt: '2026-01-24T16:00:00Z',
-            },
-            {
-                id: 'app_3',
-                email: 'ngozi@email.com',
-                firstName: 'Ngozi',
-                lastName: 'Ibe',
-                status: 'ADMITTED',
-                skillTrack: 'DIGITAL_MARKETING',
-                readinessScore: 92,
-                aiRecommendation: 'ADMIT',
-                startedAt: '2026-01-23T11:00:00Z',
-                submittedAt: '2026-01-23T15:45:00Z',
-            },
-            {
-                id: 'app_4',
-                email: 'emeka@email.com',
-                firstName: 'Emeka',
-                lastName: 'Nnamdi',
-                status: 'CONDITIONAL',
-                skillTrack: 'DATA_ANALYTICS',
-                readinessScore: 62,
-                aiRecommendation: 'CONDITIONAL',
-                startedAt: '2026-01-22T14:00:00Z',
-                submittedAt: '2026-01-22T18:20:00Z',
-            },
-            {
-                id: 'app_5',
-                email: 'amara@email.com',
-                firstName: 'Amara',
-                lastName: 'Okoro',
-                status: 'PENDING',
-                skillTrack: 'DEVELOPMENT',
-                readinessScore: null,
-                aiRecommendation: null,
-                startedAt: '2026-01-28T08:00:00Z',
-                submittedAt: '2026-01-28T12:00:00Z',
-            },
-        ];
+        const fetchData = async () => {
+            try {
+                const [applicantsRes, capacityRes] = await Promise.all([
+                    fetch(`${API_BASE}/admin/applicants`),
+                    fetch(`${API_BASE}/admin/cohort/capacity`),
+                ]);
 
-        setTimeout(() => {
-            setApplicants(mockApplicants);
-            setLoading(false);
-        }, 500);
-    }, []);
+                if (applicantsRes.ok) {
+                    const data = await applicantsRes.json();
+                    setApplicants(data);
+                }
+
+                if (capacityRes.ok) {
+                    const capData = await capacityRes.json();
+                    setCapacity(capData);
+                }
+            } catch (error) {
+                console.error('Failed to fetch data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [API_BASE]);
 
     // Filter applicants
     const filteredApplicants = applicants.filter(app => {
@@ -127,7 +97,16 @@ export default function ApplicantsPage() {
 
         const matchesStatus = statusFilter === '' || app.status === statusFilter;
 
-        return matchesSearch && matchesStatus;
+        const matchesScore = scoreFilter === '' || (() => {
+            const score = app.readinessScore;
+            if (!score) return scoreFilter === 'unscored';
+            if (scoreFilter === 'high') return score >= 75;
+            if (scoreFilter === 'medium') return score >= 50 && score < 75;
+            if (scoreFilter === 'low') return score < 50;
+            return true;
+        })();
+
+        return matchesSearch && matchesStatus && matchesScore;
     });
 
     const formatDate = (dateStr: string | null) => {
@@ -140,6 +119,57 @@ export default function ApplicantsPage() {
         });
     };
 
+    // Selection handlers
+    const toggleSelect = (id: string) => {
+        const newSelected = new Set(selectedIds);
+        if (newSelected.has(id)) {
+            newSelected.delete(id);
+        } else {
+            newSelected.add(id);
+        }
+        setSelectedIds(newSelected);
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedIds.size === filteredApplicants.length) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(filteredApplicants.map(a => a.id)));
+        }
+    };
+
+    // Bulk actions
+    const handleBulkAction = async (decision: 'ADMITTED' | 'REJECTED') => {
+        if (selectedIds.size === 0) return;
+
+        setBulkLoading(true);
+        try {
+            const response = await fetch(`${API_BASE}/admin/applicants/bulk-decision`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    applicantIds: Array.from(selectedIds),
+                    decision,
+                }),
+            });
+
+            if (response.ok) {
+                // Refresh applicants
+                const refreshRes = await fetch(`${API_BASE}/admin/applicants`);
+                if (refreshRes.ok) {
+                    setApplicants(await refreshRes.json());
+                }
+                setSelectedIds(new Set());
+            }
+        } catch (error) {
+            console.error('Bulk action failed:', error);
+        } finally {
+            setBulkLoading(false);
+        }
+    };
+
+    const capacityPercent = Math.round((capacity.filled / capacity.capacity) * 100);
+
     return (
         <div className={styles.container}>
             <header className={styles.header}>
@@ -148,13 +178,60 @@ export default function ApplicantsPage() {
                     <p className={styles.subtitle}>Review and manage incoming applications</p>
                 </div>
                 <div className={styles.headerStats}>
+                    {/* Cohort Capacity Indicator */}
+                    <div className={styles.capacityCard}>
+                        <Users size={18} />
+                        <div className={styles.capacityInfo}>
+                            <span className={styles.capacityLabel}>Cohort Capacity</span>
+                            <span className={styles.capacityValue}>
+                                {capacity.filled}/{capacity.capacity} spots
+                            </span>
+                        </div>
+                        <div className={styles.capacityBar}>
+                            <div
+                                className={`${styles.capacityFill} ${capacity.isAtCapacity ? styles.full : ''}`}
+                                style={{ width: `${capacityPercent}%` }}
+                            />
+                        </div>
+                    </div>
                     <span className={styles.statBadge}>
-                        <Clock size={14} /> {applicants.filter(a => a.status === 'PENDING').length} pending review
+                        <Clock size={14} /> {applicants.filter(a => a.status === 'PENDING').length} pending
                     </span>
                 </div>
             </header>
 
-            {/* Search and Filters */}
+            {/* Bulk Actions Bar */}
+            {selectedIds.size > 0 && (
+                <div className={styles.bulkBar}>
+                    <span className={styles.bulkCount}>{selectedIds.size} selected</span>
+                    <div className={styles.bulkActions}>
+                        <button
+                            className={styles.bulkApprove}
+                            onClick={() => handleBulkAction('ADMITTED')}
+                            disabled={bulkLoading || capacity.remaining < selectedIds.size}
+                        >
+                            <UserCheck size={16} />
+                            Approve Selected
+                        </button>
+                        <button
+                            className={styles.bulkReject}
+                            onClick={() => handleBulkAction('REJECTED')}
+                            disabled={bulkLoading}
+                        >
+                            <UserX size={16} />
+                            Reject Selected
+                        </button>
+                        <button
+                            className={styles.bulkClear}
+                            onClick={() => setSelectedIds(new Set())}
+                        >
+                            Clear
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Search, Filters, and View Toggle */}
             <div className={styles.toolbar}>
                 <div className={styles.searchBox}>
                     <Search size={18} />
@@ -165,14 +242,32 @@ export default function ApplicantsPage() {
                         onChange={(e) => setSearch(e.target.value)}
                     />
                 </div>
-                <button
-                    className={styles.filterButton}
-                    onClick={() => setShowFilters(!showFilters)}
-                >
-                    <Filter size={16} />
-                    Filters
-                    <ChevronDown size={14} />
-                </button>
+                <div className={styles.toolbarRight}>
+                    <div className="view-toggle">
+                        <button
+                            className={viewMode === 'table' ? 'active' : ''}
+                            onClick={() => setViewMode('table')}
+                            title="Table view"
+                        >
+                            <List size={16} />
+                        </button>
+                        <button
+                            className={viewMode === 'grid' ? 'active' : ''}
+                            onClick={() => setViewMode('grid')}
+                            title="Grid view"
+                        >
+                            <Grid size={16} />
+                        </button>
+                    </div>
+                    <button
+                        className={styles.filterButton}
+                        onClick={() => setShowFilters(!showFilters)}
+                    >
+                        <Filter size={16} />
+                        Filters
+                        <ChevronDown size={14} />
+                    </button>
+                </div>
             </div>
 
             {showFilters && (
@@ -192,102 +287,210 @@ export default function ApplicantsPage() {
                             <option value="REJECTED">Rejected</option>
                         </select>
                     </div>
+                    <div className={styles.filterGroup}>
+                        <label>Readiness Score</label>
+                        <select
+                            value={scoreFilter}
+                            onChange={(e) => setScoreFilter(e.target.value)}
+                        >
+                            <option value="">All Scores</option>
+                            <option value="high">High (75+)</option>
+                            <option value="medium">Medium (50-74)</option>
+                            <option value="low">Low (&lt;50)</option>
+                            <option value="unscored">Unscored</option>
+                        </select>
+                    </div>
                 </div>
             )}
 
-            {/* Applicants Table */}
-            <div className={styles.tableWrapper}>
-                <table className={styles.table}>
-                    <thead>
-                        <tr>
-                            <th>Applicant</th>
-                            <th>Skill Track</th>
-                            <th>Status</th>
-                            <th>Score</th>
-                            <th>AI Recommendation</th>
-                            <th>Submitted</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loading ? (
+            {/* Table View */}
+            {viewMode === 'table' && (
+                <div className={styles.tableWrapper}>
+                    <table className={styles.table}>
+                        <thead>
                             <tr>
-                                <td colSpan={7} className={styles.loadingCell}>
-                                    Loading applicants...
-                                </td>
+                                <th className={styles.checkboxCell}>
+                                    <button onClick={toggleSelectAll} className={styles.checkboxBtn}>
+                                        {selectedIds.size === filteredApplicants.length && filteredApplicants.length > 0
+                                            ? <CheckSquare size={18} />
+                                            : <Square size={18} />
+                                        }
+                                    </button>
+                                </th>
+                                <th>Applicant</th>
+                                <th>Skill Track</th>
+                                <th>Status</th>
+                                <th>Score</th>
+                                <th>AI Recommendation</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
                             </tr>
-                        ) : filteredApplicants.length === 0 ? (
-                            <tr>
-                                <td colSpan={7} className={styles.emptyCell}>
-                                    No applicants found
-                                </td>
-                            </tr>
-                        ) : (
-                            filteredApplicants.map((applicant) => (
-                                <tr key={applicant.id}>
-                                    <td>
-                                        <div className={styles.applicantInfo}>
-                                            <div className={styles.avatar}>
-                                                {applicant.firstName[0]}{applicant.lastName[0]}
-                                            </div>
-                                            <div>
-                                                <div className={styles.name}>
-                                                    {applicant.firstName} {applicant.lastName}
-                                                </div>
-                                                <div className={styles.email}>{applicant.email}</div>
-                                            </div>
-                                        </div>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={8} className={styles.loadingCell}>
+                                        Loading applicants...
                                     </td>
-                                    <td>
+                                </tr>
+                            ) : filteredApplicants.length === 0 ? (
+                                <tr>
+                                    <td colSpan={8} className={styles.emptyCell}>
+                                        No applicants found
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredApplicants.map((applicant) => (
+                                    <tr key={applicant.id} className={selectedIds.has(applicant.id) ? styles.selectedRow : ''}>
+                                        <td className={styles.checkboxCell}>
+                                            <button onClick={() => toggleSelect(applicant.id)} className={styles.checkboxBtn}>
+                                                {selectedIds.has(applicant.id)
+                                                    ? <CheckSquare size={18} />
+                                                    : <Square size={18} />
+                                                }
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <div className={styles.applicantInfo}>
+                                                <div className={styles.avatar}>
+                                                    {applicant.firstName[0]}{applicant.lastName[0]}
+                                                </div>
+                                                <div>
+                                                    <div className={styles.name}>
+                                                        {applicant.firstName} {applicant.lastName}
+                                                    </div>
+                                                    <div className={styles.email}>{applicant.email}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span className={styles.trackBadge}>
+                                                {applicant.skillTrack?.replace('_', ' ') || '—'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className={`badge ${statusColors[applicant.status] || ''}`}>
+                                                {statusIcons[applicant.status]}
+                                                {applicant.status}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {applicant.readinessScore !== null ? (
+                                                <span className={styles.scoreValue}>
+                                                    {applicant.readinessScore}%
+                                                </span>
+                                            ) : (
+                                                <span className={styles.noScore}>—</span>
+                                            )}
+                                        </td>
+                                        <td>
+                                            {applicant.aiRecommendation ? (
+                                                <span className={`badge ${applicant.aiRecommendation === 'ADMIT' ? 'badge-success' :
+                                                    applicant.aiRecommendation === 'CONDITIONAL' ? 'badge-warning' :
+                                                        'badge-danger'
+                                                    }`}>
+                                                    {applicant.aiRecommendation}
+                                                </span>
+                                            ) : (
+                                                <span className={styles.pending}>Pending</span>
+                                            )}
+                                        </td>
+                                        <td className={styles.dateCell}>
+                                            {formatDate(applicant.submittedAt)}
+                                        </td>
+                                        <td>
+                                            <Link
+                                                href={`/admin/applicants/${applicant.id}`}
+                                                className={styles.viewButton}
+                                            >
+                                                <Eye size={16} />
+                                                Review
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {/* Grid View (Mobile-friendly) */}
+            {viewMode === 'grid' && (
+                <div className={styles.gridView}>
+                    {loading ? (
+                        <div className={styles.loadingCell}>Loading applicants...</div>
+                    ) : filteredApplicants.length === 0 ? (
+                        <div className={styles.emptyCell}>No applicants found</div>
+                    ) : (
+                        filteredApplicants.map((applicant) => (
+                            <div
+                                key={applicant.id}
+                                className={`${styles.applicantCard} ${selectedIds.has(applicant.id) ? styles.selectedCard : ''}`}
+                            >
+                                <div className={styles.cardHeader}>
+                                    <button onClick={() => toggleSelect(applicant.id)} className={styles.checkboxBtn}>
+                                        {selectedIds.has(applicant.id)
+                                            ? <CheckSquare size={18} />
+                                            : <Square size={18} />
+                                        }
+                                    </button>
+                                    <div className={styles.applicantInfo}>
+                                        <div className={styles.avatar}>
+                                            {applicant.firstName[0]}{applicant.lastName[0]}
+                                        </div>
+                                        <div>
+                                            <div className={styles.name}>
+                                                {applicant.firstName} {applicant.lastName}
+                                            </div>
+                                            <div className={styles.email}>{applicant.email}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className={styles.cardBody}>
+                                    <div className={styles.cardRow}>
+                                        <span className={styles.cardLabel}>Track</span>
                                         <span className={styles.trackBadge}>
                                             {applicant.skillTrack?.replace('_', ' ') || '—'}
                                         </span>
-                                    </td>
-                                    <td>
+                                    </div>
+                                    <div className={styles.cardRow}>
+                                        <span className={styles.cardLabel}>Status</span>
                                         <span className={`badge ${statusColors[applicant.status] || ''}`}>
                                             {statusIcons[applicant.status]}
                                             {applicant.status}
                                         </span>
-                                    </td>
-                                    <td>
-                                        {applicant.readinessScore !== null ? (
-                                            <span className={styles.scoreValue}>
-                                                {applicant.readinessScore}%
-                                            </span>
-                                        ) : (
-                                            <span className={styles.noScore}>—</span>
-                                        )}
-                                    </td>
-                                    <td>
+                                    </div>
+                                    <div className={styles.cardRow}>
+                                        <span className={styles.cardLabel}>Score</span>
+                                        <span className={styles.scoreValue}>
+                                            {applicant.readinessScore !== null ? `${applicant.readinessScore}%` : '—'}
+                                        </span>
+                                    </div>
+                                    <div className={styles.cardRow}>
+                                        <span className={styles.cardLabel}>AI Rec</span>
                                         {applicant.aiRecommendation ? (
                                             <span className={`badge ${applicant.aiRecommendation === 'ADMIT' ? 'badge-success' :
-                                                    applicant.aiRecommendation === 'CONDITIONAL' ? 'badge-warning' :
-                                                        'badge-danger'
+                                                applicant.aiRecommendation === 'CONDITIONAL' ? 'badge-warning' : 'badge-danger'
                                                 }`}>
                                                 {applicant.aiRecommendation}
                                             </span>
                                         ) : (
                                             <span className={styles.pending}>Pending</span>
                                         )}
-                                    </td>
-                                    <td className={styles.dateCell}>
-                                        {formatDate(applicant.submittedAt)}
-                                    </td>
-                                    <td>
-                                        <Link
-                                            href={`/admin/applicants/${applicant.id}`}
-                                            className={styles.viewButton}
-                                        >
-                                            <Eye size={16} />
-                                            Review
-                                        </Link>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                                    </div>
+                                </div>
+                                <div className={styles.cardFooter}>
+                                    <span className={styles.dateCell}>{formatDate(applicant.submittedAt)}</span>
+                                    <Link href={`/admin/applicants/${applicant.id}`} className={styles.viewButton}>
+                                        <Eye size={16} /> Review
+                                    </Link>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            )}
         </div>
     );
 }

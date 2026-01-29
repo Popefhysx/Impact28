@@ -172,3 +172,142 @@ a {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
+
+/* Override browser dropdown/select highlight */
+::selection {
+  background: var(--gold-warm);
+  color: var(--navy-deep);
+}
+
+select,
+input,
+textarea {
+  accent-color: var(--gold-warm);
+}
+
+option:checked,
+option:focus,
+option:active {
+  background: var(--gold-warm) !important;
+  color: var(--navy-deep) !important;
+}
+
+/* Focus states */
+*:focus-visible {
+  outline: 2px solid var(--gold-warm);
+  outline-offset: 2px;
+}
+
+/* View toggle buttons */
+.view-toggle {
+  display: flex;
+  gap: var(--space-xs);
+  background: var(--bg-elevated);
+  padding: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.view-toggle button {
+  padding: var(--space-xs) var(--space-sm);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.view-toggle button.active {
+  background: var(--bg-card);
+  color: var(--navy-deep);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 100%;
+    --sidebar-collapsed: 0px;
+  }
+
+  .hide-mobile {
+    display: none !important;
+  }
+
+  .show-mobile {
+    display: block !important;
+  }
+
+  /* Tables default to card view on mobile */
+  .responsive-table {
+    display: none;
+  }
+
+  .responsive-cards {
+    display: flex !important;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+}
+
+@media (min-width: 769px) {
+  .show-mobile {
+    display: none !important;
+  }
+
+  .responsive-cards {
+    display: none;
+  }
+
+  .responsive-table {
+    display: table;
+  }
+}
+
+/* Card grid layout */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-md);
+}
+
+/* Data card for mobile view */
+.data-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+}
+
+.data-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.data-card-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-xs) 0;
+  font-size: 13px;
+}
+
+.data-card-label {
+  color: var(--text-muted);
+}
+
+.data-card-value {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.data-card-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+}

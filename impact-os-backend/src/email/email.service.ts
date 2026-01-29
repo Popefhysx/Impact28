@@ -548,9 +548,82 @@ export class EmailService {
         throw new Error(`Resend API error: ${response.statusText}`);
       }
 
+
       return true;
     } catch (error) {
       console.error('Failed to send offer email:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Send OTP verification email for login
+   */
+  async sendOtpEmail(
+    email: string,
+    data: { firstName: string; otpCode: string; expiryMinutes: number }
+  ): Promise<boolean> {
+    const html = `
+      <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #02213D; margin: 0; font-size: 24px;">Project 3:10</h1>
+        </div>
+        
+        <p style="color: #333; font-size: 16px; line-height: 1.6;">
+          Hi ${data.firstName},
+        </p>
+        
+        <p style="color: #333; font-size: 16px; line-height: 1.6;">
+          Use this code to log in to your dashboard:
+        </p>
+        
+        <div style="background: #f5f5f5; border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0;">
+          <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #02213D;">
+            ${data.otpCode}
+          </span>
+        </div>
+        
+        <p style="color: #666; font-size: 14px; text-align: center;">
+          This code expires in ${data.expiryMinutes} minutes.
+        </p>
+        
+        <p style="color: #999; font-size: 13px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+          If you didn't request this code, you can safely ignore this email.
+        </p>
+      </div>
+    `;
+
+    // If no API key, log to console (dev mode)
+    if (!this.resendApiKey) {
+      console.log('📧 [DEV] OTP Email would be sent:');
+      console.log(`To: ${email}`);
+      console.log(`Code: ${data.otpCode}`);
+      return true;
+    }
+
+    // Send via Resend API
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: this.fromEmail,
+          to: email,
+          subject: `${data.otpCode} — Your Project 3:10 Login Code`,
+          html,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Resend API error: ${response.statusText}`);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to send OTP email:', error);
       return false;
     }
   }

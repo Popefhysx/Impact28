@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Home, Target, Gem, Wallet, CreditCard, User, Zap, Star, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Home, Target, Gem, Wallet, CreditCard, User, Zap, Star, PanelLeftClose, PanelLeft, LogOut, Menu, X } from 'lucide-react';
 import { UserProvider } from '../context/UserContext';
 import styles from './layout.module.css';
 
@@ -22,12 +22,58 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
+    const router = useRouter();
     const [collapsed, setCollapsed] = useState(false);
+    const [mobileOpen, setMobileOpen] = useState(false);
+    const [userName, setUserName] = useState('User');
+    const [userEmail, setUserEmail] = useState('');
+
+    useEffect(() => {
+        // Get user info from localStorage
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            const user = JSON.parse(storedUser);
+            setUserName(`${user.firstName} ${user.lastName}`);
+            setUserEmail(user.email);
+        }
+    }, []);
+
+    const handleLogout = () => {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('onboarding_complete');
+        router.push('/login');
+    };
+
+    // Close mobile nav on route change
+    useEffect(() => {
+        setMobileOpen(false);
+    }, [pathname]);
 
     return (
         <UserProvider>
             <div className={styles.container}>
-                <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''}`}>
+                {/* Mobile header */}
+                <div className={styles.mobileHeader}>
+                    <button
+                        className={styles.mobileMenuBtn}
+                        onClick={() => setMobileOpen(!mobileOpen)}
+                        aria-label="Toggle menu"
+                    >
+                        {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+                    </button>
+                    <span className={styles.mobileTitle}>Impact OS</span>
+                </div>
+
+                {/* Sidebar overlay for mobile */}
+                {mobileOpen && (
+                    <div
+                        className={styles.overlay}
+                        onClick={() => setMobileOpen(false)}
+                    />
+                )}
+
+                <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''} ${mobileOpen ? styles.mobileOpen : ''}`}>
                     <div className={styles.sidebarHeader}>
                         <Link href="/" className={styles.logo}>
                             <Zap size={20} />
@@ -77,12 +123,22 @@ export default function DashboardLayout({
 
                     <div className={styles.sidebarFooter}>
                         <div className={styles.userInfo}>
-                            <div className={styles.avatar}>A</div>
-                            <div>
-                                <div className={styles.userName}>Adaeze Okonkwo</div>
-                                <div className={styles.userEmail}>adaeze@email.com</div>
-                            </div>
+                            <div className={styles.avatar}>{userName.charAt(0)}</div>
+                            {!collapsed && (
+                                <div className={styles.userDetails}>
+                                    <div className={styles.userName}>{userName}</div>
+                                    <div className={styles.userEmail}>{userEmail}</div>
+                                </div>
+                            )}
                         </div>
+                        <button
+                            className={styles.logoutBtn}
+                            onClick={handleLogout}
+                            title="Log out"
+                        >
+                            <LogOut size={18} />
+                            {!collapsed && <span>Log out</span>}
+                        </button>
                     </div>
                 </aside>
 
@@ -93,4 +149,3 @@ export default function DashboardLayout({
         </UserProvider>
     );
 }
-

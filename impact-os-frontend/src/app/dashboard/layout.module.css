@@ -215,3 +215,130 @@
 .mainCollapsed {
     margin-left: var(--sidebar-collapsed);
 }
+
+/* Logout Button */
+.logoutBtn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    margin-top: var(--space-md);
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.logoutBtn:hover {
+    background: var(--bg-elevated);
+    color: var(--accent-danger);
+    border-color: var(--accent-danger);
+}
+
+.collapsed .logoutBtn {
+    justify-content: center;
+    padding: var(--space-sm);
+}
+
+.collapsed .logoutBtn span {
+    display: none;
+}
+
+.userDetails {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Mobile Header */
+.mobileHeader {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-subtle);
+    z-index: 101;
+    padding: 0 var(--space-md);
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.mobileMenuBtn {
+    background: none;
+    border: none;
+    padding: var(--space-xs);
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+}
+
+.mobileMenuBtn:hover {
+    background: var(--bg-elevated);
+}
+
+.mobileTitle {
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--navy-deep);
+}
+
+/* Overlay for mobile */
+.overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 99;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+        width: 280px;
+    }
+
+    .sidebar.mobileOpen {
+        transform: translateX(0);
+    }
+
+    .collapsed .sidebar {
+        width: 280px;
+    }
+
+    .mobileHeader {
+        display: flex;
+    }
+
+    .overlay {
+        display: block;
+    }
+
+    .main {
+        margin-left: 0;
+        padding: var(--space-md);
+        padding-top: calc(56px + var(--space-md));
+    }
+
+    .mainCollapsed {
+        margin-left: 0;
+    }
+
+    .collapseBtn {
+        display: none;
+    }
+
+    .expandBtn {
+        display: none;
+    }
+}

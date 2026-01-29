@@ -14,6 +14,7 @@ import { IncomeModule } from './income';
 import { MissionModule } from './mission';
 import { AdminModule } from './admin';
 import { AssessmentModule } from './assessment';
+import { AuthModule } from './auth';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { AssessmentModule } from './assessment';
       isGlobal: true,
     }),
     PrismaModule,
+    AuthModule,
     IntakeModule,
     EmailModule,
     TestimonialsModule,

@@ -262,3 +262,260 @@
         min-width: 800px;
     }
 }
+
+/* Capacity Card */
+.capacityCard {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+}
+
+.capacityInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.capacityLabel {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.capacityValue {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy-deep);
+}
+
+.capacityBar {
+    width: 80px;
+    height: 6px;
+    background: var(--bg-primary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.capacityFill {
+    height: 100%;
+    background: var(--accent-success);
+    border-radius: var(--radius-full);
+    transition: width 0.3s ease;
+}
+
+.capacityFill.full {
+    background: var(--accent-danger);
+}
+
+/* Bulk Actions Bar */
+.bulkBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--gold-pale);
+    border: 1px solid var(--gold-warm);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--space-md);
+}
+
+.bulkCount {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy-deep);
+}
+
+.bulkActions {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.bulkApprove,
+.bulkReject,
+.bulkClear {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.bulkApprove {
+    background: var(--accent-success);
+    color: white;
+    border: none;
+}
+
+.bulkApprove:hover:not(:disabled) {
+    filter: brightness(1.1);
+}
+
+.bulkReject {
+    background: var(--accent-danger);
+    color: white;
+    border: none;
+}
+
+.bulkReject:hover:not(:disabled) {
+    filter: brightness(1.1);
+}
+
+.bulkClear {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+}
+
+.bulkClear:hover {
+    background: var(--bg-elevated);
+}
+
+.bulkApprove:disabled,
+.bulkReject:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Checkbox Cell */
+.checkboxCell {
+    width: 40px;
+    text-align: center;
+}
+
+.checkboxBtn {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    transition: all 0.15s ease;
+}
+
+.checkboxBtn:hover {
+    color: var(--gold-warm);
+    background: var(--gold-pale);
+}
+
+.selectedRow {
+    background: var(--gold-pale) !important;
+}
+
+/* Toolbar Right */
+.toolbarRight {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: center;
+}
+
+/* Grid View */
+.gridView {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-md);
+}
+
+.applicantCard {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: all 0.15s ease;
+}
+
+.applicantCard:hover {
+    border-color: var(--border-default);
+    box-shadow: var(--shadow-sm);
+}
+
+.selectedCard {
+    border-color: var(--gold-warm);
+    background: var(--gold-pale);
+}
+
+.cardHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.cardBody {
+    padding: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.cardRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cardLabel {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.cardFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-elevated);
+    border-top: 1px solid var(--border-subtle);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .container {
+        padding: var(--space-md);
+    }
+
+    .headerStats {
+        flex-direction: column;
+        gap: var(--space-sm);
+        width: 100%;
+    }
+
+    .capacityCard {
+        width: 100%;
+    }
+
+    .filtersPanel {
+        flex-direction: column;
+    }
+
+    .bulkBar {
+        flex-direction: column;
+        gap: var(--space-sm);
+        text-align: center;
+    }
+
+    .bulkActions {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .tableWrapper {
+        display: none;
+    }
+
+    .gridView {
+        grid-template-columns: 1fr;
+    }
+}
