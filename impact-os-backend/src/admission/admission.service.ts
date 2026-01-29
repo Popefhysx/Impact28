@@ -72,6 +72,8 @@ export class AdmissionService {
                 skillTrack: true,
                 riskFlags: true,
                 rejectionReason: true,
+                readinessScore: true,
+                diagnosticReport: true,
                 // Assessment data for offer email
                 offerType: true,
                 triadTechnical: true,
@@ -201,23 +203,54 @@ export class AdmissionService {
     }
 
     /**
-     * Handle rejection
+     * Handle rejection - send readiness-tiered rejection email
      */
     private async handleRejection(applicant: {
         id: string;
         email: string;
         firstName: string;
         rejectionReason: RejectionReason | null;
+        readinessScore?: number | null;
+        diagnosticReport?: any;
     }): Promise<void> {
-        const reasonText = this.formatRejectionReason(applicant.rejectionReason);
+        // Extract custom message and capacity flag from diagnostic report
+        const diagnostics = applicant.diagnosticReport || {};
+        const customMessage = diagnostics.customMessage;
+        const isCapacityRejection = diagnostics.isCapacityRejection || false;
+        const readinessScore = applicant.readinessScore ?? 50;
 
-        await this.emailService.sendRejectionEmail(
+        // Determine primary gap from rejection reason
+        const primaryGap = this.mapRejectionToGap(applicant.rejectionReason);
+
+        await this.emailService.sendReadinessRejectionEmail(
             applicant.email,
-            applicant.firstName,
-            reasonText,
+            {
+                firstName: applicant.firstName,
+                readinessScore,
+                primaryGap,
+                isCapacityRejection,
+                customMessage,
+            }
         );
 
-        this.logger.log(`Sent rejection email to ${applicant.email}`);
+        this.logger.log(`Sent readiness-tiered rejection email to ${applicant.email} (score: ${readinessScore})`);
+    }
+
+    /**
+     * Map rejection reason to a human-readable primary gap
+     */
+    private mapRejectionToGap(reason: RejectionReason | null): string | undefined {
+        if (!reason) return undefined;
+
+        const gapMap: Partial<Record<RejectionReason, string>> = {
+            LOW_READINESS: 'overall readiness',
+            NO_DEVICE: 'device access',
+            NO_INTERNET: 'internet connectivity',
+            NO_CONSENT: 'commitment level',
+            INCOMPLETE_FORM: 'application completion',
+        };
+
+        return gapMap[reason];
     }
 
     /**

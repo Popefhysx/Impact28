@@ -281,6 +281,127 @@ export class EmailService {
     return this.sendEmail(email, 'application_rejected', { firstName, rejectionReason });
   }
 
+  /**
+   * Send readiness-tiered rejection email with personalized messaging
+   */
+  async sendReadinessRejectionEmail(
+    email: string,
+    data: {
+      firstName: string;
+      readinessScore: number;
+      primaryGap?: string; // e.g., "technical skills", "commitment"
+      isCapacityRejection?: boolean;
+      customMessage?: string;
+    }
+  ): Promise<boolean> {
+    const { firstName, readinessScore, primaryGap, isCapacityRejection, customMessage } = data;
+
+    // Determine tier and messaging based on readiness score
+    type RejectionTier = { subject: string; headline: string; message: string; reapplyText: string };
+    let tier: RejectionTier;
+
+    if (isCapacityRejection) {
+      tier = {
+        subject: `Cohort is full — but you're on our radar`,
+        headline: `You Qualified, But We're At Capacity`,
+        message: `Your application was strong, but we've reached our cohort capacity. This is not a reflection of your potential — it's simply about timing.`,
+        reapplyText: `You'll be <strong>first in line</strong> for our next cohort. We'll email you when applications reopen.`
+      };
+    } else if (readinessScore >= 70) {
+      tier = {
+        subject: `Close, but not quite this time`,
+        headline: `You're Almost There`,
+        message: `You showed real promise, but we need to see a bit more readiness. ${primaryGap ? `Your ${primaryGap} could use some strengthening.` : ''}`,
+        reapplyText: `We encourage you to <strong>reapply in 2-3 months</strong> after building more experience.`
+      };
+    } else if (readinessScore >= 50) {
+      tier = {
+        subject: `Update on your Project 3:10 application`,
+        headline: `Not Quite Ready — Yet`,
+        message: `We appreciate your interest, but based on our assessment, you need more preparation before joining an intensive program like ours. ${primaryGap ? `Focus on developing your ${primaryGap}.` : ''}`,
+        reapplyText: `Consider reapplying after <strong>3-6 months</strong> of self-directed learning.`
+      };
+    } else if (readinessScore >= 30) {
+      tier = {
+        subject: `Update on your Project 3:10 application`,
+        headline: `Some Foundational Gaps`,
+        message: `We're unable to offer you a spot right now. Our program moves quickly and requires a baseline of readiness that we didn't see in your application.`,
+        reapplyText: `We recommend building foundational skills before considering reapplication.`
+      };
+    } else {
+      tier = {
+        subject: `Update on your Project 3:10 application`,
+        headline: `Not a Fit Right Now`,
+        message: `After reviewing your application, we've determined that Project 3:10 isn't the right fit for you at this time.`,
+        reapplyText: `We wish you the best in your journey.`
+      };
+    }
+
+    const html = `
+      <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #02213D;">${tier.headline}</h1>
+        
+        <p>Hi ${firstName},</p>
+        
+        <p>${tier.message}</p>
+        
+        ${customMessage ? `
+        <div style="background: #f0f4f8; border-left: 4px solid #02213D; padding: 15px; margin: 20px 0;">
+          <p style="margin: 0; font-style: italic;">"${customMessage}"</p>
+          <p style="margin: 10px 0 0 0; font-size: 12px; color: #666;">— From our review team</p>
+        </div>
+        ` : ''}
+        
+        <p>${tier.reapplyText}</p>
+        
+        <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0;">Free Resources to Help You Grow</h3>
+          <ul style="margin-bottom: 0;">
+            <li><a href="https://www.youtube.com/@Cycle28Official">Our YouTube Channel</a> — Free tutorials</li>
+            <li><a href="https://cycle28.org/resources">Resource Library</a> — Guides and tools</li>
+          </ul>
+        </div>
+        
+        <p style="color: #666;">— The Project 3:10 Team</p>
+      </div>
+    `;
+
+    // If no API key, log to console (dev mode)
+    if (!this.resendApiKey) {
+      console.log('📧 [DEV] Readiness Rejection Email would be sent:');
+      console.log(`To: ${email}`);
+      console.log(`Subject: ${tier.subject}`);
+      console.log(`Score: ${readinessScore}, Capacity rejection: ${isCapacityRejection}`);
+      return true;
+    }
+
+    // Send via Resend API
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: this.fromEmail,
+          to: email,
+          subject: tier.subject,
+          html,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Resend API error: ${response.statusText}`);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to send readiness rejection email:', error);
+      return false;
+    }
+  }
+
   async sendResumeLink(email: string, firstName: string, resumeLink: string) {
     return this.sendEmail(email, 'resume_link', { firstName, resumeLink });
   }

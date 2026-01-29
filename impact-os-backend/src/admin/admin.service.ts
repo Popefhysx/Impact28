@@ -535,12 +535,47 @@ export class AdminService {
     }
 
     /**
+     * Get cohort capacity status
+     */
+    async getCohortCapacity(cohortId?: string) {
+        // Get active cohort if not specified
+        const cohort = cohortId
+            ? await this.prisma.cohort.findUnique({ where: { id: cohortId } })
+            : await this.prisma.cohort.findFirst({ where: { isActive: true } });
+
+        if (!cohort) {
+            return { capacity: 50, filled: 0, remaining: 50, isAtCapacity: false };
+        }
+
+        // Count admitted/converted users in this cohort
+        const filled = await this.prisma.applicant.count({
+            where: {
+                cohortId: cohort.id,
+                status: { in: [ApplicantStatus.ADMITTED, ApplicantStatus.CONVERTED] },
+            },
+        });
+
+        return {
+            cohortId: cohort.id,
+            cohortName: cohort.name,
+            capacity: cohort.capacity,
+            filled,
+            remaining: Math.max(0, cohort.capacity - filled),
+            isAtCapacity: filled >= cohort.capacity,
+        };
+    }
+
+    /**
      * Make admission decision for an applicant
      */
     async makeAdmissionDecision(
         applicantId: string,
         decision: 'ADMITTED' | 'CONDITIONAL' | 'REJECTED',
-        notes?: string,
+        options?: {
+            notes?: string;
+            customMessage?: string;
+            isCapacityRejection?: boolean;
+        },
     ) {
         const applicant = await this.prisma.applicant.findUnique({
             where: { id: applicantId },
@@ -559,6 +594,14 @@ export class AdminService {
 
         const status = statusMap[decision];
 
+        // Store custom message and capacity flag in diagnostic report
+        const diagnosticUpdate: Record<string, any> = {
+            ...(applicant.diagnosticReport as object),
+            ...(options?.notes && { adminNotes: options.notes }),
+            ...(options?.customMessage && { customMessage: options.customMessage }),
+            ...(options?.isCapacityRejection && { isCapacityRejection: true }),
+        };
+
         // Update applicant with decision
         const updated = await this.prisma.applicant.update({
             where: { id: applicantId },
@@ -566,7 +609,7 @@ export class AdminService {
                 status,
                 reviewedAt: new Date(),
                 reviewedBy: 'admin', // TODO: Use actual admin ID
-                ...(notes && { diagnosticReport: { ...applicant.diagnosticReport as object, adminNotes: notes } }),
+                diagnosticReport: diagnosticUpdate,
             },
         });
 
@@ -586,6 +629,60 @@ export class AdminService {
             decision,
             status: updated.status,
             message: `Applicant has been ${decision.toLowerCase()}`,
+        };
+    }
+
+    /**
+     * Bulk admission decision for multiple applicants
+     */
+    async makeBulkDecision(
+        applicantIds: string[],
+        decision: 'ADMITTED' | 'CONDITIONAL' | 'REJECTED',
+        options?: {
+            notes?: string;
+            customMessage?: string;
+            isCapacityRejection?: boolean;
+        },
+    ) {
+        const results: Array<{ applicantId: string; success: boolean; error?: string }> = [];
+
+        // Check capacity for bulk admits
+        if (decision === 'ADMITTED') {
+            const capacity = await this.getCohortCapacity();
+            if (capacity.remaining < applicantIds.length) {
+                return {
+                    success: false,
+                    error: `Cannot admit ${applicantIds.length} applicants. Only ${capacity.remaining} spots remaining.`,
+                    capacityStatus: capacity,
+                };
+            }
+        }
+
+        // Process each applicant
+        for (const applicantId of applicantIds) {
+            try {
+                await this.makeAdmissionDecision(applicantId, decision, options);
+                results.push({ applicantId, success: true });
+            } catch (error) {
+                results.push({
+                    applicantId,
+                    success: false,
+                    error: error instanceof Error ? error.message : 'Unknown error'
+                });
+            }
+        }
+
+        const successCount = results.filter(r => r.success).length;
+        const failCount = results.filter(r => !r.success).length;
+
+        this.logger.log(`Bulk decision: ${successCount} succeeded, ${failCount} failed`);
+
+        return {
+            success: failCount === 0,
+            total: applicantIds.length,
+            successCount,
+            failCount,
+            results,
         };
     }
 }

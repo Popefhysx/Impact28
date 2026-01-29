@@ -18,6 +18,11 @@ export class AdminController {
         return this.adminService.getRecentActivity(limit || 20);
     }
 
+    @Get('cohort/capacity')
+    async getCohortCapacity(@Query('cohortId') cohortId?: string) {
+        return this.adminService.getCohortCapacity(cohortId);
+    }
+
     // ===== APPLICANTS =====
 
     @Get('applicants')
@@ -48,8 +53,29 @@ export class AdminController {
         @Param('id') id: string,
         @Body('decision') decision: 'ADMITTED' | 'CONDITIONAL' | 'REJECTED',
         @Body('notes') notes?: string,
+        @Body('customMessage') customMessage?: string,
+        @Body('isCapacityRejection') isCapacityRejection?: boolean,
     ) {
-        return this.adminService.makeAdmissionDecision(id, decision, notes);
+        return this.adminService.makeAdmissionDecision(id, decision, {
+            notes,
+            customMessage,
+            isCapacityRejection,
+        });
+    }
+
+    @Post('applicants/bulk-decision')
+    async makeBulkDecision(
+        @Body('applicantIds') applicantIds: string[],
+        @Body('decision') decision: 'ADMITTED' | 'CONDITIONAL' | 'REJECTED',
+        @Body('notes') notes?: string,
+        @Body('customMessage') customMessage?: string,
+        @Body('isCapacityRejection') isCapacityRejection?: boolean,
+    ) {
+        return this.adminService.makeBulkDecision(applicantIds, decision, {
+            notes,
+            customMessage,
+            isCapacityRejection,
+        });
     }
 
     // ===== USERS =====
