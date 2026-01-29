@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma';
 import { AdmissionService } from '../admission';
+import { AssessmentService } from '../assessment';
 import { ApplicantStatus, IdentityLevel, VerificationStatus, MissionStatus } from '@prisma/client';
 
 /**
@@ -51,6 +52,7 @@ export class AdminService {
     constructor(
         private prisma: PrismaService,
         private admissionService: AdmissionService,
+        private assessmentService: AssessmentService,
     ) { }
 
     /**
@@ -526,6 +528,9 @@ export class AdminService {
 
             // Conditional Tasks
             conditionalTasks: applicant.conditionalTasks,
+
+            // Cross-validation Warnings (calculated from income/status inconsistencies)
+            warnings: this.assessmentService.generateWarnings(applicant as any),
         };
     }
 

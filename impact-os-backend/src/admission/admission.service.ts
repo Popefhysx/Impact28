@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma';
-import { EmailService } from '../email';
+import { EmailService, OfferEmailData } from '../email';
 import { ApplicantStatus, ConditionalTaskType, RejectionReason } from '@prisma/client';
+import { randomBytes } from 'crypto';
 
 /**
  * Admission Service
@@ -71,6 +72,14 @@ export class AdmissionService {
                 skillTrack: true,
                 riskFlags: true,
                 rejectionReason: true,
+                // Assessment data for offer email
+                offerType: true,
+                triadTechnical: true,
+                triadSoft: true,
+                triadCommercial: true,
+                primaryFocus: true,
+                receivesStipend: true,
+                kpiTargets: true,
             },
         });
 
@@ -103,24 +112,55 @@ export class AdmissionService {
     }
 
     /**
-     * Handle full admission
+     * Handle full admission - send personalized offer email
      */
     private async handleAdmission(applicant: {
         id: string;
         email: string;
         firstName: string;
         skillTrack: string | null;
+        offerType: string | null;
+        triadTechnical: number | null;
+        triadSoft: number | null;
+        triadCommercial: number | null;
+        primaryFocus: string | null;
+        receivesStipend: boolean | null;
+        kpiTargets: any;
     }): Promise<void> {
-        const dashboardLink = `${this.baseUrl}/dashboard`;
+        // Generate secure offer token
+        const offerToken = randomBytes(32).toString('hex');
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7); // 7 days to accept
 
-        await this.emailService.sendAdmissionEmail(
-            applicant.email,
-            applicant.firstName,
-            dashboardLink,
-            applicant.skillTrack ?? undefined,
-        );
+        // Store token
+        await this.prisma.applicant.update({
+            where: { id: applicant.id },
+            data: {
+                offerToken,
+                offerTokenExpiresAt: expiresAt,
+            },
+        });
 
-        this.logger.log(`Sent admission email to ${applicant.email}`);
+        const acceptLink = `${this.baseUrl}/apply/accept/${offerToken}`;
+        const declineLink = `${this.baseUrl}/apply/decline/${offerToken}`;
+
+        // Send personalized offer email with Skill Triad
+        const offerData: OfferEmailData = {
+            firstName: applicant.firstName,
+            offerType: applicant.offerType || 'FULL_SUPPORT',
+            triadTechnical: applicant.triadTechnical || 50,
+            triadSoft: applicant.triadSoft || 50,
+            triadCommercial: applicant.triadCommercial || 50,
+            primaryFocus: applicant.primaryFocus || 'COMMERCIAL',
+            receivesStipend: applicant.receivesStipend || false,
+            kpiTargets: applicant.kpiTargets,
+            acceptLink,
+            declineLink,
+        };
+
+        await this.emailService.sendOfferEmail(applicant.email, offerData);
+
+        this.logger.log(`Sent personalized offer email to ${applicant.email} (token: ${offerToken.substring(0, 8)}...)`);
     }
 
     /**

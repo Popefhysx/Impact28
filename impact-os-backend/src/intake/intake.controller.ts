@@ -59,4 +59,16 @@ export class IntakeController {
     findByEmail(@Query('email') email: string) {
         return this.intakeService.findByEmail(email);
     }
+
+    // POST /intake/accept/:token - Accept offer and create User
+    @Post('accept/:token')
+    acceptOffer(@Param('token') token: string) {
+        return this.intakeService.acceptOffer(token);
+    }
+
+    // POST /intake/decline/:token - Decline offer
+    @Post('decline/:token')
+    declineOffer(@Param('token') token: string) {
+        return this.intakeService.declineOffer(token);
+    }
 }

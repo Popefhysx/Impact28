@@ -83,6 +83,9 @@ model Applicant {
   resumeTokenExpiresAt DateTime?
   resumeEmailSent      Boolean         @default(false)
   
+  // === OFFER TOKEN ===
+  offerToken           String?         @unique  // For accept/decline links
+  offerTokenExpiresAt  DateTime?
   // === ATTRIBUTION ===
   deviceDetected       String?
   utmSource            String?

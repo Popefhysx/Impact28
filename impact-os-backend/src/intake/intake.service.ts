@@ -272,6 +272,91 @@ export class IntakeService {
         }
     }
 
+    /**
+     * Accept offer - validate token and convert Applicant to User
+     */
+    async acceptOffer(token: string) {
+        const applicant = await this.prisma.applicant.findUnique({
+            where: { offerToken: token },
+        });
+
+        if (!applicant) {
+            throw new NotFoundException('Invalid or expired offer token');
+        }
+
+        // Check token expiration
+        if (applicant.offerTokenExpiresAt && new Date() > applicant.offerTokenExpiresAt) {
+            throw new BadRequestException('Offer has expired. Please contact support.');
+        }
+
+        // Check status - must be ADMITTED
+        if (applicant.status !== ApplicantStatus.ADMITTED) {
+            throw new BadRequestException('This application is not in ADMITTED status');
+        }
+
+        // Create User from Applicant (convert) - link via relation
+        const user = await this.prisma.user.create({
+            data: {
+                email: applicant.email,
+                firstName: applicant.firstName,
+                lastName: applicant.lastName || '',
+                whatsapp: applicant.whatsapp || undefined,
+                skillTrack: applicant.skillTrack,
+                // Link to original applicant record (assessment data lives there)
+                applicantId: applicant.id,
+            },
+        });
+
+        // Update applicant record to mark as converted
+        await this.prisma.applicant.update({
+            where: { id: applicant.id },
+            data: {
+                status: ApplicantStatus.CONVERTED,
+                convertedAt: new Date(),
+                offerToken: null, // Clear the token
+            },
+        });
+
+        this.logger.log(`Applicant ${applicant.id} accepted offer and converted to user ${user.id}`);
+
+        return {
+            success: true,
+            message: 'Welcome to Project 3:10! Your journey begins now.',
+            userId: user.id,
+            dashboardUrl: `${process.env.FRONTEND_URL}/dashboard`,
+        };
+    }
+
+    /**
+     * Decline offer - archive the applicant
+     */
+    async declineOffer(token: string) {
+        const applicant = await this.prisma.applicant.findUnique({
+            where: { offerToken: token },
+        });
+
+        if (!applicant) {
+            throw new NotFoundException('Invalid or expired offer token');
+        }
+
+        // Update status to DECLINED (we may need to add this status)
+        await this.prisma.applicant.update({
+            where: { id: applicant.id },
+            data: {
+                status: ApplicantStatus.REJECTED, // Archive as rejected
+                rejectionReason: 'STAFF_DECISION', // Reusing existing reason
+                offerToken: null, // Clear the token
+            },
+        });
+
+        this.logger.log(`Applicant ${applicant.id} declined offer`);
+
+        return {
+            success: true,
+            message: 'We understand. We hope to see you in a future cohort.',
+        };
+    }
+
     private defaultSelect = {
         id: true,
         status: true,

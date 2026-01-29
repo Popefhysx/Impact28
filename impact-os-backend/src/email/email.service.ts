@@ -26,6 +26,21 @@ interface TemplateData {
   cohortName?: string;
 }
 
+// Offer email specific data
+export interface OfferEmailData {
+  firstName: string;
+  offerType: string; // FULL_SUPPORT, SKILLS_ONLY, ACCELERATOR, CATALYST_TRACK
+  triadTechnical: number;
+  triadSoft: number;
+  triadCommercial: number;
+  primaryFocus: string;
+  receivesStipend: boolean;
+  weeklyHours?: string;
+  kpiTargets?: Record<string, number>;
+  acceptLink: string;
+  declineLink: string;
+}
+
 @Injectable()
 export class EmailService {
   private resendApiKey: string;
@@ -268,5 +283,154 @@ export class EmailService {
 
   async sendResumeLink(email: string, firstName: string, resumeLink: string) {
     return this.sendEmail(email, 'resume_link', { firstName, resumeLink });
+  }
+
+  /**
+   * Send personalized offer email with Skill Triad visualization
+   */
+  async sendOfferEmail(email: string, data: OfferEmailData): Promise<boolean> {
+    const offerLabels: Record<string, string> = {
+      'FULL_SUPPORT': 'Full Support Track',
+      'SKILLS_ONLY': 'Skills Development Track',
+      'ACCELERATOR': 'Accelerator Track',
+      'CATALYST_TRACK': 'Catalyst Track',
+    };
+
+    const offerDescriptions: Record<string, string> = {
+      'FULL_SUPPORT': 'You qualify for our full support program with weekly stipend and intensive training.',
+      'SKILLS_ONLY': 'Focus on skill development with our comprehensive training program.',
+      'ACCELERATOR': 'Fast-track your journey with market-focused missions and client work.',
+      'CATALYST_TRACK': 'Lead the way — build your income and mentor others.',
+    };
+
+    const focusLabels: Record<string, string> = {
+      'TECHNICAL': 'Technical Skills',
+      'SOFT': 'Soft Skills',
+      'COMMERCIAL': 'Commercial Awareness',
+    };
+
+    const offerLabel = offerLabels[data.offerType] || data.offerType;
+    const offerDescription = offerDescriptions[data.offerType] || '';
+    const focusLabel = focusLabels[data.primaryFocus] || data.primaryFocus;
+
+    const html = `
+      <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #fafafa;">
+        <div style="background: #02213D; color: white; padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+          <h1 style="margin: 0; font-size: 24px;">🎯 Your Project 3:10 Offer</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">Personalized just for you, ${data.firstName}</p>
+        </div>
+
+        <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px;">
+          <!-- Skill Triad Visualization -->
+          <h2 style="color: #02213D; margin-top: 0;">Your Starting Position</h2>
+          
+          <div style="margin: 20px 0;">
+            <div style="margin-bottom: 15px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span style="font-weight: 600;">Technical</span>
+                <span style="color: #666;">${Math.round(data.triadTechnical)}%</span>
+              </div>
+              <div style="background: #e5e5e5; border-radius: 4px; height: 12px; overflow: hidden;">
+                <div style="background: #3B82F6; height: 100%; width: ${data.triadTechnical}%; border-radius: 4px;"></div>
+              </div>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span style="font-weight: 600;">Soft Skills</span>
+                <span style="color: #666;">${Math.round(data.triadSoft)}%</span>
+              </div>
+              <div style="background: #e5e5e5; border-radius: 4px; height: 12px; overflow: hidden;">
+                <div style="background: #10B981; height: 100%; width: ${data.triadSoft}%; border-radius: 4px;"></div>
+              </div>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span style="font-weight: 600;">Commercial</span>
+                <span style="color: #666;">${Math.round(data.triadCommercial)}%</span>
+              </div>
+              <div style="background: #e5e5e5; border-radius: 4px; height: 12px; overflow: hidden;">
+                <div style="background: #C4A052; height: 100%; width: ${data.triadCommercial}%; border-radius: 4px;"></div>
+              </div>
+            </div>
+          </div>
+          
+          <p style="color: #666; font-size: 14px; margin-top: 0;">
+            Your main focus area: <strong style="color: #02213D;">${focusLabel}</strong>
+          </p>
+
+          <!-- Offer Type -->
+          <div style="background: linear-gradient(135deg, #02213D 0%, #1a3a5c 100%); color: white; padding: 25px; border-radius: 12px; margin: 25px 0;">
+            <h3 style="margin: 0 0 10px 0; font-size: 20px;">${offerLabel}</h3>
+            <p style="margin: 0; opacity: 0.9;">${offerDescription}</p>
+            ${data.receivesStipend ? '<p style="margin: 15px 0 0 0; font-size: 14px; background: rgba(196, 160, 82, 0.3); padding: 8px 12px; border-radius: 6px; display: inline-block;">✅ Includes weekly stipend</p>' : ''}
+          </div>
+
+          <!-- Journey Details -->
+          <h3 style="color: #02213D;">Your 90-Day Journey</h3>
+          <ul style="color: #444; line-height: 1.8;">
+            <li>Focus on <strong>${focusLabel}</strong> development</li>
+            <li>Weekly missions aligned to your growth areas</li>
+            <li>Daily momentum tracking and community support</li>
+            ${data.receivesStipend ? '<li>Weekly stipend upon meeting KPIs</li>' : ''}
+          </ul>
+
+          <!-- CTA Buttons -->
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${data.acceptLink}" style="background: #C4A052; color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-bottom: 15px;">
+              ✅ Accept My Offer
+            </a>
+            <br/>
+            <a href="${data.declineLink}" style="color: #666; font-size: 14px; text-decoration: underline;">
+              I need to decline at this time
+            </a>
+          </div>
+
+          <p style="color: #999; font-size: 12px; text-align: center; margin-top: 30px;">
+            This offer expires in 7 days. Questions? Reply to this email.
+          </p>
+        </div>
+        
+        <p style="color: #666; text-align: center; margin-top: 20px; font-size: 14px;">
+          — The Project 3:10 Team
+        </p>
+      </div>
+    `;
+
+    // If no API key, log to console (dev mode)
+    if (!this.resendApiKey) {
+      console.log('📧 [DEV] Offer Email would be sent:');
+      console.log(`To: ${email}`);
+      console.log(`Subject: Your Project 3:10 Offer — ${offerLabel}`);
+      console.log('Data:', data);
+      return true;
+    }
+
+    // Send via Resend API
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: this.fromEmail,
+          to: email,
+          subject: `Your Project 3:10 Offer — ${offerLabel}`,
+          html,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Resend API error: ${response.statusText}`);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to send offer email:', error);
+      return false;
+    }
   }
 }
