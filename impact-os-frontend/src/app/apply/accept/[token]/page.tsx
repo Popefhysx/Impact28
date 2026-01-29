@@ -22,7 +22,7 @@ export default function AcceptOfferPage() {
 
         const acceptOffer = async () => {
             try {
-                const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+                const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
                 const response = await fetch(`${API_BASE}/intake/accept/${token}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

@@ -1,5 +1,5 @@
 // API configuration
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
 // Generic fetch wrapper with error handling
 async function apiFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {

@@ -38,7 +38,7 @@ export default function ConditionalTaskPage() {
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
 
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
     useEffect(() => {
         const fetchTask = async () => {

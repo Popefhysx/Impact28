@@ -79,14 +79,21 @@
     padding: var(--space-lg);
     border: 2px solid var(--border-subtle);
     border-radius: var(--radius-md);
-    font-size: 32px;
+    font-size: 28px;
     font-family: var(--font-sans);
     font-weight: 600;
-    letter-spacing: 12px;
+    letter-spacing: 8px;
     text-align: center;
     background: var(--bg-card);
     color: var(--navy-deep);
     transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.otpInput::placeholder {
+    font-size: 14px;
+    letter-spacing: normal;
+    font-weight: 400;
+    color: var(--text-muted);
 }
 
 .otpInput:focus {

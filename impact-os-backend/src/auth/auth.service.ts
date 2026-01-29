@@ -44,8 +44,9 @@ export class AuthService {
     /**
      * Generate and send OTP code
      */
-    async requestOtp(email: string): Promise<{ success: boolean; message: string }> {
+    async requestOtp(email: string): Promise<{ success: boolean; message: string; devOtp?: string }> {
         const normalizedEmail = email.toLowerCase();
+        const isDev = process.env.NODE_ENV !== 'production';
 
         // Check if user exists
         const user = await this.prisma.user.findUnique({
@@ -72,7 +73,18 @@ export class AuthService {
             data: { otpCode, otpExpiresAt },
         });
 
-        // Send OTP via email
+        // In dev mode, skip email and log OTP to console
+        if (isDev) {
+            this.logger.log(`[DEV MODE] OTP for ${normalizedEmail}: ${otpCode}`);
+            this.logger.log(`[DEV MODE] Use code "000000" to bypass OTP verification`);
+            return {
+                success: true,
+                message: '[DEV] Code sent. Check console or use "000000" to bypass.',
+                devOtp: otpCode, // Return OTP in dev mode for testing
+            };
+        }
+
+        // Send OTP via email (production only)
         await this.emailService.sendOtpEmail(normalizedEmail, {
             firstName: user.firstName,
             otpCode,
@@ -106,14 +118,19 @@ export class AuthService {
             throw new UnauthorizedException('Invalid email or code');
         }
 
-        // Check OTP
-        if (!user.otpCode || user.otpCode !== code) {
+        // Check OTP - In dev mode, accept "000000" as bypass code
+        const isDev = process.env.NODE_ENV !== 'production';
+        const isValidOtp = (isDev && code === '000000') || (user.otpCode && user.otpCode === code);
+
+        if (!isValidOtp) {
             throw new UnauthorizedException('Invalid code');
         }
 
-        // Check expiry
-        if (!user.otpExpiresAt || new Date() > user.otpExpiresAt) {
-            throw new UnauthorizedException('Code has expired. Please request a new one.');
+        // Check expiry (skip in dev mode with bypass code)
+        if (!(isDev && code === '000000')) {
+            if (!user.otpExpiresAt || new Date() > user.otpExpiresAt) {
+                throw new UnauthorizedException('Code has expired. Please request a new one.');
+            }
         }
 
         // Clear OTP and update login time

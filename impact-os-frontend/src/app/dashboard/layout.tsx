@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Target, Gem, Wallet, CreditCard, User, Zap, Star, PanelLeftClose, PanelLeft, LogOut, Menu, X } from 'lucide-react';
+import { Home, Target, Gem, Wallet, CreditCard, User, Star, PanelLeftClose, LogOut, Menu, X, Settings, ChevronUp } from 'lucide-react';
 import { UserProvider } from '../context/UserContext';
 import styles from './layout.module.css';
 
@@ -25,8 +26,21 @@ export default function DashboardLayout({
     const router = useRouter();
     const [collapsed, setCollapsed] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [userName, setUserName] = useState('User');
     const [userEmail, setUserEmail] = useState('');
+    const userMenuRef = useRef<HTMLDivElement>(null);
+
+    // Close user menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+                setUserMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     useEffect(() => {
         // Get user info from localStorage
@@ -55,6 +69,10 @@ export default function DashboardLayout({
             <div className={styles.container}>
                 {/* Mobile header */}
                 <div className={styles.mobileHeader}>
+                    <Link href="/" className={styles.mobileLogo}>
+                        <Image src="/triad.webp" alt="Impact OS" width={32} height={32} />
+                        <span className={styles.mobileTitle}>Impact OS</span>
+                    </Link>
                     <button
                         className={styles.mobileMenuBtn}
                         onClick={() => setMobileOpen(!mobileOpen)}
@@ -62,7 +80,6 @@ export default function DashboardLayout({
                     >
                         {mobileOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>
-                    <span className={styles.mobileTitle}>Impact OS</span>
                 </div>
 
                 {/* Sidebar overlay for mobile */}
@@ -75,30 +92,25 @@ export default function DashboardLayout({
 
                 <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''} ${mobileOpen ? styles.mobileOpen : ''}`}>
                     <div className={styles.sidebarHeader}>
-                        <Link href="/" className={styles.logo}>
-                            <Zap size={20} />
+                        <div
+                            className={styles.logo}
+                            onClick={() => collapsed && setCollapsed(false)}
+                            role={collapsed ? 'button' : undefined}
+                            tabIndex={collapsed ? 0 : undefined}
+                        >
+                            <Image src="/triad.webp" alt="Impact OS" width={40} height={40} />
                             {!collapsed && <span>Impact OS</span>}
-                        </Link>
+                        </div>
                         {!collapsed && (
                             <button
                                 className={styles.collapseBtn}
                                 onClick={() => setCollapsed(true)}
                                 aria-label="Collapse sidebar"
                             >
-                                <PanelLeftClose size={18} />
+                                <PanelLeftClose size={16} />
                             </button>
                         )}
                     </div>
-
-                    {collapsed && (
-                        <button
-                            className={styles.expandBtn}
-                            onClick={() => setCollapsed(false)}
-                            aria-label="Expand sidebar"
-                        >
-                            <PanelLeft size={18} />
-                        </button>
-                    )}
 
                     <div className={styles.levelBadge}>
                         <Star size={20} className={styles.levelIcon} />
@@ -121,24 +133,36 @@ export default function DashboardLayout({
                         ))}
                     </nav>
 
-                    <div className={styles.sidebarFooter}>
-                        <div className={styles.userInfo}>
+                    <div className={styles.sidebarFooter} ref={userMenuRef}>
+                        <div
+                            className={styles.userInfo}
+                            onClick={() => setUserMenuOpen(!userMenuOpen)}
+                            role="button"
+                            tabIndex={0}
+                        >
                             <div className={styles.avatar}>{userName.charAt(0)}</div>
                             {!collapsed && (
-                                <div className={styles.userDetails}>
-                                    <div className={styles.userName}>{userName}</div>
-                                    <div className={styles.userEmail}>{userEmail}</div>
-                                </div>
+                                <>
+                                    <div className={styles.userDetails}>
+                                        <div className={styles.userName}>{userName}</div>
+                                        <div className={styles.userEmail}>{userEmail}</div>
+                                    </div>
+                                    <ChevronUp size={16} className={`${styles.chevron} ${userMenuOpen ? styles.chevronOpen : ''}`} />
+                                </>
                             )}
                         </div>
-                        <button
-                            className={styles.logoutBtn}
-                            onClick={handleLogout}
-                            title="Log out"
-                        >
-                            <LogOut size={18} />
-                            {!collapsed && <span>Log out</span>}
-                        </button>
+                        {userMenuOpen && (
+                            <div className={styles.userMenu}>
+                                <Link href="/dashboard/profile" className={styles.userMenuItem} onClick={() => setUserMenuOpen(false)}>
+                                    <Settings size={16} />
+                                    <span>Settings</span>
+                                </Link>
+                                <button className={styles.userMenuItem} onClick={handleLogout}>
+                                    <LogOut size={16} />
+                                    <span>Log out</span>
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </aside>
 

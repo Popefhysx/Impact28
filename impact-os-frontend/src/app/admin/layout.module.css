@@ -14,7 +14,7 @@
     height: 100vh;
     left: 0;
     top: 0;
-    transition: width 0.2s ease;
+    transition: width 0.2s ease, transform 0.3s ease;
     z-index: 100;
 }
 
@@ -23,20 +23,31 @@
 }
 
 .sidebarHeader {
+    position: relative;
     padding: var(--space-lg);
     border-bottom: 1px solid var(--border-subtle);
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
 }
 
 .logo {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: var(--space-sm);
+    gap: 4px;
     font-weight: 600;
-    font-size: 18px;
+    font-size: 14px;
     color: var(--navy-deep);
+    text-align: center;
+}
+
+.collapsed .logo {
+    cursor: pointer;
+}
+
+.collapsed .logo:hover {
+    opacity: 0.8;
 }
 
 .collapsed .logo span:last-child {
@@ -44,9 +55,12 @@
 }
 
 .collapseBtn {
+    position: absolute;
+    top: var(--space-md);
+    right: var(--space-md);
     background: none;
     border: none;
-    padding: var(--space-xs);
+    padding: 4px;
     cursor: pointer;
     color: var(--text-muted);
     border-radius: var(--radius-sm);
@@ -54,11 +68,36 @@
     align-items: center;
     justify-content: center;
     transition: all 0.15s ease;
+    opacity: 0.6;
 }
 
 .collapseBtn:hover {
+    opacity: 1;
+    color: var(--text-primary);
+}
+
+.expandBtn {
+    background: none;
+    border: none;
+    padding: var(--space-sm);
+    cursor: pointer;
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    width: 100%;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.expandBtn:hover {
     background: var(--bg-elevated);
     color: var(--text-primary);
+}
+
+.collapsed .sidebarHeader {
+    justify-content: center;
 }
 
 .roleTag {
@@ -117,27 +156,49 @@
 }
 
 .sidebarFooter {
+    position: relative;
     padding: var(--space-lg);
     border-top: 1px solid var(--border-subtle);
 }
 
 .collapsed .sidebarFooter {
     padding: var(--space-md);
+    display: flex;
+    justify-content: center;
 }
 
 .userInfo {
     display: flex;
     align-items: center;
-    gap: var(--space-md);
+    gap: var(--space-sm);
+    cursor: pointer;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    transition: background 0.15s ease;
+    outline: none;
 }
 
-.collapsed .userInfo>div:last-child {
-    display: none;
+.userInfo:hover {
+    background: var(--bg-elevated);
+}
+
+.userInfo:focus-visible {
+    box-shadow: 0 0 0 2px var(--gold-pale);
+}
+
+.collapsed .userInfo {
+    justify-content: center;
+    padding: var(--space-xs);
+}
+
+.userDetails {
+    flex: 1;
+    min-width: 0;
 }
 
 .avatar {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     background: var(--navy-deep);
     color: #ffffff;
     border-radius: var(--radius-full);
@@ -145,19 +206,82 @@
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 13px;
     flex-shrink: 0;
 }
 
 .userName {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .userRole {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.chevron {
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+    transform: rotate(180deg);
+}
+
+.chevronOpen {
+    transform: rotate(0deg);
+}
+
+/* User Menu Dropdown */
+.userMenu {
+    position: absolute;
+    bottom: 100%;
+    left: var(--space-md);
+    right: var(--space-md);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: var(--space-xs);
+    margin-bottom: var(--space-xs);
+    z-index: 200;
+}
+
+.collapsed .userMenu {
+    left: 100%;
+    bottom: 0;
+    right: auto;
+    width: 180px;
+    margin-left: var(--space-sm);
+    margin-bottom: 0;
+}
+
+.userMenuItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    border: none;
+    background: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.userMenuItem:hover {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+}
+
+.userMenuItem:last-child:hover {
+    color: var(--accent-danger);
 }
 
 /* Main Content */
@@ -172,4 +296,113 @@
 
 .mainCollapsed {
     margin-left: var(--sidebar-collapsed);
+}
+
+/* Mobile Header */
+.mobileHeader {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-subtle);
+    z-index: 101;
+    padding: 0 var(--space-md);
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mobileLogo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.mobileMenuBtn {
+    background: none;
+    border: none;
+    padding: var(--space-xs);
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+}
+
+.mobileMenuBtn:hover {
+    background: var(--bg-elevated);
+}
+
+.mobileTitle {
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--navy-deep);
+}
+
+/* Overlay for mobile */
+.overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 99;
+}
+
+/* Responsive - Mobile sidebar slides from RIGHT */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(100%);
+        width: 280px;
+        left: auto;
+        right: 0;
+    }
+
+    .sidebar.mobileOpen {
+        transform: translateX(0);
+    }
+
+    .collapsed .sidebar {
+        width: 280px;
+    }
+
+    .mobileHeader {
+        display: flex;
+    }
+
+    .overlay {
+        display: block;
+    }
+
+    .main {
+        margin-left: 0;
+        padding: var(--space-md);
+        padding-top: calc(56px + var(--space-md));
+    }
+
+    .mainCollapsed {
+        margin-left: 0;
+    }
+
+    .collapseBtn {
+        display: none;
+    }
+
+    .expandBtn {
+        display: none;
+    }
+
+    .sidebarHeader {
+        display: none;
+    }
+
+    .sidebar.mobileOpen {
+        padding-top: var(--space-lg);
+    }
+
+    .roleTag {
+        margin-top: 0;
+    }
 }

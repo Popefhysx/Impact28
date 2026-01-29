@@ -58,7 +58,7 @@ export default function ApplicantsPage() {
     const [capacity, setCapacity] = useState<CohortCapacity>({ capacity: 50, filled: 12, remaining: 38, isAtCapacity: false });
     const [bulkLoading, setBulkLoading] = useState(false);
 
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
     // Fetch applicants and capacity
     useEffect(() => {
