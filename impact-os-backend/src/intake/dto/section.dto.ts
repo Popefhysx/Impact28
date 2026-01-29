@@ -1,4 +1,4 @@
-import { IsEnum, IsString, IsOptional, MaxLength, IsBoolean } from 'class-validator';
+import { IsEnum, IsString, IsOptional, MaxLength, IsBoolean, IsInt, Min } from 'class-validator';
 import { CurrentStatus, EducationLevel, InternetAccess, WeeklyHours, DeviceType, SkillTrack } from '@prisma/client';
 
 // Section 2: Current Situation
@@ -12,6 +12,15 @@ export class Section2Dto {
     @IsString()
     @MaxLength(150)
     biggestChallenge: string;
+
+    @IsOptional()
+    @IsInt()
+    @Min(0)
+    currentMonthlyIncome?: number; // NGN, 0 = no income
+
+    @IsOptional()
+    @IsString()
+    incomeSource?: string; // "None", "Freelance", "Employment", "Business"
 }
 
 // Section 3: Resource Check
