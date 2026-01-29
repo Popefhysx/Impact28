@@ -479,8 +479,8 @@ export class AdminService {
             triedLearningSkill: applicant.triedLearningSkill,
 
             // Income Context
-            currentMonthlyIncome: applicant.currentMonthlyIncome,
-            incomeSource: applicant.incomeSource,
+            incomeRange: applicant.incomeRange,
+            intakeIncomeSource: applicant.intakeIncomeSource,
 
             // Probes (Free-form responses)
             technicalProbe: applicant.technicalProbe,

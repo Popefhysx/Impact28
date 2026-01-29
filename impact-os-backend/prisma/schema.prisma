@@ -97,8 +97,8 @@ model Applicant {
   conditionalTasks     ConditionalTask[]
   
   // === INCOME CONTEXT ===
-  currentMonthlyIncome Int?            // NGN, 0 = no income
-  incomeSource         String?         // "None", "Freelance", "Employment", "Business"
+  incomeRange          IncomeRange?         // Dropdown selection
+  intakeIncomeSource   IntakeIncomeSource?  // How they earn (intake context)
   
   // === SKILL TRIAD (computed from probes) ===
   triadTechnical       Float?          // 0-100
@@ -809,6 +809,22 @@ enum CurrentStatus {
   CAREGIVER
   BETWEEN_JOBS
   STRUGGLING_BUSINESS
+}
+
+enum IncomeRange {
+  ZERO              // ₦0 - No income at all
+  LOW               // ₦1 - ₦30,000
+  MEDIUM            // ₦30,001 - ₦100,000
+  HIGH              // ₦100,001+
+}
+
+enum IntakeIncomeSource {
+  NONE              // No income source
+  FREELANCE         // Gig work, online freelance
+  EMPLOYMENT        // Formal job
+  BUSINESS          // Own business
+  FAMILY            // Supported by family
+  OTHER             // Other sources
 }
 
 enum EducationLevel {

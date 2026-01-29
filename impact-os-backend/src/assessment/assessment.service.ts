@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Applicant, OfferType, SkillDomain } from '@prisma/client';
+import { Applicant, OfferType, SkillDomain, IncomeRange, IntakeIncomeSource, CurrentStatus } from '@prisma/client';
 
 /**
  * Assessment Service
@@ -52,6 +52,7 @@ export interface AssessmentResult {
     receivesStipend: boolean;
     primaryFocus: SkillDomain;
     kpiTargets: typeof KPI_TARGETS[keyof typeof KPI_TARGETS];
+    warnings: string[]; // Cross-validation warnings
 }
 
 @Injectable()
@@ -104,7 +105,8 @@ export class AssessmentService {
 
         this.logger.log(`Assessed applicant ${applicantId}: ${offerType}, stipend=${receivesStipend}`);
 
-        return { triad, offerType, receivesStipend, primaryFocus, kpiTargets };
+        const warnings = this.generateWarnings(applicant);
+        return { triad, offerType, receivesStipend, primaryFocus, kpiTargets, warnings };
     }
 
     /**
@@ -139,8 +141,14 @@ export class AssessmentService {
         }
 
         // Income indicates commercial experience
-        if (applicant.currentMonthlyIncome && applicant.currentMonthlyIncome > 0) {
-            commercial += 25;
+        if (applicant.incomeRange && applicant.incomeRange !== IncomeRange.ZERO) {
+            if (applicant.incomeRange === IncomeRange.HIGH) {
+                commercial += 30;
+            } else if (applicant.incomeRange === IncomeRange.MEDIUM) {
+                commercial += 25;
+            } else {
+                commercial += 15;
+            }
         }
 
         // Probe quality scoring (simplified - could be AI-powered)
@@ -170,7 +178,7 @@ export class AssessmentService {
      * Determine offer type based on income and skill level
      */
     determineOfferType(applicant: Applicant, triad: SkillTriad): OfferType {
-        const hasIncome = (applicant.currentMonthlyIncome ?? 0) > 0;
+        const hasIncome = applicant.incomeRange && applicant.incomeRange !== IncomeRange.ZERO;
         const technical = triad.technical;
 
         if (!hasIncome) {
@@ -200,7 +208,7 @@ export class AssessmentService {
         }
 
         // Must have no income
-        if ((applicant.currentMonthlyIncome ?? 0) > 0) {
+        if (applicant.incomeRange && applicant.incomeRange !== IncomeRange.ZERO) {
             return false;
         }
 
@@ -211,6 +219,42 @@ export class AssessmentService {
         }
 
         return true;
+    }
+
+    /**
+     * Generate cross-validation warnings to help admin detect inconsistencies
+     */
+    generateWarnings(applicant: Applicant): string[] {
+        const warnings: string[] = [];
+
+        // Tried online earning but claims zero income
+        if (applicant.triedOnlineEarning &&
+            (!applicant.incomeRange || applicant.incomeRange === IncomeRange.ZERO)) {
+            warnings.push('Claims zero income but has tried online earning');
+        }
+
+        // Employment status but zero income
+        if (applicant.currentStatus === CurrentStatus.UNDEREMPLOYED &&
+            (!applicant.incomeRange || applicant.incomeRange === IncomeRange.ZERO)) {
+            warnings.push('Status is underemployed but claims zero income');
+        }
+
+        // Has income source but zero income
+        if (applicant.intakeIncomeSource &&
+            applicant.intakeIncomeSource !== IntakeIncomeSource.NONE &&
+            applicant.intakeIncomeSource !== IntakeIncomeSource.FAMILY &&
+            (!applicant.incomeRange || applicant.incomeRange === IncomeRange.ZERO)) {
+            warnings.push(`Income source is ${applicant.intakeIncomeSource} but claims zero income`);
+        }
+
+        // Freelance/Business income source but no online earning attempt
+        if ((applicant.intakeIncomeSource === IntakeIncomeSource.FREELANCE ||
+            applicant.intakeIncomeSource === IntakeIncomeSource.BUSINESS) &&
+            !applicant.triedOnlineEarning) {
+            warnings.push(`Income source is ${applicant.intakeIncomeSource} but claims never tried online earning`);
+        }
+
+        return warnings;
     }
 
     /**

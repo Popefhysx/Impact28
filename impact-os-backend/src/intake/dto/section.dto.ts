@@ -1,5 +1,5 @@
-import { IsEnum, IsString, IsOptional, MaxLength, IsBoolean, IsInt, Min } from 'class-validator';
-import { CurrentStatus, EducationLevel, InternetAccess, WeeklyHours, DeviceType, SkillTrack } from '@prisma/client';
+import { IsEnum, IsString, IsOptional, MaxLength, IsBoolean } from 'class-validator';
+import { CurrentStatus, EducationLevel, InternetAccess, WeeklyHours, DeviceType, SkillTrack, IncomeRange, IntakeIncomeSource } from '@prisma/client';
 
 // Section 2: Current Situation
 export class Section2Dto {
@@ -14,13 +14,12 @@ export class Section2Dto {
     biggestChallenge: string;
 
     @IsOptional()
-    @IsInt()
-    @Min(0)
-    currentMonthlyIncome?: number; // NGN, 0 = no income
+    @IsEnum(IncomeRange)
+    incomeRange?: IncomeRange; // Dropdown: ZERO / LOW / MEDIUM / HIGH
 
     @IsOptional()
-    @IsString()
-    incomeSource?: string; // "None", "Freelance", "Employment", "Business"
+    @IsEnum(IntakeIncomeSource)
+    intakeIncomeSource?: IntakeIncomeSource; // Dropdown: NONE / FREELANCE / EMPLOYMENT / etc.
 }
 
 // Section 3: Resource Check
