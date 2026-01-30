@@ -15,6 +15,11 @@ import { MissionModule } from './mission';
 import { AdminModule } from './admin';
 import { AssessmentModule } from './assessment';
 import { AuthModule } from './auth';
+import { StaffModule } from './staff';
+import { ProgressModule } from './progress';
+import { PsnModule } from './psn';
+import { SupportRequestModule } from './support-request';
+import { ResourceModule } from './resource/resource.module';
 
 @Module({
   imports: [
@@ -36,7 +41,11 @@ import { AuthModule } from './auth';
     MissionModule,
     AdminModule,
     AssessmentModule,
+    StaffModule,
+    ProgressModule,
+    PsnModule,
+    SupportRequestModule,
+    ResourceModule,
   ],
 })
 export class AppModule { }
-

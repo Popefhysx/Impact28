@@ -34,7 +34,6 @@ export interface OfferEmailData {
   triadSoft: number;
   triadCommercial: number;
   primaryFocus: string;
-  receivesStipend: boolean;
   weeklyHours?: string;
   kpiTargets?: Record<string, number>;
   acceptLink: string;
@@ -418,7 +417,7 @@ export class EmailService {
     };
 
     const offerDescriptions: Record<string, string> = {
-      'FULL_SUPPORT': 'You qualify for our full support program with weekly stipend and intensive training.',
+      'FULL_SUPPORT': 'Our comprehensive program with intensive training and dedicated support to help you succeed.',
       'SKILLS_ONLY': 'Focus on skill development with our comprehensive training program.',
       'ACCELERATOR': 'Fast-track your journey with market-focused missions and client work.',
       'CATALYST_TRACK': 'Lead the way — build your income and mentor others.',
@@ -485,7 +484,6 @@ export class EmailService {
           <div style="background: linear-gradient(135deg, #02213D 0%, #1a3a5c 100%); color: white; padding: 25px; border-radius: 12px; margin: 25px 0;">
             <h3 style="margin: 0 0 10px 0; font-size: 20px;">${offerLabel}</h3>
             <p style="margin: 0; opacity: 0.9;">${offerDescription}</p>
-            ${data.receivesStipend ? '<p style="margin: 15px 0 0 0; font-size: 14px; background: rgba(196, 160, 82, 0.3); padding: 8px 12px; border-radius: 6px; display: inline-block;">✅ Includes weekly stipend</p>' : ''}
           </div>
 
           <!-- Journey Details -->
@@ -494,7 +492,7 @@ export class EmailService {
             <li>Focus on <strong>${focusLabel}</strong> development</li>
             <li>Weekly missions aligned to your growth areas</li>
             <li>Daily momentum tracking and community support</li>
-            ${data.receivesStipend ? '<li>Weekly stipend upon meeting KPIs</li>' : ''}
+            <li>Access to support resources when you need them</li>
           </ul>
 
           <!-- CTA Buttons -->
@@ -624,6 +622,114 @@ export class EmailService {
       return true;
     } catch (error) {
       console.error('Failed to send OTP email:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Send staff invite email with setup link
+   */
+  async sendStaffInvite(
+    email: string,
+    data: {
+      category: 'ADMIN' | 'STAFF' | 'OBSERVER';
+      inviterName?: string;
+      setupLink: string;
+    }
+  ): Promise<boolean> {
+    const categoryLabels: Record<string, { label: string; description: string }> = {
+      ADMIN: {
+        label: 'Administrator',
+        description: 'Full access to manage the platform, staff, and system settings.',
+      },
+      STAFF: {
+        label: 'Staff Member',
+        description: 'Execute assigned work including mentoring, reviewing, and managing participants.',
+      },
+      OBSERVER: {
+        label: 'Observer',
+        description: 'Read-only access to view reports and monitor progress.',
+      },
+    };
+
+    const catInfo = categoryLabels[data.category] || { label: data.category, description: '' };
+
+    const html = `
+      <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: #02213D; color: white; padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+          <h1 style="margin: 0; font-size: 24px;">You're Invited to Project 3:10</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">Staff Portal Access</p>
+        </div>
+
+        <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px; border: 1px solid #e5e5e5; border-top: none;">
+          <p style="color: #333; font-size: 16px; line-height: 1.6;">
+            ${data.inviterName ? `<strong>${data.inviterName}</strong> has invited you` : 'You have been invited'} 
+            to join the Project 3:10 staff team.
+          </p>
+          
+          <div style="background: linear-gradient(135deg, #02213D 0%, #1a3a5c 100%); color: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin: 0 0 8px 0; font-size: 18px;">${catInfo.label}</h3>
+            <p style="margin: 0; opacity: 0.9; font-size: 14px;">${catInfo.description}</p>
+          </div>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${data.setupLink}" style="background: #C4A052; color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+              Complete Your Setup →
+            </a>
+          </div>
+          
+          <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-top: 20px;">
+            <p style="margin: 0; font-size: 14px; color: #666;">
+              <strong>What happens next?</strong><br/>
+              1. Click the button above to set up your account<br/>
+              2. Complete your profile<br/>
+              3. Access your staff dashboard
+            </p>
+          </div>
+          
+          <p style="color: #999; font-size: 12px; margin-top: 20px;">
+            This invitation link expires in 7 days. If you didn't expect this invitation, you can safely ignore this email.
+          </p>
+        </div>
+        
+        <p style="color: #666; text-align: center; margin-top: 20px; font-size: 14px;">
+          — The Project 3:10 Team
+        </p>
+      </div>
+    `;
+
+    // If no API key, log to console (dev mode)
+    if (!this.resendApiKey) {
+      console.log('📧 [DEV] Staff Invite Email would be sent:');
+      console.log(`To: ${email}`);
+      console.log(`Category: ${data.category}`);
+      console.log(`Setup Link: ${data.setupLink}`);
+      return true;
+    }
+
+    // Send via Resend API
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: this.fromEmail,
+          to: email,
+          subject: `You're invited to join Project 3:10 as ${catInfo.label}`,
+          html,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Resend API error: ${response.statusText}`);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to send staff invite email:', error);
       return false;
     }
   }

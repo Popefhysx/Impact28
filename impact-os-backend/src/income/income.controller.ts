@@ -1,6 +1,7 @@
 import { Controller, Post, Get, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { IncomeService } from './income.service';
 import { IncomeSource, ProofType, VerificationStatus } from '@prisma/client';
+import { CapabilityGuard, RequireCapability } from '../staff/guards';
 
 // DTOs
 class SubmitIncomeDto {
@@ -23,7 +24,7 @@ class RejectIncomeDto {
 export class IncomeController {
     constructor(private incomeService: IncomeService) { }
 
-    // User endpoints
+    // User endpoints (no capability required - user's own data)
     @Post(':userId/submit')
     async submitIncome(
         @Param('userId') userId: string,
@@ -45,13 +46,17 @@ export class IncomeController {
         return this.incomeService.getUserIncomeStats(userId);
     }
 
-    // Admin endpoints
+    // Admin endpoints - require capabilities
     @Get('admin/pending')
+    @UseGuards(CapabilityGuard)
+    @RequireCapability('income.review')
     async getPendingReviews(@Query('limit') limit?: number) {
         return this.incomeService.getPendingReviews(limit);
     }
 
     @Post('admin/:recordId/approve')
+    @UseGuards(CapabilityGuard)
+    @RequireCapability('income.approve')
     async approveIncome(
         @Param('recordId') recordId: string,
         @Body('adminId') adminId: string,
@@ -60,6 +65,8 @@ export class IncomeController {
     }
 
     @Post('admin/:recordId/reject')
+    @UseGuards(CapabilityGuard)
+    @RequireCapability('income.approve')
     async rejectIncome(
         @Param('recordId') recordId: string,
         @Body() dto: RejectIncomeDto & { adminId: string },
@@ -67,9 +74,10 @@ export class IncomeController {
         return this.incomeService.rejectIncome(recordId, dto.adminId, dto.reason);
     }
 
-    // Public leaderboard
+    // Public leaderboard (no guard)
     @Get('leaderboard')
     async getLeaderboard(@Query('limit') limit?: number) {
         return this.incomeService.getIncomeLeaderboard(limit || 10);
     }
 }
+

@@ -1,54 +1,106 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Zap, Shield, Target, Star } from 'lucide-react';
+import Image from 'next/image';
 import styles from './page.module.css';
 
-export default function HomePage() {
+export default function LoginPage() {
   const router = useRouter();
+  const [username, setUsername] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    const trimmedUsername = username.trim().toLowerCase();
+
+    // Simple username-based routing
+    if (trimmedUsername === 'admin') {
+      // Store admin session
+      localStorage.setItem('auth_token', 'admin-token');
+      localStorage.setItem('user', JSON.stringify({
+        id: 'admin-1',
+        firstName: 'Admin',
+        lastName: 'User',
+        email: 'admin@impact-os.local',
+        role: 'ADMIN'
+      }));
+      router.push('/admin');
+    } else if (trimmedUsername === 'user') {
+      // Store participant session
+      localStorage.setItem('auth_token', 'user-token');
+      localStorage.setItem('user', JSON.stringify({
+        id: 'user-1',
+        firstName: 'Demo',
+        lastName: 'Participant',
+        email: 'user@impact-os.local',
+        role: 'PARTICIPANT'
+      }));
+      router.push('/dashboard');
+    } else {
+      setError('Use "admin" for Admin Console or "user" for Participant Dashboard');
+      setLoading(false);
+      return;
+    }
+
+    setLoading(false);
+  };
 
   return (
-    <main className={styles.container}>
-      <div className={styles.hero}>
+    <div className={styles.container}>
+      <div className={styles.card}>
         <div className={styles.logo}>
-          <Zap size={40} className={styles.logoIcon} />
+          <Image
+            src="/triad.webp"
+            alt="Impact OS"
+            width={100}
+            height={100}
+            className={styles.triadImage}
+            priority
+          />
           <h1>Impact OS</h1>
         </div>
-        <p className={styles.tagline}>Behavioral Operating System for Economic Transformation</p>
+
+        <h2 className={styles.title}>Welcome</h2>
+        <p className={styles.subtitle}>
+          Enter your username to continue
+        </p>
+
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className={styles.input}
+            required
+            autoFocus
+          />
+
+          {error && <p className={styles.error}>{error}</p>}
+
+          <button
+            type="submit"
+            className={styles.button}
+            disabled={loading || !username.trim()}
+          >
+            {loading ? 'Loading...' : 'Continue'}
+          </button>
+        </form>
+
+        <div className={styles.hint}>
+          <p><strong>admin</strong> → Admin Console</p>
+          <p><strong>user</strong> → Participant Dashboard</p>
+        </div>
       </div>
 
-      <div className={styles.portals}>
-        <button
-          className={styles.portalCard}
-          onClick={() => router.push('/admin')}
-        >
-          <Shield size={32} className={styles.portalIcon} />
-          <h2>Admin Console</h2>
-          <p>Manage applicants, review income, oversee missions</p>
-        </button>
-
-        <button
-          className={styles.portalCard}
-          onClick={() => router.push('/dashboard')}
-        >
-          <Target size={32} className={styles.portalIcon} />
-          <h2>Participant Dashboard</h2>
-          <p>Missions, currency, stipend status, income tracking</p>
-        </button>
-
-        <button
-          className={styles.portalCard}
-          onClick={() => router.push('/mentor')}
-        >
-          <Star size={32} className={styles.portalIcon} />
-          <h2>Mentor Portal</h2>
-          <p>Guide participants, review progress, provide feedback</p>
-        </button>
-      </div>
-
-      <div className={styles.footer}>
-        <p>Select your portal to continue</p>
-      </div>
-    </main>
+      <p className={styles.footer}>
+        Project 3:10 × Cycle 28
+      </p>
+    </div>
   );
 }

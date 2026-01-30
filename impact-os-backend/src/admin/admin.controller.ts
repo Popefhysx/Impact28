@@ -1,24 +1,29 @@
-import { Controller, Get, Post, Param, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { ApplicantStatus, IdentityLevel } from '@prisma/client';
+import { CapabilityGuard, RequireCapability, RequireCategory } from '../staff/guards';
 
 @Controller('admin')
+@UseGuards(CapabilityGuard)
 export class AdminController {
     constructor(private adminService: AdminService) { }
 
     // ===== DASHBOARD =====
 
     @Get('dashboard')
+    @RequireCapability('reports.view', 'admissions.manage')
     async getDashboardStats() {
         return this.adminService.getDashboardStats();
     }
 
     @Get('activity')
+    @RequireCapability('audit.view')
     async getRecentActivity(@Query('limit') limit?: number) {
         return this.adminService.getRecentActivity(limit || 20);
     }
 
     @Get('cohort/capacity')
+    @RequireCapability('cohort.manage', 'reports.view')
     async getCohortCapacity(@Query('cohortId') cohortId?: string) {
         return this.adminService.getCohortCapacity(cohortId);
     }
@@ -26,6 +31,7 @@ export class AdminController {
     // ===== APPLICANTS =====
 
     @Get('applicants')
+    @RequireCapability('admissions.manage', 'participants.view')
     async getApplicants(
         @Query('status') status?: ApplicantStatus,
         @Query('search') search?: string,
@@ -36,11 +42,13 @@ export class AdminController {
     }
 
     @Get('applicants/:id')
+    @RequireCapability('admissions.manage', 'participants.view')
     async getApplicantDetail(@Param('id') id: string) {
         return this.adminService.getApplicantDetail(id);
     }
 
     @Post('applicants/:id/status')
+    @RequireCapability('admissions.manage')
     async updateApplicantStatus(
         @Param('id') id: string,
         @Body('status') status: ApplicantStatus,
@@ -49,6 +57,7 @@ export class AdminController {
     }
 
     @Post('applicants/:id/decision')
+    @RequireCapability('admissions.manage')
     async makeAdmissionDecision(
         @Param('id') id: string,
         @Body('decision') decision: 'ADMITTED' | 'CONDITIONAL' | 'REJECTED',
@@ -64,6 +73,8 @@ export class AdminController {
     }
 
     @Post('applicants/bulk-decision')
+    @RequireCapability('admissions.manage')
+    @RequireCategory('ADMIN')
     async makeBulkDecision(
         @Body('applicantIds') applicantIds: string[],
         @Body('decision') decision: 'ADMITTED' | 'CONDITIONAL' | 'REJECTED',
@@ -81,6 +92,7 @@ export class AdminController {
     // ===== USERS =====
 
     @Get('users')
+    @RequireCapability('participants.view')
     async getUsers(
         @Query('level') level?: IdentityLevel,
         @Query('active') active?: string,
@@ -93,11 +105,14 @@ export class AdminController {
     }
 
     @Get('users/:id')
+    @RequireCapability('participants.view')
     async getUserDetail(@Param('id') id: string) {
         return this.adminService.getUserDetail(id);
     }
 
     @Post('users/:id/level')
+    @RequireCapability('cohort.manage')
+    @RequireCategory('ADMIN')
     async updateUserLevel(
         @Param('id') id: string,
         @Body('level') level: IdentityLevel,
@@ -106,7 +121,10 @@ export class AdminController {
     }
 
     @Post('users/:id/reactivate')
+    @RequireCapability('cohort.manage')
+    @RequireCategory('ADMIN')
     async reactivateUser(@Param('id') id: string) {
         return this.adminService.reactivateUser(id);
     }
 }
+

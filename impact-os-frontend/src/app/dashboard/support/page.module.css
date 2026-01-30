@@ -257,15 +257,73 @@
     gap: 2px;
 }
 
-.historyAmount {
+.historyType {
     font-size: 14px;
     font-weight: 600;
     color: var(--navy-deep);
 }
 
+.historyMission {
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
 .historyDate {
     font-size: 12px;
     color: var(--text-muted);
+}
+
+.historyStatus {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.emptyHistory {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-xl);
+    color: var(--text-muted);
+}
+
+.emptyHistory svg {
+    opacity: 0.5;
+}
+
+/* Support CTA */
+.supportCta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-lg);
+}
+
+.supportCta svg {
+    color: var(--gold-warm);
+    flex-shrink: 0;
+}
+
+.supportCta p {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.ctaHint {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.supportCta button {
+    margin-left: auto;
+}
+
+.requestFormContainer {
+    margin-bottom: var(--space-lg);
 }
 
 /* Info Box */

@@ -1,92 +1,142 @@
 .container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-xl);
-  background: var(--bg-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--gold-pale) 100%);
+    padding: var(--space-lg);
 }
 
-.hero {
-  text-align: center;
-  margin-bottom: var(--space-2xl);
+.card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: var(--space-2xl);
+    width: 100%;
+    max-width: 380px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-subtle);
 }
 
 .logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-md);
-  margin-bottom: var(--space-md);
-}
-
-.logoIcon {
-  color: var(--gold-warm);
+    text-align: center;
+    margin-bottom: var(--space-xl);
 }
 
 .logo h1 {
-  font-size: 48px;
-  font-weight: 600;
-  color: var(--navy-deep);
+    color: var(--navy-deep);
+    font-size: 24px;
+    font-weight: 600;
+    margin: var(--space-md) 0 0 0;
 }
 
-.tagline {
-  color: var(--text-secondary);
-  font-size: 18px;
+.triadImage {
+    border-radius: var(--radius-md);
 }
 
-.portals {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-lg);
-  max-width: 1000px;
-  width: 100%;
+.title {
+    color: var(--navy-deep);
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 var(--space-sm) 0;
+    text-align: center;
 }
 
-@media (max-width: 900px) {
-  .portals {
-    grid-template-columns: 1fr;
-  }
+.subtitle {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin: 0 0 var(--space-xl) 0;
+    text-align: center;
+    line-height: 1.5;
 }
 
-.portalCard {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: var(--space-xl);
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: var(--font-sans);
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
 }
 
-.portalCard:hover {
-  border-color: var(--gold-warm);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+.input {
+    width: 100%;
+    padding: var(--space-md);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    font-family: var(--font-sans);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    text-align: center;
 }
 
-.portalIcon {
-  color: var(--gold-warm);
-  margin-bottom: var(--space-md);
+.input:focus {
+    outline: none;
+    border-color: var(--gold-warm);
+    box-shadow: 0 0 0 3px rgba(197, 173, 103, 0.15);
 }
 
-.portalCard h2 {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: var(--space-sm);
-  color: var(--navy-deep);
+.input::placeholder {
+    color: var(--text-muted);
 }
 
-.portalCard p {
-  font-size: 14px;
-  color: var(--text-secondary);
-  line-height: 1.5;
+.button {
+    width: 100%;
+    padding: var(--space-md);
+    background: var(--navy-deep);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    font-weight: 600;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.button:hover:not(:disabled) {
+    background: var(--navy-medium);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.error {
+    color: var(--accent-danger);
+    font-size: 13px;
+    margin: 0;
+    text-align: center;
+    background: rgba(239, 68, 68, 0.1);
+    padding: var(--space-sm);
+    border-radius: var(--radius-sm);
+}
+
+.hint {
+    margin-top: var(--space-lg);
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--border-subtle);
+    text-align: center;
+}
+
+.hint p {
+    margin: var(--space-xs) 0;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.hint strong {
+    color: var(--navy-deep);
+    font-family: monospace;
+    background: var(--bg-secondary);
+    padding: 2px 6px;
+    border-radius: 4px;
 }
 
 .footer {
-  margin-top: var(--space-2xl);
-  color: var(--text-muted);
-  font-size: 14px;
+    margin-top: var(--space-xl);
+    color: var(--text-muted);
+    font-size: 13px;
 }

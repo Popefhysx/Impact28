@@ -224,3 +224,90 @@
     font-size: 13px;
     color: var(--text-secondary);
 }
+
+/* Loading & Error States */
+.loadingState,
+.errorState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    padding: var(--space-xl);
+    color: var(--text-secondary);
+    min-height: 300px;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Not Eligible */
+.stipendBadge.notEligible {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+}
+
+/* Tier Badge */
+.stipendDetails {
+    margin-bottom: var(--space-md);
+}
+
+.tierBadge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-full);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+/* Quick Stats */
+.quickStats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-md);
+    margin-top: var(--space-xl);
+    padding: var(--space-lg);
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+}
+
+@media (max-width: 600px) {
+    .quickStats {
+        grid-template-columns: 1fr;
+    }
+}
+
+.quickStat {
+    text-align: center;
+}
+
+.quickStatValue {
+    display: block;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--navy-deep);
+}
+
+.quickStatLabel {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* Support Section */
+.supportSection {
+    margin-top: var(--space-xl);
+}

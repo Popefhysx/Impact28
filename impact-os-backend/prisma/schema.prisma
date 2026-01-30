@@ -114,6 +114,13 @@ model Applicant {
   primaryFocus         SkillDomain?
   kpiTargets           Json?           // { weeklyXp, weeklyArena, incomeTarget, graduationDay }
   
+  // === PSN FORECAST (Admin-Only) ===
+  psnLevel             PsnLevel?
+  psnScore             Float?          // 0-100 internal score
+  psnConfidence        Float?          // 0.0-1.0
+  psnPrimaryConstraint PsnConstraint?
+  psnGeneratedAt       DateTime?
+  
   @@index([status])
   @@index([email])
   @@index([source])
@@ -182,9 +189,39 @@ model User {
   failures          FailureRecord[]
   supportWallet     SupportWallet?
   supportRequests   SupportRequest[]
+  staff             Staff?
   
   @@index([email])
   @@index([identityLevel])
+}
+
+// ============================================================================
+// STAFF MANAGEMENT
+// ============================================================================
+
+model Staff {
+  id              String          @id @default(cuid())
+  userId          String          @unique
+  user            User            @relation(fields: [userId], references: [id])
+  
+  category        StaffCategory   // ADMIN, STAFF, OBSERVER
+  isSuperAdmin    Boolean         @default(false)
+  
+  capabilities    String[]        // Array of capability keys
+  
+  // Scope assignments
+  cohortIds       String[]        // Assigned cohorts
+  queueIds        String[]        // Assigned queues (support, income, mentor)
+  participantIds  String[]        // Assigned participants (for 1:1 mentors)
+  
+  // Audit
+  invitedBy       String
+  invitedAt       DateTime        @default(now())
+  isActive        Boolean         @default(true)
+  deactivatedAt   DateTime?
+  
+  @@index([category])
+  @@index([userId])
 }
 
 model Cohort {
@@ -200,6 +237,7 @@ model Cohort {
   users         User[]
   config        CohortConfig?
   commitmentAllocations CommitmentAllocation[]
+  psnForecast   CohortPsnForecast?
   
   createdAt     DateTime    @default(now())
 }
@@ -233,6 +271,54 @@ model CohortConfig {
   
   updatedAt             DateTime    @updatedAt
   updatedBy             String?     // Admin who last updated
+}
+
+// ============================================================================
+// PSN FORECASTING & DETECTION
+// ============================================================================
+
+// Cohort-level PSN forecast for operational planning
+model CohortPsnForecast {
+  id                          String    @id @default(cuid())
+  cohortId                    String    @unique
+  cohort                      Cohort    @relation(fields: [cohortId], references: [id])
+  
+  countHigh                   Int
+  countMedium                 Int
+  countLow                    Int
+  
+  predictedDemandExpected     Float
+  predictedDemandUpper        Float
+  predictedDemandLower        Float
+  
+  riskBadge                   RiskBadge
+  generatedAt                 DateTime  @default(now())
+}
+
+// Audit log for PSN calculations (immutable)
+model PsnCalculationLog {
+  id              String   @id @default(cuid())
+  applicantId     String
+  version         String   // e.g., "v1.0-deterministic"
+  inputHash       String   // Hash of inputs for reproducibility
+  output          Json     // Full PSN output
+  createdAt       DateTime @default(now())
+  
+  @@index([applicantId])
+}
+
+// Proactive blocker detection events
+model DetectionTrigger {
+  id              String    @id @default(cuid())
+  participantId   String
+  signalType      String    // e.g., "MISSION_STALL", "MOMENTUM_DROP", "LOGIN_GAP"
+  severity        DetectionSeverity
+  actionTaken     DetectionAction
+  details         Json?     // Additional context
+  resolvedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  
+  @@index([participantId, createdAt])
 }
 
 // ============================================================================
@@ -331,6 +417,7 @@ enum SupportType {
   DATA
   TRANSPORT
   TOOLS
+  COUNSELLING
   CASH
 }
 
@@ -1012,4 +1099,161 @@ enum InquiryStatus {
   CONVERTED
   DECLINED
   UNRESPONSIVE
+}
+
+enum StaffCategory {
+  ADMIN
+  STAFF
+  OBSERVER
+}
+
+// ============================================================================
+// PSN ENUMS
+// ============================================================================
+
+enum PsnLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum PsnConstraint {
+  DATA
+  TRANSPORT
+  TOOLS
+  OTHER
+}
+
+enum RiskBadge {
+  GREEN
+  AMBER
+  RED
+}
+
+enum DetectionSeverity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum DetectionAction {
+  PROMPT       // Soft message to participant
+  QUEUE        // Added to operator queue
+  ALERT        // Admin alert triggered
+}
+
+// ============================================================================
+// RESOURCE LIBRARY
+// ============================================================================
+
+model Resource {
+  id          String         @id @default(cuid())
+  title       String
+  author      String?
+  description String?        @db.Text
+  url         String         @unique
+  type        ResourceType
+  thumbnail   String?
+  skillTracks SkillTrack[]
+  tags        String[]
+  
+  status      ResourceStatus @default(PENDING)
+  
+  sourceId    String?
+  source      ResourceSource? @relation(fields: [sourceId], references: [id])
+  
+  createdBy   String?
+  createdAt   DateTime       @default(now())
+  approvedAt  DateTime?
+  approvedBy  String?
+  
+  viewCount   Int            @default(0)
+  
+  @@index([status])
+  @@index([type])
+}
+
+model ResourceSource {
+  id          String       @id @default(cuid())
+  name        String
+  type        SourceType
+  url         String       // RSS feed URL or YouTube channel ID
+  skillTrack  SkillTrack?
+  isActive    Boolean      @default(true)
+  lastFetched DateTime?
+  
+  resources   Resource[]
+  
+  createdAt   DateTime     @default(now())
+}
+
+enum ResourceType {
+  BOOK
+  ARTICLE
+  VIDEO
+  PODCAST
+  BLOG
+}
+
+enum ResourceStatus {
+  PENDING    // Awaiting admin review
+  APPROVED   // Visible to all users
+  REJECTED   // Hidden
+}
+
+enum SourceType {
+  RSS_FEED
+  YOUTUBE_CHANNEL
+}
+
+// ============================================================================
+// STAFF ESCALATION
+// ============================================================================
+
+model Escalation {
+  id            String            @id @default(cuid())
+  type          EscalationType
+  referenceId   String            // ID of supportRequest, user, etc.
+  referenceType String            // "SUPPORT_REQUEST", "PARTICIPANT", etc.
+  
+  fromStaffId   String
+  toStaffId     String
+  
+  reason        String            @db.VarChar(500)
+  priority      EscalationPriority @default(NORMAL)
+  status        EscalationStatus  @default(PENDING)
+  
+  resolution    String?           @db.VarChar(500)
+  resolvedAt    DateTime?
+  
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  
+  @@index([fromStaffId])
+  @@index([toStaffId])
+  @@index([status])
+  @@index([referenceId])
+}
+
+enum EscalationType {
+  SUPPORT_REQUEST   // Support request needs higher approval
+  PARTICIPANT_CASE  // Participant issue needs senior review
+  APPROVAL_NEEDED   // General approval request
+  DISPUTE           // Conflict or complaint
+  OTHER
+}
+
+enum EscalationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum EscalationStatus {
+  PENDING       // Awaiting review
+  ACKNOWLEDGED  // Supervisor has seen it
+  IN_PROGRESS   // Being worked on
+  RESOLVED      // Closed with resolution
+  DISMISSED     // Closed without action
 }

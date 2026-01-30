@@ -1,0 +1,138 @@
+.container {
+    position: relative;
+    width: 100%;
+}
+
+.trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: left;
+}
+
+.trigger:hover:not(.disabled) {
+    border-color: var(--border-default);
+}
+
+.trigger:focus {
+    outline: none;
+    border-color: var(--gold-warm);
+}
+
+.trigger.open {
+    border-color: var(--gold-warm);
+}
+
+.trigger.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.value {
+    color: var(--text-primary);
+}
+
+.placeholder {
+    color: var(--text-muted);
+}
+
+.chevron {
+    color: var(--text-muted);
+    transition: transform 0.15s ease;
+}
+
+.trigger.open .chevron {
+    transform: rotate(180deg);
+}
+
+/* Dropdown Panel */
+.dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    z-index: 100;
+    max-height: 240px;
+    overflow-y: auto;
+    animation: slideDown 0.15s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Option Item */
+.option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    background: transparent;
+    border: none;
+    font-size: 14px;
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.1s ease;
+}
+
+.option:hover {
+    background: var(--gold-pale);
+}
+
+.option.selected {
+    background: var(--gold-warm);
+    color: #ffffff;
+}
+
+.option.selected:hover {
+    background: var(--gold-dark);
+}
+
+.optionContent {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.optionLabel {
+    font-weight: 500;
+}
+
+.optionDescription {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.option.selected .optionDescription {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.checkIcon {
+    flex-shrink: 0;
+    color: #ffffff;
+}

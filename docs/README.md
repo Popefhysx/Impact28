@@ -10,8 +10,11 @@ This directory contains the canonical documentation for Impact OS.
 |----------|----------|---------|
 | [IMPACT_OS_GOVERNANCE.md](./IMPACT_OS_GOVERNANCE.md) | 27 | Core rules, philosophy, identity system |
 | [SUPPORT_WALLET.md](./SUPPORT_WALLET.md) | 15 | Budget, disbursement, audit |
+| [PREDICTED_SUPPORT_NEED.md](./PREDICTED_SUPPORT_NEED.md) | 17 | PSN forecasting, proactive detection, participant request UI |
 | [PARTNER_FUNDING.md](./PARTNER_FUNDING.md) | 12 | Partner management, commitments |
 | [INFRASTRUCTURE.md](./INFRASTRUCTURE.md) | 10 | Stack, deployment, operations |
+| [STAFF_MANAGEMENT.md](./STAFF_MANAGEMENT.md) | — | Staff roles, capabilities, assignments |
+| [COMMUNICATIONS_CENTER.md](./COMMUNICATIONS_CENTER.md) | — | Messaging, notifications, audit |
 
 ---
 
@@ -21,10 +24,16 @@ This directory contains the canonical documentation for Impact OS.
 IMPACT_OS_GOVERNANCE.md (Core)
         │
         ├── Section 14 ──→ SUPPORT_WALLET.md
+        │                        │
+        │                        └── PREDICTED_SUPPORT_NEED.md
+        │                             (Forecasting & Detection)
         │
         ├── Section 24 ──→ PARTNER_FUNDING.md
         │
-        └── Section 25 ──→ INFRASTRUCTURE.md
+        ├── Section 25 ──→ INFRASTRUCTURE.md
+        │
+        └── STAFF_MANAGEMENT.md
+             └── COMMUNICATIONS_CENTER.md
 ```
 
 ---

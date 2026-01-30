@@ -60,6 +60,106 @@ export default function ApplicantsPage() {
 
     const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
+    // Mock data for demonstration
+    const mockApplicants: Applicant[] = [
+        {
+            id: 'app-001',
+            email: 'oluwaseun.adebayo@email.com',
+            firstName: 'Oluwaseun',
+            lastName: 'Adebayo',
+            status: 'SCORED',
+            skillTrack: 'GRAPHIC_DESIGN',
+            readinessScore: 87,
+            aiRecommendation: 'ADMIT',
+            startedAt: '2026-01-25T09:30:00Z',
+            submittedAt: '2026-01-25T14:45:00Z',
+        },
+        {
+            id: 'app-002',
+            email: 'blessing.ojo@email.com',
+            firstName: 'Blessing',
+            lastName: 'Ojo',
+            status: 'SCORED',
+            skillTrack: 'WEB_DEVELOPMENT',
+            readinessScore: 92,
+            aiRecommendation: 'ADMIT',
+            startedAt: '2026-01-24T11:00:00Z',
+            submittedAt: '2026-01-24T16:30:00Z',
+        },
+        {
+            id: 'app-003',
+            email: 'chioma.nwosu@email.com',
+            firstName: 'Chioma',
+            lastName: 'Nwosu',
+            status: 'PENDING',
+            skillTrack: 'DIGITAL_MARKETING',
+            readinessScore: null,
+            aiRecommendation: null,
+            startedAt: '2026-01-28T08:00:00Z',
+            submittedAt: '2026-01-28T12:15:00Z',
+        },
+        {
+            id: 'app-004',
+            email: 'yusuf.ibrahim@email.com',
+            firstName: 'Yusuf',
+            lastName: 'Ibrahim',
+            status: 'SCORED',
+            skillTrack: 'VIDEO_EDITING',
+            readinessScore: 58,
+            aiRecommendation: 'CONDITIONAL',
+            startedAt: '2026-01-22T15:30:00Z',
+            submittedAt: '2026-01-23T09:00:00Z',
+        },
+        {
+            id: 'app-005',
+            email: 'funke.adesanya@email.com',
+            firstName: 'Funke',
+            lastName: 'Adesanya',
+            status: 'DRAFT',
+            skillTrack: null,
+            readinessScore: null,
+            aiRecommendation: null,
+            startedAt: '2026-01-29T10:00:00Z',
+            submittedAt: null,
+        },
+        {
+            id: 'app-006',
+            email: 'godwin.obi@email.com',
+            firstName: 'Godwin',
+            lastName: 'Obi',
+            status: 'ADMITTED',
+            skillTrack: 'VIRTUAL_ASSISTANT',
+            readinessScore: 81,
+            aiRecommendation: 'ADMIT',
+            startedAt: '2026-01-18T14:00:00Z',
+            submittedAt: '2026-01-18T18:30:00Z',
+        },
+        {
+            id: 'app-007',
+            email: 'kemi.bello@email.com',
+            firstName: 'Kemi',
+            lastName: 'Bello',
+            status: 'REJECTED',
+            skillTrack: 'DATA_ENTRY',
+            readinessScore: 32,
+            aiRecommendation: 'REJECT',
+            startedAt: '2026-01-15T09:00:00Z',
+            submittedAt: '2026-01-15T13:45:00Z',
+        },
+        {
+            id: 'app-008',
+            email: 'tunde.akande@email.com',
+            firstName: 'Tunde',
+            lastName: 'Akande',
+            status: 'CONDITIONAL',
+            skillTrack: 'GRAPHIC_DESIGN',
+            readinessScore: 65,
+            aiRecommendation: 'CONDITIONAL',
+            startedAt: '2026-01-20T11:30:00Z',
+            submittedAt: '2026-01-20T17:00:00Z',
+        },
+    ];
+
     // Fetch applicants and capacity
     useEffect(() => {
         const fetchData = async () => {
@@ -71,7 +171,9 @@ export default function ApplicantsPage() {
 
                 if (applicantsRes.ok) {
                     const data = await applicantsRes.json();
-                    setApplicants(data);
+                    setApplicants(data?.length > 0 ? data : mockApplicants);
+                } else {
+                    setApplicants(mockApplicants);
                 }
 
                 if (capacityRes.ok) {
@@ -80,6 +182,7 @@ export default function ApplicantsPage() {
                 }
             } catch (error) {
                 console.error('Failed to fetch data:', error);
+                setApplicants(mockApplicants);
             } finally {
                 setLoading(false);
             }

@@ -99,13 +99,42 @@
     display: grid;
     grid-template-columns: 1fr 400px;
     gap: var(--space-lg);
+    align-items: start;
+    /* Needed for sticky to work */
 }
 
-.detailsColumn,
+.detailsColumn {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
 .scoresColumn {
     display: flex;
     flex-direction: column;
     gap: var(--space-lg);
+    position: sticky;
+    top: var(--space-lg);
+    max-height: calc(100vh - var(--space-lg) * 2);
+    overflow-y: auto;
+}
+
+/* Hide scrollbar on scores column but keep scroll */
+.scoresColumn::-webkit-scrollbar {
+    width: 4px;
+}
+
+.scoresColumn::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scoresColumn::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 2px;
+}
+
+.scoresColumn::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
 }
 
 /* Sections */
@@ -423,6 +452,198 @@
 
 .rejectButton:hover:not(:disabled) {
     background: #b91c1c;
+}
+
+/* PSN Section */
+.psnCard {
+    background: var(--bg-elevated);
+    padding: var(--space-md);
+    border-radius: var(--radius-sm);
+}
+
+.psnHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-md);
+}
+
+.psnBadge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.psnHIGH {
+    background: rgba(220, 38, 38, 0.15);
+    color: #dc2626;
+    border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+.psnMEDIUM {
+    background: rgba(202, 138, 4, 0.15);
+    color: #ca8a04;
+    border: 1px solid rgba(202, 138, 4, 0.3);
+}
+
+.psnLOW {
+    background: rgba(22, 163, 74, 0.15);
+    color: #16a34a;
+    border: 1px solid rgba(22, 163, 74, 0.3);
+}
+
+.psnConfidence {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.psnConstraint {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+    background: var(--bg-primary);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--space-md);
+}
+
+.constraintLabel {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.constraintValue {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.psnScore {
+    display: grid;
+    grid-template-columns: 80px 1fr 60px;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-md);
+}
+
+.psnScore span:last-child {
+    text-align: right;
+    font-weight: 600;
+    color: var(--navy-deep);
+}
+
+.psnScoreBar {
+    height: 6px;
+    background: var(--border-subtle);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.psnScoreBar>div {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-warm), #ca8a04);
+    border-radius: 3px;
+}
+
+.psnDisclaimer {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-xs);
+    padding: var(--space-sm);
+    background: rgba(197, 173, 103, 0.1);
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.psnDisclaimer svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: var(--gold-warm);
+}
+
+/* Support & Offer Card */
+.supportOfferCard {
+    background: var(--bg-elevated);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+}
+
+.supportOfferRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.supportOfferRow:last-of-type {
+    border-bottom: none;
+}
+
+.supportOfferLabel {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.offerTypeBadge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    text-transform: capitalize;
+}
+
+.offerFULL_SUPPORT {
+    background: rgba(22, 163, 74, 0.15);
+    color: #16a34a;
+}
+
+.offerSKILLS_ONLY {
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+}
+
+.offerACCELERATOR {
+    background: rgba(197, 173, 103, 0.15);
+    color: var(--gold-dark);
+}
+
+.offerCATALYST_TRACK {
+    background: rgba(139, 92, 246, 0.15);
+    color: #8b5cf6;
+}
+
+.stipendYes {
+    font-size: 13px;
+    font-weight: 600;
+    color: #16a34a;
+}
+
+.stipendNo {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.psnScoreSection {
+    margin-top: var(--space-md);
+    margin-bottom: var(--space-md);
+}
+
+.psnScoreHeader {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xs);
 }
 
 /* Responsive */

@@ -173,9 +173,59 @@
     color: var(--navy-deep);
 }
 
+/* Secondary Nav (Resources, Help) */
+.secondaryNav {
+    padding: var(--space-md);
+    padding-top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    border-top: 1px solid var(--border-subtle);
+    margin-top: auto;
+}
+
+.secondaryItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s ease;
+    /* Button reset for Help link */
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+}
+
+.collapsed .secondaryItem {
+    justify-content: center;
+    padding: var(--space-sm);
+}
+
+.collapsed .secondaryItem span:last-child {
+    display: none;
+}
+
+.secondaryItem:hover {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+}
+
+.secondaryItem.active {
+    color: var(--gold-dark);
+}
+
 .sidebarFooter {
     padding: var(--space-lg);
     border-top: 1px solid var(--border-subtle);
+    position: relative;
 }
 
 .collapsed .sidebarFooter {

@@ -1,0 +1,465 @@
+.container {
+    padding: var(--space-lg);
+}
+
+.header {
+    margin-bottom: var(--space-lg);
+}
+
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.backLink:hover {
+    color: var(--text-primary);
+}
+
+.loading,
+.error {
+    text-align: center;
+    padding: var(--space-xl);
+    color: var(--text-secondary);
+}
+
+/* Profile Section */
+.profileSection {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: var(--space-lg);
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-lg);
+}
+
+.profileMain {
+    display: flex;
+    gap: var(--space-md);
+    align-items: flex-start;
+}
+
+.avatar {
+    width: 64px;
+    height: 64px;
+    background: var(--navy-deep);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.profileInfo h1 {
+    margin: 0 0 4px 0;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.email {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin: 0 0 var(--space-sm) 0;
+}
+
+.tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.levelBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    color: white;
+}
+
+.skillBadge,
+.cohortBadge {
+    display: inline-flex;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--bg-hover);
+    color: var(--text-secondary);
+}
+
+.profileActions {
+    display: flex;
+    gap: 8px;
+}
+
+.pauseButton,
+.reactivateButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+}
+
+.pauseButton {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.pauseButton:hover {
+    background: #fde68a;
+}
+
+.reactivateButton {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.reactivateButton:hover {
+    background: #a7f3d0;
+}
+
+/* Paused Alert */
+.pausedAlert {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: var(--space-md);
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    border-radius: var(--radius-md);
+    color: #92400e;
+    font-size: 14px;
+    margin-bottom: var(--space-lg);
+}
+
+/* Stats Grid */
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.statCard {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+}
+
+.statIcon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-hover);
+    border-radius: var(--radius-sm);
+    color: var(--navy-deep);
+}
+
+.statInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.statValue {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.statLabel {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* Section Title */
+.sectionTitle {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 var(--space-md) 0;
+}
+
+/* Currency Grid */
+.currencyGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.currencyCard {
+    padding: var(--space-md);
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+}
+
+.currencyIcon {
+    margin-bottom: var(--space-sm);
+}
+
+.currencyInfo {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: var(--space-sm);
+}
+
+.currencyValue {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.currencyLabel {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.currencyBar {
+    height: 6px;
+    background: var(--bg-hover);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.currencyFill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* Panels */
+.panels {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+}
+
+.panel {
+    padding: var(--space-lg);
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+}
+
+/* Stipend Content */
+.stipendContent {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.stipendStatus {
+    display: flex;
+}
+
+.eligible,
+.notEligible {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.eligible {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.notEligible {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.stipendDetails {
+    display: flex;
+    gap: var(--space-lg);
+}
+
+.stipendItem {
+    display: flex;
+    flex-direction: column;
+}
+
+.stipendItem span {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.stipendItem strong {
+    font-size: 18px;
+    color: var(--text-primary);
+}
+
+.stipendReason {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0;
+    padding: var(--space-sm);
+    background: var(--bg-hover);
+    border-radius: var(--radius-sm);
+}
+
+/* Triad Content */
+.triadContent {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.triadBar {
+    display: grid;
+    grid-template-columns: 80px 1fr 40px;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.triadLabel {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.triadTrack {
+    height: 10px;
+    background: var(--bg-hover);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.triadFill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.3s ease;
+}
+
+.triadValue {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    text-align: right;
+}
+
+/* PSN Section */
+.adminOnlyTag {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: #e2e8f0;
+    color: #64748b;
+    border-radius: 4px;
+    vertical-align: middle;
+}
+
+.psnContent {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.psnBadge {
+    display: inline-flex;
+    align-self: flex-start;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.psnDetails {
+    display: flex;
+    gap: var(--space-lg);
+    flex-wrap: wrap;
+}
+
+.psnItem {
+    display: flex;
+    flex-direction: column;
+}
+
+.psnItem span {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.psnItem strong {
+    font-size: 16px;
+    color: var(--text-primary);
+}
+
+.psnDisclaimer {
+    font-size: 12px;
+    color: #94a3b8;
+    margin: 0;
+    padding: var(--space-sm);
+    background: repeating-linear-gradient(45deg,
+            transparent,
+            transparent 2px,
+            #f8fafc 2px,
+            #f8fafc 4px);
+    border-radius: var(--radius-sm);
+    font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+
+    .statsGrid,
+    .currencyGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .panels {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .profileSection {
+        flex-direction: column;
+        gap: var(--space-md);
+    }
+
+    .profileActions {
+        width: 100%;
+    }
+
+    .pauseButton,
+    .reactivateButton {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .statsGrid,
+    .currencyGrid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Target, Gem, Wallet, CreditCard, User, Star, PanelLeftClose, LogOut, Menu, X, Settings, ChevronUp } from 'lucide-react';
+import { Home, Target, Gem, Wallet, HeartHandshake, User, Star, PanelLeftClose, LogOut, Menu, X, Settings, ChevronUp, BookOpen, HelpCircle } from 'lucide-react';
 import { UserProvider } from '../context/UserContext';
 import styles from './layout.module.css';
 
@@ -13,7 +13,7 @@ const navItems = [
     { href: '/dashboard/missions', label: 'Missions', Icon: Target },
     { href: '/dashboard/currency', label: 'Currency', Icon: Gem },
     { href: '/dashboard/income', label: 'My Income', Icon: Wallet },
-    { href: '/dashboard/stipend', label: 'Stipend', Icon: CreditCard },
+    { href: '/dashboard/support', label: 'Support', Icon: HeartHandshake },
     { href: '/dashboard/profile', label: 'Profile', Icon: User },
 ];
 
@@ -29,6 +29,7 @@ export default function DashboardLayout({
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [userName, setUserName] = useState('User');
     const [userEmail, setUserEmail] = useState('');
+    const [userId, setUserId] = useState('');
     const userMenuRef = useRef<HTMLDivElement>(null);
 
     // Close user menu when clicking outside
@@ -49,6 +50,7 @@ export default function DashboardLayout({
             const user = JSON.parse(storedUser);
             setUserName(`${user.firstName} ${user.lastName}`);
             setUserEmail(user.email);
+            setUserId(user.id || 'user-1');
         }
     }, []);
 
@@ -56,7 +58,7 @@ export default function DashboardLayout({
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
         localStorage.removeItem('onboarding_complete');
-        router.push('/login');
+        router.push('/');
     };
 
     // Close mobile nav on route change
@@ -132,6 +134,24 @@ export default function DashboardLayout({
                             </Link>
                         ))}
                     </nav>
+
+                    {/* Secondary Links */}
+                    <div className={styles.secondaryNav}>
+                        <Link
+                            href="/dashboard/resources"
+                            className={`${styles.secondaryItem} ${pathname === '/dashboard/resources' ? styles.active : ''}`}
+                        >
+                            <BookOpen size={18} />
+                            <span>Resources</span>
+                        </Link>
+                        <Link
+                            href="/dashboard/stipend"
+                            className={`${styles.secondaryItem} ${pathname === '/dashboard/stipend' ? styles.active : ''}`}
+                        >
+                            <HelpCircle size={18} />
+                            <span>Get Help</span>
+                        </Link>
+                    </div>
 
                     <div className={styles.sidebarFooter} ref={userMenuRef}>
                         <div

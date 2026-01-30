@@ -4,15 +4,17 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, FileText, Users, DollarSign, Target, PanelLeftClose, Menu, X, Settings, LogOut, ChevronUp } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, DollarSign, Target, PanelLeftClose, Menu, X, Settings, LogOut, ChevronUp, UserCog, BookOpen, HeartHandshake } from 'lucide-react';
 import styles from './layout.module.css';
 
 const navItems = [
     { href: '/admin', label: 'Dashboard', Icon: LayoutDashboard },
     { href: '/admin/applicants', label: 'Applicants', Icon: FileText },
     { href: '/admin/participants', label: 'Participants', Icon: Users },
+    { href: '/admin/support', label: 'Support Queue', Icon: HeartHandshake },
     { href: '/admin/income', label: 'Income Review', Icon: DollarSign },
     { href: '/admin/missions', label: 'Missions', Icon: Target },
+    { href: '/admin/staff', label: 'Staff', Icon: UserCog },
 ];
 
 export default function AdminLayout({
@@ -41,7 +43,7 @@ export default function AdminLayout({
     const handleLogout = () => {
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
-        router.push('/login');
+        router.push('/');
     };
 
     // Close mobile nav on route change
@@ -110,6 +112,17 @@ export default function AdminLayout({
                         </Link>
                     ))}
                 </nav>
+
+                {/* Secondary Links */}
+                <div className={styles.secondaryNav}>
+                    <Link
+                        href="/admin/resources"
+                        className={`${styles.secondaryItem} ${pathname === '/admin/resources' ? styles.active : ''}`}
+                    >
+                        <BookOpen size={18} />
+                        <span>Resources</span>
+                    </Link>
+                </div>
 
                 <div className={styles.sidebarFooter} ref={userMenuRef}>
                     <div

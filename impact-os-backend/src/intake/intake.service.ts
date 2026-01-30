@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ConflictException, BadRequestException, 
 import { PrismaService } from '../prisma';
 import { EmailService } from '../email';
 import { ScoringService } from '../scoring';
+import { ProgressService } from '../progress';
 import { StartApplicationDto, Section2Dto, Section3Dto, Section4Dto, Section5Dto, Section6Dto } from './dto';
 import { ApplicantStatus } from '@prisma/client';
 import * as crypto from 'crypto';
@@ -14,6 +15,7 @@ export class IntakeService {
         private prisma: PrismaService,
         private emailService: EmailService,
         private scoringService: ScoringService,
+        private progressService: ProgressService,
     ) { }
 
     // Start a new application (Section 1)
@@ -316,6 +318,9 @@ export class IntakeService {
                 offerToken: null, // Clear the token
             },
         });
+
+        // Initialize progress (momentum, missions) for new user
+        await this.progressService.initializeProgress(user.id);
 
         this.logger.log(`Applicant ${applicant.id} accepted offer and converted to user ${user.id}`);
 

@@ -240,7 +240,8 @@
 }
 
 .viewButton:hover {
-    background: var(--navy-dark);
+    background: #01192e;
+    transform: translateY(-1px);
 }
 
 /* Responsive */

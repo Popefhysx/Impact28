@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Body, Param, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, NotFoundException, BadRequestException, UseGuards } from '@nestjs/common';
 import { AdmissionService } from './admission.service';
 import { PrismaService } from '../prisma';
+import { CapabilityGuard, RequireCapability } from '../staff/guards';
 
 @Controller('conditional')
 export class AdmissionController {
@@ -172,6 +173,8 @@ export class AdmissionController {
      * Admin: Get all conditional tasks pending review
      */
     @Get('admin/pending')
+    @UseGuards(CapabilityGuard)
+    @RequireCapability('admissions.manage')
     async getPendingForReview() {
         const tasks = await this.prisma.conditionalTask.findMany({
             where: {
@@ -204,6 +207,8 @@ export class AdmissionController {
      * Admin: Get overdue conditional tasks
      */
     @Get('admin/overdue')
+    @UseGuards(CapabilityGuard)
+    @RequireCapability('admissions.manage')
     async getOverdueTasks() {
         const tasks = await this.prisma.conditionalTask.findMany({
             where: {

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
     ArrowLeft, User, MapPin, Briefcase, Monitor, Clock,
     Star, FileText, Check, X, AlertCircle, CheckCircle,
-    Send, Loader2
+    Send, Loader2, HeartHandshake, Info
 } from 'lucide-react';
 import styles from './page.module.css';
 
@@ -40,6 +40,11 @@ interface ApplicantDetail {
     receivesStipend?: boolean;
     status: string;
     submittedAt?: string;
+    // PSN Fields
+    psnLevel?: 'HIGH' | 'MEDIUM' | 'LOW';
+    psnScore?: number;
+    psnConfidence?: number;
+    psnPrimaryConstraint?: 'DATA' | 'TRANSPORT' | 'TOOLS' | 'OTHER';
 }
 
 function SkillTriadMini({ technical, soft, commercial }: { technical: number; soft: number; commercial: number }) {
@@ -132,6 +137,11 @@ export default function ApplicantDetailPage() {
             receivesStipend: true,
             status: 'SCORED',
             submittedAt: '2026-01-25T14:30:00Z',
+            // PSN Data
+            psnLevel: 'HIGH',
+            psnScore: 78,
+            psnConfidence: 0.85,
+            psnPrimaryConstraint: 'DATA',
         };
 
         setTimeout(() => {
@@ -193,9 +203,9 @@ export default function ApplicantDetailPage() {
                 </div>
                 <div className={styles.headerMeta}>
                     <span className={`badge ${applicant.status === 'ADMITTED' ? 'badge-success' :
-                            applicant.status === 'REJECTED' ? 'badge-danger' :
-                                applicant.status === 'CONDITIONAL' ? 'badge-warning' :
-                                    'badge-gold'
+                        applicant.status === 'REJECTED' ? 'badge-danger' :
+                            applicant.status === 'CONDITIONAL' ? 'badge-warning' :
+                                'badge-gold'
                         }`}>
                         {applicant.status}
                     </span>
@@ -318,8 +328,8 @@ export default function ApplicantDetailPage() {
                         <div className={styles.recommendation}>
                             <h3>AI Recommendation</h3>
                             <span className={`badge ${applicant.aiRecommendation === 'ADMIT' ? 'badge-success' :
-                                    applicant.aiRecommendation === 'CONDITIONAL' ? 'badge-warning' :
-                                        'badge-danger'
+                                applicant.aiRecommendation === 'CONDITIONAL' ? 'badge-warning' :
+                                    'badge-danger'
                                 }`}>
                                 {applicant.aiRecommendation === 'ADMIT' ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
                                 {applicant.aiRecommendation}
@@ -336,15 +346,75 @@ export default function ApplicantDetailPage() {
                                 soft={applicant.triadSoft || 0}
                                 commercial={applicant.triadCommercial || 0}
                             />
-                            {applicant.offerType && (
-                                <div className={styles.offerType}>
-                                    <span>Offer Type:</span>
-                                    <strong>{applicant.offerType.replace(/_/g, ' ')}</strong>
-                                    {applicant.receivesStipend && (
-                                        <span className="badge badge-success">Stipend Eligible</span>
+                        </section>
+                    )}
+
+                    {/* Support & Offer Section - Consolidated */}
+                    {(applicant.offerType || applicant.psnLevel) && (
+                        <section className={styles.section}>
+                            <h2><HeartHandshake size={18} /> Support & Offer</h2>
+                            <div className={styles.supportOfferCard}>
+                                {/* Offer Type */}
+                                {applicant.offerType && (
+                                    <div className={styles.supportOfferRow}>
+                                        <span className={styles.supportOfferLabel}>Offer Type</span>
+                                        <span className={`${styles.offerTypeBadge} ${styles[`offer${applicant.offerType}`]}`}>
+                                            {applicant.offerType.replace(/_/g, ' ')}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {/* Stipend Eligible */}
+                                <div className={styles.supportOfferRow}>
+                                    <span className={styles.supportOfferLabel}>Stipend Eligible</span>
+                                    {applicant.receivesStipend ? (
+                                        <span className={styles.stipendYes}>✓ Yes</span>
+                                    ) : (
+                                        <span className={styles.stipendNo}>✗ No</span>
                                     )}
                                 </div>
-                            )}
+
+                                {/* PSN Level */}
+                                {applicant.psnLevel && (
+                                    <div className={styles.supportOfferRow}>
+                                        <span className={styles.supportOfferLabel}>PSN Level</span>
+                                        <span className={`${styles.psnBadge} ${styles[`psn${applicant.psnLevel}`]}`}>
+                                            {applicant.psnLevel}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {/* Primary Constraint */}
+                                {applicant.psnPrimaryConstraint && (
+                                    <div className={styles.supportOfferRow}>
+                                        <span className={styles.supportOfferLabel}>Primary Constraint</span>
+                                        <span className={styles.constraintValue}>
+                                            {applicant.psnPrimaryConstraint === 'DATA' && '📶 Data/Internet'}
+                                            {applicant.psnPrimaryConstraint === 'TRANSPORT' && '🚌 Transport'}
+                                            {applicant.psnPrimaryConstraint === 'TOOLS' && '💻 Tools/Devices'}
+                                            {applicant.psnPrimaryConstraint === 'OTHER' && '📋 Other'}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {/* PSN Confidence Bar */}
+                                {applicant.psnScore !== undefined && (
+                                    <div className={styles.psnScoreSection}>
+                                        <div className={styles.psnScoreHeader}>
+                                            <span>PSN Confidence</span>
+                                            <span>{Math.round((applicant.psnConfidence || 0) * 100)}%</span>
+                                        </div>
+                                        <div className={styles.psnScoreBar}>
+                                            <div style={{ width: `${applicant.psnScore}%` }} />
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className={styles.psnDisclaimer}>
+                                    <Info size={12} />
+                                    <span>PSN is a forecast estimate only. Support is request-based and behavior-gated.</span>
+                                </div>
+                            </div>
                         </section>
                     )}
 
