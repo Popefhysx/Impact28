@@ -3,6 +3,10 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://impact28.vercel.app"),
+  icons: {
+    icon: "/triad.webp",
+    apple: "/triad.webp",
+  },
   title: {
     default: "Impact OS",
     template: "%s | Impact OS",
