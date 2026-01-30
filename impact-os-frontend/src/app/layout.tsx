@@ -2,11 +2,18 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Impact OS | Dashboard",
+  title: {
+    default: "Impact OS",
+    template: "%s | Impact OS",
+  },
   description: "Behavioral Operating System for Economic Transformation",
   openGraph: {
-    title: "Impact OS",
+    title: {
+      default: "Impact OS",
+      template: "%s | Impact OS",
+    },
     description: "Behavioral Operating System for Economic Transformation",
+    siteName: "Impact OS",
     images: [
       {
         url: "/triad.webp",
@@ -19,7 +26,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Impact OS",
+    title: {
+      default: "Impact OS",
+      template: "%s | Impact OS",
+    },
     description: "Behavioral Operating System for Economic Transformation",
     images: ["/triad.webp"],
   },
