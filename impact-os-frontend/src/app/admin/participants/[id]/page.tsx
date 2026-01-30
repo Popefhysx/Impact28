@@ -351,11 +351,11 @@ export default function ParticipantDetailPage() {
                 </div>
             </div>
 
-            {/* Stipend & Triad */}
+            {/* Support & Triad */}
             <div className={styles.panels}>
-                {/* Stipend Status */}
+                {/* Support Status */}
                 <div className={styles.panel}>
-                    <h2 className={styles.sectionTitle}>Stipend Status</h2>
+                    <h2 className={styles.sectionTitle}>Support Status</h2>
                     <div className={styles.stipendContent}>
                         <div className={styles.stipendStatus}>
                             {participant.stipend.eligible ? (

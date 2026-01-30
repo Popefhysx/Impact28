@@ -90,9 +90,9 @@ function SkillTriadMini({ technical, soft, commercial }: { technical: number; so
                 <circle cx={commPoint.x} cy={commPoint.y} r="4" fill="var(--gold-warm)" />
             </svg>
             <div className={styles.triadLabels}>
-                <span>T: {technical}%</span>
-                <span>S: {soft}%</span>
-                <span>C: {commercial}%</span>
+                <span>Technical: {technical}%</span>
+                <span>Soft Skills: {soft}%</span>
+                <span>Commercial: {commercial}%</span>
             </div>
         </div>
     );
@@ -364,9 +364,9 @@ export default function ApplicantDetailPage() {
                                     </div>
                                 )}
 
-                                {/* Stipend Eligible */}
+                                {/* Support Eligible */}
                                 <div className={styles.supportOfferRow}>
-                                    <span className={styles.supportOfferLabel}>Stipend Eligible</span>
+                                    <span className={styles.supportOfferLabel}>Support Eligible</span>
                                     {applicant.receivesStipend ? (
                                         <span className={styles.stipendYes}>✓ Yes</span>
                                     ) : (

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, Filter, FileText, Eye, Check, X, Clock, AlertCircle, ChevronDown, Users, CheckSquare, Square, UserCheck, UserX, Grid, List } from 'lucide-react';
+import { FileText, Eye, Check, X, Clock, AlertCircle, Users, CheckSquare, Square, UserCheck, UserX } from 'lucide-react';
+import { SearchFilterBar, FilterConfig } from '@/components/admin/SearchFilterBar';
 import styles from './page.module.css';
 
 // Types
@@ -53,9 +54,10 @@ export default function ApplicantsPage() {
     const [applicants, setApplicants] = useState<Applicant[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
-    const [statusFilter, setStatusFilter] = useState<string>('');
-    const [scoreFilter, setScoreFilter] = useState<string>('');
-    const [showFilters, setShowFilters] = useState(false);
+    const [filterValues, setFilterValues] = useState<Record<string, string>>({
+        status: 'ALL',
+        score: 'ALL',
+    });
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
     const [bulkLoading, setBulkLoading] = useState(false);
@@ -202,14 +204,14 @@ export default function ApplicantsPage() {
             app.lastName.toLowerCase().includes(search.toLowerCase()) ||
             app.email.toLowerCase().includes(search.toLowerCase());
 
-        const matchesStatus = statusFilter === '' || app.status === statusFilter;
+        const matchesStatus = filterValues.status === 'ALL' || app.status === filterValues.status;
 
-        const matchesScore = scoreFilter === '' || (() => {
+        const matchesScore = filterValues.score === 'ALL' || (() => {
             const score = app.readinessScore;
-            if (!score) return scoreFilter === 'unscored';
-            if (scoreFilter === 'high') return score >= 75;
-            if (scoreFilter === 'medium') return score >= 50 && score < 75;
-            if (scoreFilter === 'low') return score < 50;
+            if (!score) return filterValues.score === 'unscored';
+            if (filterValues.score === 'high') return score >= 75;
+            if (filterValues.score === 'medium') return score >= 50 && score < 75;
+            if (filterValues.score === 'low') return score < 50;
             return true;
         })();
 
@@ -331,76 +333,46 @@ export default function ApplicantsPage() {
             )}
 
             {/* Search, Filters, and View Toggle */}
-            <div className={styles.toolbar}>
-                <div className={styles.searchBox}>
-                    <Search size={18} />
-                    <input
-                        type="text"
-                        placeholder="Search by name or email..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                    />
-                </div>
-                <div className={styles.toolbarRight}>
-                    <div className={styles.viewToggle}>
-                        <button
-                            className={`${styles.viewToggleBtn} ${viewMode === 'table' ? styles.active : ''}`}
-                            onClick={() => setViewMode('table')}
-                            title="Table view"
-                        >
-                            <List size={16} />
-                        </button>
-                        <button
-                            className={`${styles.viewToggleBtn} ${viewMode === 'grid' ? styles.active : ''}`}
-                            onClick={() => setViewMode('grid')}
-                            title="Grid view"
-                        >
-                            <Grid size={16} />
-                        </button>
-                    </div>
-                    <button
-                        className={styles.filterButton}
-                        onClick={() => setShowFilters(!showFilters)}
-                    >
-                        <Filter size={16} />
-                        Filters
-                        <ChevronDown size={14} />
-                    </button>
-                </div>
-            </div>
-
-            {showFilters && (
-                <div className={styles.filtersPanel}>
-                    <div className={styles.filterGroup}>
-                        <label>Status</label>
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                        >
-                            <option value="">All Statuses</option>
-                            <option value="PENDING">Pending</option>
-                            <option value="SCORING">Scoring</option>
-                            <option value="SCORED">Scored</option>
-                            <option value="ADMITTED">Admitted</option>
-                            <option value="CONDITIONAL">Conditional</option>
-                            <option value="REJECTED">Rejected</option>
-                        </select>
-                    </div>
-                    <div className={styles.filterGroup}>
-                        <label>Readiness Score</label>
-                        <select
-                            value={scoreFilter}
-                            onChange={(e) => setScoreFilter(e.target.value)}
-                        >
-                            <option value="">All Scores</option>
-                            <option value="high">High (75+)</option>
-                            <option value="medium">Medium (50-74)</option>
-                            <option value="low">Low (&lt;50)</option>
-                            <option value="unscored">Unscored</option>
-                        </select>
-                    </div>
-                </div>
-            )}
+            <SearchFilterBar
+                searchValue={search}
+                onSearchChange={setSearch}
+                searchPlaceholder="Search by name or email..."
+                filters={[
+                    {
+                        key: 'status',
+                        placeholder: 'Status',
+                        options: [
+                            { value: 'ALL', label: 'All Statuses' },
+                            { value: 'PENDING', label: 'Pending' },
+                            { value: 'SCORING', label: 'Scoring' },
+                            { value: 'SCORED', label: 'Scored' },
+                            { value: 'ADMITTED', label: 'Admitted' },
+                            { value: 'CONDITIONAL', label: 'Conditional' },
+                            { value: 'REJECTED', label: 'Rejected' },
+                        ],
+                    },
+                    {
+                        key: 'score',
+                        placeholder: 'Score',
+                        options: [
+                            { value: 'ALL', label: 'All Scores' },
+                            { value: 'high', label: 'High (75+)' },
+                            { value: 'medium', label: 'Medium (50-74)' },
+                            { value: 'low', label: 'Low (<50)' },
+                            { value: 'unscored', label: 'Unscored' },
+                        ],
+                    },
+                ]}
+                filterValues={filterValues}
+                onFilterChange={(key, value) =>
+                    setFilterValues((prev) => ({ ...prev, [key]: value }))
+                }
+                viewMode={viewMode === 'table' ? 'list' : 'grid'}
+                onViewModeChange={(mode) =>
+                    setViewMode(mode === 'list' ? 'table' : 'grid')
+                }
+                showViewToggle={true}
+            />
 
             {/* Table View */}
             {viewMode === 'table' && (

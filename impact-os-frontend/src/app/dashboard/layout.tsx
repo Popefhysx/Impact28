@@ -4,16 +4,16 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Target, Gem, Wallet, HeartHandshake, User, Star, PanelLeftClose, LogOut, Menu, X, Settings, ChevronUp, BookOpen, HelpCircle } from 'lucide-react';
+import { Home, Target, TrendingUp, Trophy, Wallet, HeartHandshake, User, Star, PanelLeftClose, LogOut, Menu, X, Settings, ChevronUp, BookOpen, HelpCircle } from 'lucide-react';
 import { UserProvider } from '../context/UserContext';
 import styles from './layout.module.css';
 
 const navItems = [
-    { href: '/dashboard', label: 'Overview', Icon: Home },
+    { href: '/dashboard', label: 'Home', Icon: Home },
     { href: '/dashboard/missions', label: 'Missions', Icon: Target },
-    { href: '/dashboard/currency', label: 'Currency', Icon: Gem },
-    { href: '/dashboard/income', label: 'My Income', Icon: Wallet },
-    { href: '/dashboard/support', label: 'Support', Icon: HeartHandshake },
+    { href: '/dashboard/progress', label: 'Progress', Icon: TrendingUp },
+    { href: '/dashboard/arenatracker', label: 'Tracker', Icon: Trophy },
+    { href: '/dashboard/income', label: 'Income', Icon: Wallet },
     { href: '/dashboard/profile', label: 'Profile', Icon: User },
 ];
 
@@ -138,6 +138,13 @@ export default function DashboardLayout({
                     {/* Secondary Links */}
                     <div className={styles.secondaryNav}>
                         <Link
+                            href="/arena"
+                            className={`${styles.secondaryItem} ${pathname === '/arena' ? styles.active : ''}`}
+                        >
+                            <Trophy size={18} />
+                            <span>The Arena</span>
+                        </Link>
+                        <Link
                             href="/dashboard/resources"
                             className={`${styles.secondaryItem} ${pathname === '/dashboard/resources' ? styles.active : ''}`}
                         >
@@ -145,8 +152,8 @@ export default function DashboardLayout({
                             <span>Resources</span>
                         </Link>
                         <Link
-                            href="/dashboard/stipend"
-                            className={`${styles.secondaryItem} ${pathname === '/dashboard/stipend' ? styles.active : ''}`}
+                            href="/dashboard/support"
+                            className={`${styles.secondaryItem} ${pathname === '/dashboard/support' ? styles.active : ''}`}
                         >
                             <HelpCircle size={18} />
                             <span>Get Help</span>

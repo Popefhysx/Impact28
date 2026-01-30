@@ -264,7 +264,7 @@ export class PsnService {
                 signalType,
                 severity,
                 actionTaken,
-                details: details || {},
+                details: details ? JSON.parse(JSON.stringify(details)) : undefined,
             },
         });
 
@@ -486,7 +486,7 @@ export class PsnService {
                 applicantId,
                 version: PSN_VERSION,
                 inputHash,
-                output: output as unknown as Record<string, unknown>,
+                output: JSON.parse(JSON.stringify(output)),
             },
         });
     }

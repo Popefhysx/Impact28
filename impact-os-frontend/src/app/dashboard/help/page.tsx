@@ -23,8 +23,8 @@ const faqs: Faq[] = [
         answer: 'Momentum increases when you complete daily actions, progress on missions, and maintain your streak. It decreases if you miss check-ins or go inactive for extended periods.',
     },
     {
-        question: 'When am I eligible for stipend?',
-        answer: 'Stipend eligibility depends on maintaining momentum above 50, completing missions consistently, and staying active in the program. Your dashboard shows your current eligibility status.',
+        question: 'When am I eligible for support?',
+        answer: 'Support eligibility depends on maintaining momentum above 50, completing missions consistently, and staying active in the program. Your dashboard shows your current eligibility status.',
     },
     {
         question: 'How do I change my skill track?',

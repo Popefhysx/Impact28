@@ -154,7 +154,6 @@ export class AdmissionService {
             triadSoft: applicant.triadSoft || 50,
             triadCommercial: applicant.triadCommercial || 50,
             primaryFocus: applicant.primaryFocus || 'COMMERCIAL',
-            receivesStipend: applicant.receivesStipend || false,
             kpiTargets: applicant.kpiTargets,
             acceptLink,
             declineLink,

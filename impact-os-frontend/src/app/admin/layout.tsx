@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, FileText, Users, DollarSign, Target, PanelLeftClose, Menu, X, Settings, LogOut, ChevronUp, UserCog, BookOpen, HeartHandshake } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, DollarSign, Target, PanelLeftClose, Menu, X, Settings, LogOut, ChevronUp, UserCog, BookOpen, HeartHandshake, Trophy } from 'lucide-react';
 import styles from './layout.module.css';
 
 const navItems = [
@@ -115,6 +115,13 @@ export default function AdminLayout({
 
                 {/* Secondary Links */}
                 <div className={styles.secondaryNav}>
+                    <Link
+                        href="/arena"
+                        className={`${styles.secondaryItem} ${pathname === '/arena' ? styles.active : ''}`}
+                    >
+                        <Trophy size={18} />
+                        <span>The Arena</span>
+                    </Link>
                     <Link
                         href="/admin/resources"
                         className={`${styles.secondaryItem} ${pathname === '/admin/resources' ? styles.active : ''}`}

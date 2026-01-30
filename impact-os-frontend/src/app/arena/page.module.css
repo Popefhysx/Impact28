@@ -1,0 +1,311 @@
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: var(--space-2xl) var(--space-lg);
+    min-height: 100vh;
+    background: var(--bg-primary);
+}
+
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 14px;
+    margin-bottom: var(--space-xl);
+    transition: color 0.2s;
+}
+
+.backLink:hover {
+    color: var(--gold-warm);
+}
+
+/* Header */
+.header {
+    text-align: center;
+    margin-bottom: var(--space-2xl);
+}
+
+.headerIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--gold-warm) 0%, var(--gold-dark) 100%);
+    border-radius: 50%;
+    margin-bottom: var(--space-lg);
+}
+
+.headerIcon svg {
+    color: white;
+}
+
+.title {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--navy-deep);
+    margin: 0 0 var(--space-sm) 0;
+    letter-spacing: -0.02em;
+}
+
+.subtitle {
+    font-size: 18px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* Quote Section */
+.quoteSection {
+    background: linear-gradient(135deg, var(--navy-deep) 0%, #0f2439 100%);
+    border-radius: var(--radius-lg);
+    padding: var(--space-2xl);
+    margin-bottom: var(--space-2xl);
+    position: relative;
+}
+
+.quoteIcon {
+    position: absolute;
+    top: var(--space-lg);
+    left: var(--space-lg);
+    color: white;
+    opacity: 0.2;
+}
+
+.quote {
+    margin: 0;
+    padding: 0;
+}
+
+.quote p {
+    font-size: 18px;
+    line-height: 1.8;
+    color: rgba(255, 255, 255, 0.9);
+    font-style: italic;
+    margin: 0 0 var(--space-lg) 0;
+    text-indent: 2em;
+    text-align: justify;
+}
+
+.quote footer {
+    color: var(--gold-warm);
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 600;
+    text-align: right;
+}
+
+/* Philosophy Grid */
+.philosophyGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+    margin-bottom: var(--space-2xl);
+}
+
+.philosophyCard {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+}
+
+.cardIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-md);
+}
+
+.cardIcon svg {
+    color: var(--gold-warm);
+}
+
+.philosophyCard h2 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    margin: 0 0 var(--space-md) 0;
+}
+
+.philosophyCard p {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    margin: 0 0 var(--space-md) 0;
+    text-align: justify;
+}
+
+.philosophyCard p:first-of-type {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--navy-deep);
+}
+
+.principle {
+    background: var(--bg-elevated);
+    border-left: 3px solid var(--gold-warm);
+    padding: var(--space-md);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: var(--space-lg);
+}
+
+.principle strong {
+    color: var(--gold-dark);
+}
+
+/* System Laws */
+.lawsSection {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-2xl);
+    margin-bottom: var(--space-2xl);
+}
+
+.lawsSection h2 {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    margin: 0 0 var(--space-sm) 0;
+    text-align: center;
+}
+
+.lawsIntro {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 15px;
+    margin: 0 0 var(--space-xl) 0;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.lawsGrid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.law {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-md);
+}
+
+.lawNumber {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--gold-warm);
+    min-width: 40px;
+}
+
+.law p {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* CTA Section */
+.ctaSection {
+    text-align: center;
+    padding: var(--space-2xl) var(--space-lg);
+    margin-bottom: var(--space-2xl);
+}
+
+.ctaSection h2 {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    margin: 0 0 var(--space-lg) 0;
+}
+
+.ctaSection p {
+    font-size: 17px;
+    line-height: 1.8;
+    color: var(--text-secondary);
+    margin: 0 0 var(--space-md) 0;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+.finalWord {
+    font-size: 20px;
+    color: var(--navy-deep);
+    margin-top: var(--space-xl) !important;
+}
+
+/* Signature */
+.signatureSection {
+    text-align: center;
+    padding: var(--space-xl) 0;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.signature {
+    opacity: 0.9;
+    margin-bottom: var(--space-sm);
+}
+
+.signatureCaption {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        padding: var(--space-lg);
+    }
+
+    .title {
+        font-size: 36px;
+    }
+
+    .subtitle {
+        font-size: 16px;
+    }
+
+    .quoteSection {
+        padding: var(--space-xl);
+    }
+
+    .quote p {
+        font-size: 16px;
+        text-indent: 1em;
+    }
+
+    .philosophyGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .philosophyCard {
+        padding: var(--space-lg);
+    }
+
+    .lawsSection {
+        padding: var(--space-xl);
+    }
+
+    .lawsSection h2 {
+        font-size: 24px;
+    }
+
+    .ctaSection h2 {
+        font-size: 26px;
+    }
+}

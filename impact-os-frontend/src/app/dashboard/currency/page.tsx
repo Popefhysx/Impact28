@@ -156,7 +156,7 @@ export default function CurrencyPage() {
                     <div className={styles.currencyProgress}>
                         <div className={styles.progressBar} style={{ width: `${currencyData.momentum}%` }} />
                     </div>
-                    <p className={styles.currencyHint}>Keep above 50 to maintain stipend eligibility</p>
+                    <p className={styles.currencyHint}>Keep above 50 to maintain support eligibility</p>
                 </div>
 
                 <div className={`card ${styles.currencyCard}`}>
