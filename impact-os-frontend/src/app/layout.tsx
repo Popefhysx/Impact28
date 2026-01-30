@@ -4,8 +4,8 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL("https://impact28.vercel.app"),
   icons: {
-    icon: "/triad.webp",
-    apple: "/triad.webp",
+    icon: "/triadOG.png",
+    apple: "/triadOG.png",
   },
   title: {
     default: "Impact OS",
