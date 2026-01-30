@@ -19,11 +19,14 @@ interface Applicant {
     submittedAt: string | null;
 }
 
-interface CohortCapacity {
-    capacity: number;
-    filled: number;
-    remaining: number;
-    isAtCapacity: boolean;
+// Pipeline stats instead of capacity (per PRD §6 - admission based on readiness, not capacity)
+interface PipelineStats {
+    total: number;
+    pending: number;
+    scored: number;
+    admitted: number;
+    rejected: number;
+    conditional: number;
 }
 
 const statusColors: Record<string, string> = {
@@ -55,7 +58,6 @@ export default function ApplicantsPage() {
     const [showFilters, setShowFilters] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
-    const [capacity, setCapacity] = useState<CohortCapacity>({ capacity: 50, filled: 12, remaining: 38, isAtCapacity: false });
     const [bulkLoading, setBulkLoading] = useState(false);
 
     const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
@@ -160,25 +162,17 @@ export default function ApplicantsPage() {
         },
     ];
 
-    // Fetch applicants and capacity
+    // Fetch applicants
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [applicantsRes, capacityRes] = await Promise.all([
-                    fetch(`${API_BASE}/admin/applicants`),
-                    fetch(`${API_BASE}/admin/cohort/capacity`),
-                ]);
+                const applicantsRes = await fetch(`${API_BASE}/admin/applicants`);
 
                 if (applicantsRes.ok) {
                     const data = await applicantsRes.json();
                     setApplicants(data?.length > 0 ? data : mockApplicants);
                 } else {
                     setApplicants(mockApplicants);
-                }
-
-                if (capacityRes.ok) {
-                    const capData = await capacityRes.json();
-                    setCapacity(capData);
                 }
             } catch (error) {
                 console.error('Failed to fetch data:', error);
@@ -190,6 +184,16 @@ export default function ApplicantsPage() {
 
         fetchData();
     }, [API_BASE]);
+
+    // Compute pipeline stats from applicants (readiness-based, not capacity-based)
+    const pipelineStats: PipelineStats = {
+        total: applicants.length,
+        pending: applicants.filter(a => a.status === 'PENDING' || a.status === 'SCORING').length,
+        scored: applicants.filter(a => a.status === 'SCORED').length,
+        admitted: applicants.filter(a => a.status === 'ADMITTED').length,
+        rejected: applicants.filter(a => a.status === 'REJECTED').length,
+        conditional: applicants.filter(a => a.status === 'CONDITIONAL').length,
+    };
 
     // Filter applicants
     const filteredApplicants = applicants.filter(app => {
@@ -241,7 +245,7 @@ export default function ApplicantsPage() {
         }
     };
 
-    // Bulk actions
+    // Bulk actions - NO capacity check per PRD §6 (admission based on readiness, not capacity)
     const handleBulkAction = async (decision: 'ADMITTED' | 'REJECTED') => {
         if (selectedIds.size === 0) return;
 
@@ -271,8 +275,6 @@ export default function ApplicantsPage() {
         }
     };
 
-    const capacityPercent = Math.round((capacity.filled / capacity.capacity) * 100);
-
     return (
         <div className={styles.container}>
             <header className={styles.header}>
@@ -281,24 +283,18 @@ export default function ApplicantsPage() {
                     <p className={styles.subtitle}>Review and manage incoming applications</p>
                 </div>
                 <div className={styles.headerStats}>
-                    {/* Cohort Capacity Indicator */}
-                    <div className={styles.capacityCard}>
-                        <Users size={18} />
-                        <div className={styles.capacityInfo}>
-                            <span className={styles.capacityLabel}>Cohort Capacity</span>
-                            <span className={styles.capacityValue}>
-                                {capacity.filled}/{capacity.capacity} spots
-                            </span>
-                        </div>
-                        <div className={styles.capacityBar}>
-                            <div
-                                className={`${styles.capacityFill} ${capacity.isAtCapacity ? styles.full : ''}`}
-                                style={{ width: `${capacityPercent}%` }}
-                            />
-                        </div>
-                    </div>
+                    {/* Pipeline Stats - Readiness-based, not capacity-based */}
                     <span className={styles.statBadge}>
-                        <Clock size={14} /> {applicants.filter(a => a.status === 'PENDING').length} pending
+                        <Users size={14} /> {pipelineStats.total} total
+                    </span>
+                    <span className={styles.statBadge}>
+                        <Clock size={14} /> {pipelineStats.pending} pending
+                    </span>
+                    <span className={styles.statBadge}>
+                        <FileText size={14} /> {pipelineStats.scored} awaiting decision
+                    </span>
+                    <span className={`${styles.statBadge} ${styles.successStat}`}>
+                        <Check size={14} /> {pipelineStats.admitted} admitted
                     </span>
                 </div>
             </header>
@@ -311,7 +307,7 @@ export default function ApplicantsPage() {
                         <button
                             className={styles.bulkApprove}
                             onClick={() => handleBulkAction('ADMITTED')}
-                            disabled={bulkLoading || capacity.remaining < selectedIds.size}
+                            disabled={bulkLoading}
                         >
                             <UserCheck size={16} />
                             Approve Selected

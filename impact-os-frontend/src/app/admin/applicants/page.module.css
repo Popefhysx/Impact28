@@ -37,6 +37,11 @@
     color: var(--text-secondary);
 }
 
+.successStat {
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--accent-success);
+}
+
 /* Toolbar */
 .toolbar {
     display: flex;
