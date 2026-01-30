@@ -4,6 +4,25 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Impact OS | Dashboard",
   description: "Behavioral Operating System for Economic Transformation",
+  openGraph: {
+    title: "Impact OS",
+    description: "Behavioral Operating System for Economic Transformation",
+    images: [
+      {
+        url: "/triad.webp",
+        width: 1200,
+        height: 630,
+        alt: "Impact OS - Skill Triad",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Impact OS",
+    description: "Behavioral Operating System for Economic Transformation",
+    images: ["/triad.webp"],
+  },
 };
 
 export default function RootLayout({
