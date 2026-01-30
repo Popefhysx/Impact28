@@ -30,7 +30,7 @@
 11. [Game Currencies (Behavioral)](#11-game-currencies-behavioral)
 12. [Mission Engine](#12-mission-engine)
 13. [Failure Classification System](#13-failure-classification-system)
-14. [Stipend Governance](#14-stipend-governance)
+14. [Participation Support Governance](#14-participation-support-governance)
 15. [Intake & Admissions Logic](#15-intake--admissions-logic)
 16. [Earn-Before-Day-90 Rule](#16-earn-before-day-90-rule)
 17. [Income Verification Protocol](#17-income-verification-protocol)
@@ -444,51 +444,142 @@ When failure is logged:
 
 ---
 
-## 14. Stipend Governance
+## 14. Participation Support Governance
 
-### Core Principle
+### Core Design Principle (Locked)
 
-> **Stipends are not welfare. They are targeted infrastructure.**
+> **Admission is unconditional once readiness is proven.  
+> Support is conditional, temporary, and unlocked only by demonstrated effort.**
 
-### Stipend Types (Power-Ups)
+Support is not promised.  
+Support is not visible at admission.  
+Support is not an entitlement.
 
-| Type | Purpose |
-|------|---------|
-| **Data Boost** | Internet access for learning |
-| **Transport Pass** | Physical access when needed |
-| **Tool Access** | Software/hardware access |
+### What Support IS
 
-### Stipend Rules
+Support exists to:
+- Remove execution blockers
+- Stabilize participation
+- Protect conversion probability (income before Day 90)
+
+Support does **NOT**:
+- Reward inactivity
+- Substitute for effort
+- Guarantee outcomes
+
+### Support Types
+
+| Type | Purpose | Default |
+|------|---------|---------|
+| **Data** | Internet access for learning/outreach | ✅ Available |
+| **Transport** | Physical access when needed | ✅ Available |
+| **Tools** | Software/hardware access | ✅ Available |
+| **Counselling** | Personal disruption intervention | ✅ Available |
+| **Cash** | Last resort only | ❌ Admin-only |
+
+### Participant-Facing Visibility
+
+From the participant's perspective:
+- **At Admission:** No support information communicated
+- **After Unlocking:** "If something is temporarily preventing you from participating fully, you can request support."
+- **Amounts:** Never visible to participants
+
+### Eligibility Gates (Hard Rules)
+
+A participant may submit a support request **only if**:
 
 ```python
-IF action_logged:
-    stipend_active = True
-ELSE:
-    stipend_active = False
+def eligible_for_support(participant):
+    # Gate 1: Must be admitted
+    if participant.status != "ACTIVE":
+        return False
+    
+    # Gate 2: Must have active missions
+    if len(participant.active_missions) == 0:
+        return False
+    
+    # Gate 3: Must have minimum momentum
+    if participant.momentum < 50:
+        return False
+    
+    # Gate 4: No unresolved inactivity flags
+    if participant.has_inactivity_flag:
+        return False
+    
+    return True
 ```
 
-- Power-ups expire
-- Power-ups require activity
-- Inactivity disables them automatically
-- No manual overrides without audit log
+### Support Request Flow
 
-### Stipend Boundaries
+```
+Participant Eligible
+        │
+        ▼
+┌─────────────────┐
+│ Submit Request  │
+│ (type, blocker) │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ System Validates│
+│ Behavioral Data │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ Admin Review    │
+│ (with behavior  │
+│  snapshot)      │
+└────────┬────────┘
+         │
+    ┌────┴────┐
+    │         │
+   YES       NO
+    │         │
+    ▼         ▼
+APPROVED   DENIED
+    │
+    ▼
+PENDING_DISBURSE
+    │
+    ▼
+COMPLETED
+```
 
-- Stipends are capped **below local minimum wage**
-- Stipends are **insufficient for comfort but sufficient for focus**
-- Stipends **cannot replace income—only enable earning**
+### Request States
 
-> **📖 For detailed budget management, approval tiers, disbursement flows, and audit requirements, see [Support Wallet Module](./SUPPORT_WALLET.md).**
+| State | Participant Message | Admin Action |
+|-------|---------------------|--------------|
+| PENDING | "Your request is being reviewed" | Review queue |
+| APPROVED | "Support is on the way" | Disburse |
+| DENIED | "We can't fulfill this request now. Keep completing missions!" | Logged |
+| COMPLETED | "Support delivered" | Audit logged |
+
+### Predicted Support Need (PSN) — Admin Only
+
+> **📖 See [Predicted Support Need Module](./PREDICTED_SUPPORT_NEED.md) for full specification.**
+
+PSN is an internal forecasting tool that:
+- Predicts which participants will need support
+- Informs budget planning (not participant decisions)
+- Is **never visible to participants**
+
+PSN Levels:
+- `NONE` — Self-sufficient
+- `LOW` — Minor, time-limited
+- `MEDIUM` — Active intervention needed
+- `HIGH` — Intensive structural support
 
 ### Decision Logic
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                  STIPEND APPROVAL LOGIC                      │
+│              SUPPORT APPROVAL LOGIC                          │
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
 │    ┌─────────────────────────────────────────────────────┐  │
-│    │ Does this stipend increase P(income before Day 90)? │  │
+│    │ Is there evidence of recent action?                 │  │
 │    └─────────────────────────────────────────────────────┘  │
 │                           │                                  │
 │              ┌────────────┴────────────┐                    │
@@ -499,12 +590,59 @@ ELSE:
 │          └──────┘                 └──────┘                  │
 │              │                         │                    │
 │              ▼                         ▼                    │
-│        ┌──────────┐            ┌─────────────┐             │
-│        │ APPROVE  │            │   REJECT    │             │
-│        └──────────┘            └─────────────┘             │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
+│    ┌───────────────────┐      ┌─────────────────┐          │
+│    │ Validate Blocker  │      │ AUTO-DENY       │          │
+│    │ Against Phase     │      │ "Support follows│          │
+│    └────────┬──────────┘      │  effort"        │          │
+│             │                 └─────────────────┘          │
+│             ▼                                               │
+│    ┌───────────────────┐                                   │
+│    │ Does this support │                                   │
+│    │ increase P(income │                                   │
+│    │ before Day 90)?   │                                   │
+│    └────────┬──────────┘                                   │
+│             │                                               │
+│      ┌──────┴──────┐                                       │
+│      │             │                                       │
+│      ▼             ▼                                       │
+│   ┌──────┐    ┌──────┐                                     │
+│   │ YES  │    │  NO  │                                     │
+│   └──────┘    └──────┘                                     │
+│      │             │                                       │
+│      ▼             ▼                                       │
+│  APPROVE        DEFER                                      │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
 ```
+
+### Support Delivery Rules
+
+- **Default:** Non-cash (data, vouchers, tool access)
+- **Cash:** Only when unavoidable, requires admin escalation
+- **Expiration:** Support expires automatically after phase completion
+- **Inactivity:** Inactivity pauses support instantly
+
+### Separation of Responsibilities
+
+| Layer | Responsibility |
+|-------|----------------|
+| Admissions Engine | Readiness & eligibility (no support info) |
+| Support Request Engine | Blocker validation |
+| Admin Review | Oversight & exception handling |
+| Program Engine | Enforcement & outcomes |
+
+> **Funding constraints NEVER affect admission.** Support availability is handled after behavior is observed.
+
+> **📖 For detailed budget management, approval tiers, disbursement flows, and audit requirements, see [Support Wallet Module](./SUPPORT_WALLET.md).**
+
+### Final System Law (Support)
+
+> **Support is invisible until needed.  
+> Effort unlocks assistance.  
+> Inaction disables it.  
+> Admission is unconditional.  
+> Execution is enforced.**
+
 
 ---
 
@@ -876,7 +1014,7 @@ Impact OS is designed to:
 - ✅ Mission engine
 - ✅ Currency tracking
 - ✅ Failure logging
-- ✅ Stipend gating
+- ✅ Support eligibility gating
 - ✅ Income verification
 - ✅ Admin dashboards
 - ✅ Basic analytics
@@ -947,18 +1085,20 @@ The Skill Triad is computed from intake probe responses:
 
 ### Offer Types Defined
 
-| Offer Type | Profile | Stipend | Primary Focus |
-|------------|---------|---------|---------------|
-| **FULL_SUPPORT** | No income, low-mid skill | ✅ Yes | Technical + Commercial |
-| **SKILLS_ONLY** | Has income, needs skills | ❌ No | Technical training |
-| **ACCELERATOR** | Has skill, needs exposure | ❌ No | Arena Points focus |
-| **CATALYST_TRACK** | Ready to earn | ❌ No | Income verification |
+| Offer Type | Profile | Support Eligibility (Internal) | Primary Focus |
+|------------|---------|-------------------------------|---------------|
+| **FULL_SUPPORT** | No income, low-mid skill | ✅ Eligible | Technical + Commercial |
+| **SKILLS_ONLY** | Has income, needs skills | ❌ Not eligible | Technical training |
+| **ACCELERATOR** | Has skill, needs exposure | ❌ Not eligible | Arena Points focus |
+| **CATALYST_TRACK** | Ready to earn | ❌ Not eligible | Income verification |
 
-### Stipend Eligibility Rules
+> **Note:** Support eligibility is tracked internally but **never communicated at admission**. Participants unlock support through demonstrated effort (see §14).
+
+### Support Eligibility Rules (Internal Only)
 
 ```python
-def receives_stipend(applicant):
-    # Only FULL_SUPPORT receives stipend
+def is_support_eligible(applicant):
+    # Determines internal PSN tracking - NOT communicated to participant
     if applicant.offer_type != "FULL_SUPPORT":
         return False
     
@@ -974,7 +1114,7 @@ def receives_stipend(applicant):
     return True
 ```
 
-> **Not all participants receive monetary stipends.** Stipends are reserved for those with zero income AND eligible employment status.
+> **Critical:** This eligibility is used for internal PSN forecasting and budget planning only. Participants are **never told** they are "support eligible" at admission. They must unlock support through behavior (see §14).
 
 ### Primary Focus Assignment
 
@@ -1000,11 +1140,12 @@ When an applicant is admitted, they receive an offer email containing:
 
 1. **Skill Triad Visualization** — Their starting position
 2. **Identified Gap** — "You're strong in [X] but need [Y] development"
-3. **Offer Type** — What support they'll receive
-4. **Stipend Status** — Whether they qualify for monetary support
-5. **90-Day Focus** — What success looks like for their track
-6. **KPI Preview** — The specific targets they'll be measured against
-7. **Accept/Decline CTA** — Accepting locks in their journey
+3. **Offer Type** — What track they're on
+4. **90-Day Focus** — What success looks like for their track
+5. **KPI Preview** — The specific targets they'll be measured against
+6. **Accept/Decline CTA** — Accepting locks in their journey
+
+> **🚫 NOT included in offer email:** Any mention of stipends, support, or financial assistance. Support is unlocked through behavior, not promised at admission.
 
 ### Assessment Flow
 
