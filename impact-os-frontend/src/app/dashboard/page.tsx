@@ -81,24 +81,36 @@ export default function ParticipantDashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+
     useEffect(() => {
         const fetchProgress = async () => {
             try {
-                const response = await fetch('/api/progress', {
+                const token = localStorage.getItem('auth_token');
+                const response = await fetch(`${API_BASE}/progress`, {
                     credentials: 'include',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
                 });
 
                 if (response.ok) {
                     const progressData = await response.json();
                     setData(progressData);
-                } else {
-                    // Use mock data in development
+                } else if (process.env.NODE_ENV !== 'production') {
                     console.log('Using mock data - API not available');
                     setData(mockData);
+                } else {
+                    setData(null);
                 }
             } catch (err) {
                 console.error('Failed to fetch progress:', err);
-                setData(mockData);
+                if (process.env.NODE_ENV !== 'production') {
+                    setData(mockData);
+                } else {
+                    setData(null);
+                }
             } finally {
                 setLoading(false);
             }
@@ -106,8 +118,13 @@ export default function ParticipantDashboard() {
 
         const fetchHistory = async () => {
             try {
-                const response = await fetch('/api/progress/history', {
+                const token = localStorage.getItem('auth_token');
+                const response = await fetch(`${API_BASE}/progress/history`, {
                     credentials: 'include',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
                 });
                 if (response.ok) {
                     const historyData = await response.json();
@@ -120,7 +137,7 @@ export default function ParticipantDashboard() {
 
         fetchProgress();
         fetchHistory();
-    }, []);
+    }, [API_BASE]);
 
     if (loading) {
         return (

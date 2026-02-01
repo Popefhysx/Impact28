@@ -176,38 +176,55 @@ export default function StaffPage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                const token = localStorage.getItem('auth_token');
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                };
+
                 const [staffRes, templatesRes, cohortsRes] = await Promise.all([
-                    fetch(`${API_BASE}/staff`),
-                    fetch(`${API_BASE}/staff/templates`),
-                    fetch(`${API_BASE}/staff/cohorts`),
+                    fetch(`${API_BASE}/staff`, { headers }),
+                    fetch(`${API_BASE}/staff/templates`, { headers }),
+                    fetch(`${API_BASE}/staff/cohorts`, { headers }),
                 ]);
 
                 if (staffRes.ok) {
                     const data = await staffRes.json();
-                    setStaffMembers(data.staff?.length > 0 ? data.staff : mockStaffMembers);
-                } else {
+                    setStaffMembers(data.staff?.length > 0 ? data.staff : (process.env.NODE_ENV !== 'production' ? mockStaffMembers : []));
+                } else if (process.env.NODE_ENV !== 'production') {
                     setStaffMembers(mockStaffMembers);
+                } else {
+                    setStaffMembers([]);
                 }
 
                 if (templatesRes.ok) {
                     const tData = await templatesRes.json();
-                    setTemplates(tData.templates?.length > 0 ? tData.templates : mockTemplates);
-                } else {
+                    setTemplates(tData.templates?.length > 0 ? tData.templates : (process.env.NODE_ENV !== 'production' ? mockTemplates : []));
+                } else if (process.env.NODE_ENV !== 'production') {
                     setTemplates(mockTemplates);
+                } else {
+                    setTemplates([]);
                 }
 
                 if (cohortsRes.ok) {
                     const cData = await cohortsRes.json();
-                    setCohorts(cData?.length > 0 ? cData : mockCohorts);
-                } else {
+                    setCohorts(cData?.length > 0 ? cData : (process.env.NODE_ENV !== 'production' ? mockCohorts : []));
+                } else if (process.env.NODE_ENV !== 'production') {
                     setCohorts(mockCohorts);
+                } else {
+                    setCohorts([]);
                 }
             } catch (error) {
                 console.error('Failed to fetch data:', error);
-                // Use mock data on error
-                setStaffMembers(mockStaffMembers);
-                setTemplates(mockTemplates);
-                setCohorts(mockCohorts);
+                if (process.env.NODE_ENV !== 'production') {
+                    setStaffMembers(mockStaffMembers);
+                    setTemplates(mockTemplates);
+                    setCohorts(mockCohorts);
+                } else {
+                    setStaffMembers([]);
+                    setTemplates([]);
+                    setCohorts([]);
+                }
             } finally {
                 setLoading(false);
             }

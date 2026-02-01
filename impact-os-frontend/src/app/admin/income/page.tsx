@@ -1,11 +1,26 @@
 'use client';
 
-import { useState } from 'react';
-import { Check, X, Eye, ExternalLink, Clock, User, Banknote, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Check, X, Eye, ExternalLink, Clock, User, Banknote, AlertCircle, Loader2 } from 'lucide-react';
 import styles from './page.module.css';
 
-// Mock data for income verification queue
-const pendingIncomes = [
+// Types for income verification
+interface Income {
+    id: string;
+    userId: string;
+    userName: string;
+    amount: number;
+    currency: string;
+    source: string;
+    platform: string;
+    description: string;
+    proofUrl: string;
+    status: string;
+    submittedAt: Date;
+}
+
+// Mock data for development only
+const mockPendingIncomes: Income[] = [
     {
         id: 'income-001',
         userId: 'user-001',
@@ -66,19 +81,106 @@ function formatTimeAgo(date: Date) {
 }
 
 export default function IncomeVerificationPage() {
+    const [pendingIncomes, setPendingIncomes] = useState<Income[]>([]);
+    const [loading, setLoading] = useState(true);
     const [selectedIncome, setSelectedIncome] = useState<string | null>(null);
 
-    const handleApprove = (incomeId: string) => {
-        // TODO: API call to approve income
-        console.log('Approving income:', incomeId);
-        alert(`Income ${incomeId} approved!`);
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+
+    useEffect(() => {
+        const fetchIncomes = async () => {
+            try {
+                const token = localStorage.getItem('auth_token');
+                const response = await fetch(`${API_BASE}/income/admin/pending`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    // Convert date strings back to Date objects
+                    const incomes = (data || []).map((income: Income & { submittedAt: string }) => ({
+                        ...income,
+                        submittedAt: new Date(income.submittedAt),
+                    }));
+                    setPendingIncomes(incomes.length > 0 ? incomes : (process.env.NODE_ENV !== 'production' ? mockPendingIncomes : []));
+                } else if (process.env.NODE_ENV !== 'production') {
+                    setPendingIncomes(mockPendingIncomes);
+                } else {
+                    setPendingIncomes([]);
+                }
+            } catch (error) {
+                console.error('Failed to fetch incomes:', error);
+                if (process.env.NODE_ENV !== 'production') {
+                    setPendingIncomes(mockPendingIncomes);
+                } else {
+                    setPendingIncomes([]);
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchIncomes();
+    }, [API_BASE]);
+
+    const handleApprove = async (incomeId: string) => {
+        try {
+            const token = localStorage.getItem('auth_token');
+            const response = await fetch(`${API_BASE}/income/admin/${incomeId}/approve`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                setPendingIncomes(prev => prev.filter(i => i.id !== incomeId));
+            } else {
+                alert(`Failed to approve income ${incomeId}`);
+            }
+        } catch (error) {
+            console.error('Approve failed:', error);
+            alert(`Error approving income ${incomeId}`);
+        }
     };
 
-    const handleReject = (incomeId: string, reason?: string) => {
-        // TODO: API call to reject income
-        console.log('Rejecting income:', incomeId, reason);
-        alert(`Income ${incomeId} rejected.`);
+    const handleReject = async (incomeId: string, reason?: string) => {
+        try {
+            const token = localStorage.getItem('auth_token');
+            const response = await fetch(`${API_BASE}/income/admin/${incomeId}/reject`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ reason }),
+            });
+
+            if (response.ok) {
+                setPendingIncomes(prev => prev.filter(i => i.id !== incomeId));
+            } else {
+                alert(`Failed to reject income ${incomeId}`);
+            }
+        } catch (error) {
+            console.error('Reject failed:', error);
+            alert(`Error rejecting income ${incomeId}`);
+        }
     };
+
+    if (loading) {
+        return (
+            <div className={styles.container}>
+                <div className={styles.loadingState}>
+                    <Loader2 size={32} className={styles.spinner} />
+                    <p>Loading income verifications...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.container}>

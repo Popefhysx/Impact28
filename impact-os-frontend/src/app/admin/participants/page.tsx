@@ -1,12 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, Filter, User, Zap, Star, Trophy, ChevronRight, MoreHorizontal, Grid, List } from 'lucide-react';
+import { Search, Filter, User, Zap, Star, Trophy, ChevronRight, MoreHorizontal, Grid, List, Loader2 } from 'lucide-react';
 import styles from './page.module.css';
 
-// Mock data for participants
-const participants = [
+// Types for participants
+interface Participant {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    skillTrack: string;
+    identityLevel: string;
+    momentum: number;
+    daysInProgram: number;
+    isActive: boolean;
+    cohort: string;
+}
+
+// Mock data for development only
+const mockParticipants: Participant[] = [
     {
         id: 'user-001',
         firstName: 'Adaeze',
@@ -91,10 +105,48 @@ function getInitials(firstName: string, lastName: string) {
 }
 
 export default function ParticipantsPage() {
+    const [participants, setParticipants] = useState<Participant[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [levelFilter, setLevelFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+
+    useEffect(() => {
+        const fetchParticipants = async () => {
+            try {
+                const token = localStorage.getItem('auth_token');
+                const response = await fetch(`${API_BASE}/admin/participants`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    setParticipants(data?.length > 0 ? data : (process.env.NODE_ENV !== 'production' ? mockParticipants : []));
+                } else if (process.env.NODE_ENV !== 'production') {
+                    setParticipants(mockParticipants);
+                } else {
+                    setParticipants([]);
+                }
+            } catch (error) {
+                console.error('Failed to fetch participants:', error);
+                if (process.env.NODE_ENV !== 'production') {
+                    setParticipants(mockParticipants);
+                } else {
+                    setParticipants([]);
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchParticipants();
+    }, [API_BASE]);
 
     const filteredParticipants = participants.filter(p => {
         const matchesSearch = searchQuery === '' ||
@@ -106,6 +158,17 @@ export default function ParticipantsPage() {
             (statusFilter === 'paused' && !p.isActive);
         return matchesSearch && matchesLevel && matchesStatus;
     });
+
+    if (loading) {
+        return (
+            <div className={styles.container}>
+                <div className={styles.loadingState}>
+                    <Loader2 size={32} className={styles.spinner} />
+                    <p>Loading participants...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.container}>
@@ -173,113 +236,124 @@ export default function ParticipantsPage() {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredParticipants.map((p) => (
-                            <tr key={p.id}>
-                                <td>
-                                    <div className={styles.participantCell}>
-                                        <div className={styles.avatar}>
-                                            {getInitials(p.firstName, p.lastName)}
-                                        </div>
-                                        <div className={styles.participantInfo}>
-                                            <span className={styles.name}>{p.firstName} {p.lastName}</span>
-                                            <span className={styles.email}>{p.email}</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span
-                                        className={styles.levelBadge}
-                                        style={{ color: levelLabels[p.identityLevel]?.color }}
-                                    >
-                                        {levelLabels[p.identityLevel]?.label}
-                                    </span>
-                                </td>
-                                <td>{skillLabels[p.skillTrack] || p.skillTrack}</td>
-                                <td>
-                                    <div className={styles.momentumCell}>
-                                        <Zap size={14} />
-                                        <span className={p.momentum < 50 ? styles.lowMomentum : ''}>
-                                            {p.momentum}
-                                        </span>
-                                    </div>
-                                </td>
-                                <td>{p.daysInProgram}</td>
-                                <td>
-                                    {p.isActive ? (
-                                        <span className="badge badge-success">Active</span>
-                                    ) : (
-                                        <span className="badge badge-warning">Paused</span>
-                                    )}
-                                </td>
-                                <td>
-                                    <Link href={`/admin/participants/${p.id}`} className={styles.viewBtn}>
-                                        <ChevronRight size={18} />
-                                    </Link>
+                        {filteredParticipants.length === 0 ? (
+                            <tr>
+                                <td colSpan={7} className={styles.emptyCell}>
+                                    No participants found
                                 </td>
                             </tr>
-                        ))}
+                        ) : (
+                            filteredParticipants.map((p) => (
+                                <tr key={p.id}>
+                                    <td>
+                                        <div className={styles.participantCell}>
+                                            <div className={styles.avatar}>
+                                                {getInitials(p.firstName, p.lastName)}
+                                            </div>
+                                            <div className={styles.participantInfo}>
+                                                <span className={styles.name}>{p.firstName} {p.lastName}</span>
+                                                <span className={styles.email}>{p.email}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span
+                                            className={styles.levelBadge}
+                                            style={{ color: levelLabels[p.identityLevel]?.color }}
+                                        >
+                                            {levelLabels[p.identityLevel]?.label}
+                                        </span>
+                                    </td>
+                                    <td>{skillLabels[p.skillTrack] || p.skillTrack}</td>
+                                    <td>
+                                        <div className={styles.momentumCell}>
+                                            <Zap size={14} />
+                                            <span className={p.momentum < 50 ? styles.lowMomentum : ''}>
+                                                {p.momentum}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>{p.daysInProgram}</td>
+                                    <td>
+                                        {p.isActive ? (
+                                            <span className="badge badge-success">Active</span>
+                                        ) : (
+                                            <span className="badge badge-warning">Paused</span>
+                                        )}
+                                    </td>
+                                    <td>
+                                        <Link href={`/admin/participants/${p.id}`} className={styles.viewBtn}>
+                                            <ChevronRight size={18} />
+                                        </Link>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>
 
             {/* Grid View - Always visible on mobile, toggled on desktop */}
             <div className={`${styles.gridView} ${viewMode === 'grid' ? '' : styles.hiddenDesktop}`}>
-                {filteredParticipants.map((p) => (
-                    <div key={p.id} className={styles.participantCard}>
-                        <div className={styles.cardHeader}>
-                            <div className={styles.participantCell}>
-                                <div className={styles.avatar}>
-                                    {getInitials(p.firstName, p.lastName)}
+                {filteredParticipants.length === 0 ? (
+                    <div className={styles.emptyCell}>No participants found</div>
+                ) : (
+                    filteredParticipants.map((p) => (
+                        <div key={p.id} className={styles.participantCard}>
+                            <div className={styles.cardHeader}>
+                                <div className={styles.participantCell}>
+                                    <div className={styles.avatar}>
+                                        {getInitials(p.firstName, p.lastName)}
+                                    </div>
+                                    <div className={styles.participantInfo}>
+                                        <span className={styles.name}>{p.firstName} {p.lastName}</span>
+                                        <span className={styles.email}>{p.email}</span>
+                                    </div>
                                 </div>
-                                <div className={styles.participantInfo}>
-                                    <span className={styles.name}>{p.firstName} {p.lastName}</span>
-                                    <span className={styles.email}>{p.email}</span>
-                                </div>
+                                {p.isActive ? (
+                                    <span className="badge badge-success">Active</span>
+                                ) : (
+                                    <span className="badge badge-warning">Paused</span>
+                                )}
                             </div>
-                            {p.isActive ? (
-                                <span className="badge badge-success">Active</span>
-                            ) : (
-                                <span className="badge badge-warning">Paused</span>
-                            )}
-                        </div>
-                        <div className={styles.cardBody}>
-                            <div className={styles.cardRow}>
-                                <span className={styles.cardLabel}>Level</span>
-                                <span
-                                    className={styles.levelBadge}
-                                    style={{ color: levelLabels[p.identityLevel]?.color }}
-                                >
-                                    {levelLabels[p.identityLevel]?.label}
-                                </span>
-                            </div>
-                            <div className={styles.cardRow}>
-                                <span className={styles.cardLabel}>Skill Track</span>
-                                <span>{skillLabels[p.skillTrack] || p.skillTrack}</span>
-                            </div>
-                            <div className={styles.cardRow}>
-                                <span className={styles.cardLabel}>Momentum</span>
-                                <div className={styles.momentumCell}>
-                                    <Zap size={14} />
-                                    <span className={p.momentum < 50 ? styles.lowMomentum : ''}>
-                                        {p.momentum}
+                            <div className={styles.cardBody}>
+                                <div className={styles.cardRow}>
+                                    <span className={styles.cardLabel}>Level</span>
+                                    <span
+                                        className={styles.levelBadge}
+                                        style={{ color: levelLabels[p.identityLevel]?.color }}
+                                    >
+                                        {levelLabels[p.identityLevel]?.label}
                                     </span>
                                 </div>
+                                <div className={styles.cardRow}>
+                                    <span className={styles.cardLabel}>Skill Track</span>
+                                    <span>{skillLabels[p.skillTrack] || p.skillTrack}</span>
+                                </div>
+                                <div className={styles.cardRow}>
+                                    <span className={styles.cardLabel}>Momentum</span>
+                                    <div className={styles.momentumCell}>
+                                        <Zap size={14} />
+                                        <span className={p.momentum < 50 ? styles.lowMomentum : ''}>
+                                            {p.momentum}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className={styles.cardRow}>
+                                    <span className={styles.cardLabel}>Days in Program</span>
+                                    <span>{p.daysInProgram}</span>
+                                </div>
                             </div>
-                            <div className={styles.cardRow}>
-                                <span className={styles.cardLabel}>Days in Program</span>
-                                <span>{p.daysInProgram}</span>
+                            <div className={styles.cardFooter}>
+                                <span className={styles.cohortLabel}>{p.cohort}</span>
+                                <Link href={`/admin/participants/${p.id}`} className={styles.viewBtn}>
+                                    View <ChevronRight size={16} />
+                                </Link>
                             </div>
                         </div>
-                        <div className={styles.cardFooter}>
-                            <span className={styles.cohortLabel}>{p.cohort}</span>
-                            <Link href={`/admin/participants/${p.id}`} className={styles.viewBtn}>
-                                View <ChevronRight size={16} />
-                            </Link>
-                        </div>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
         </div>
     );
 }
-
