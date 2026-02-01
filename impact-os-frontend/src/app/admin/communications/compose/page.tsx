@@ -436,14 +436,7 @@ export default function ComposePage() {
                             className={styles.contentArea}
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
-                            placeholder="Write your email content here...
-
-You can use {{variable}} placeholders that will be replaced with recipient data.
-
-Available variables:
-- {{firstName}} - Recipient's first name
-- {{lastName}} - Recipient's last name
-- {{email}} - Recipient's email address"
+                            placeholder="Write your email content here..."
                         />
                     )}
 

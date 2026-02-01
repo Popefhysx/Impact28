@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma';
+import { UploadsModule } from './uploads';
 import { IntakeModule } from './intake';
 import { EmailModule } from './email';
+import { EmailTemplatesModule } from './email-templates';
 import { TestimonialsModule } from './testimonials';
 import { PartnersModule } from './partners';
 import { CohortConfigModule } from './cohort-config';
@@ -30,6 +32,8 @@ import { CommunicationsModule } from './communications';
       isGlobal: true,
     }),
     PrismaModule,
+    UploadsModule,
+    EmailTemplatesModule,
     AuthModule,
     IntakeModule,
     EmailModule,

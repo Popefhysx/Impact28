@@ -49,6 +49,102 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+// Mock data for development
+const mockStats: Stats = {
+    total: 47,
+    sent: 35,
+    delivered: 32,
+    failed: 3,
+    pending: 9,
+};
+
+const mockLogs: CommunicationLog[] = [
+    {
+        id: 'comm-001',
+        triggeredBy: 'SYSTEM',
+        triggerSource: 'INTAKE',
+        templateType: 'APPLICATION_RECEIVED',
+        subject: 'Application Received - Cycle 28',
+        recipientEmail: 'adaeze@example.com',
+        recipientName: 'Adaeze Okonkwo',
+        status: 'DELIVERED',
+        sentAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        failedAt: null,
+        failureReason: null,
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+        id: 'comm-002',
+        triggeredBy: 'SYSTEM',
+        triggerSource: 'ADMISSION',
+        templateType: 'OFFER_LETTER',
+        subject: 'Congratulations! You have been accepted',
+        recipientEmail: 'chidi@example.com',
+        recipientName: 'Chidi Eze',
+        status: 'DELIVERED',
+        sentAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        failedAt: null,
+        failureReason: null,
+        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+        id: 'comm-003',
+        triggeredBy: 'admin@impactos.ng',
+        triggerSource: 'MANUAL',
+        templateType: 'MANUAL_EMAIL',
+        subject: 'Reminder: Complete your onboarding',
+        recipientEmail: 'ngozi@example.com',
+        recipientName: 'Ngozi Ibe',
+        status: 'SENT',
+        sentAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+        failedAt: null,
+        failureReason: null,
+        createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+        id: 'comm-004',
+        triggeredBy: 'SYSTEM',
+        triggerSource: 'AUTH',
+        templateType: 'PASSWORD_RESET',
+        subject: 'Reset your password',
+        recipientEmail: 'tunde@example.com',
+        recipientName: 'Tunde Adeyemi',
+        status: 'FAILED',
+        sentAt: null,
+        failedAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+        failureReason: 'Invalid email address',
+        createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+        id: 'comm-005',
+        triggeredBy: 'SYSTEM',
+        triggerSource: 'STAFF',
+        templateType: 'WEEKLY_UPDATE',
+        subject: 'Weekly Progress Report',
+        recipientEmail: 'staff@impactos.ng',
+        recipientName: null,
+        status: 'QUEUED',
+        sentAt: null,
+        failedAt: null,
+        failureReason: null,
+        createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+    },
+    {
+        id: 'comm-006',
+        triggeredBy: 'SYSTEM',
+        triggerSource: 'SYSTEM',
+        templateType: 'MISSION_REMINDER',
+        subject: 'Mission deadline approaching',
+        recipientEmail: 'participant@example.com',
+        recipientName: 'Sample Participant',
+        status: 'BOUNCED',
+        sentAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+        failedAt: new Date(Date.now() - 47 * 60 * 60 * 1000).toISOString(),
+        failureReason: 'Mailbox does not exist',
+        createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+    },
+];
+
 export default function CommunicationsPage() {
     const [logs, setLogs] = useState<CommunicationLog[]>([]);
     const [stats, setStats] = useState<Stats | null>(null);
@@ -66,9 +162,14 @@ export default function CommunicationsPage() {
             if (res.ok) {
                 const data = await res.json();
                 setStats(data);
+            } else if (process.env.NODE_ENV !== 'production') {
+                setStats(mockStats);
             }
         } catch (error) {
             console.error('Failed to fetch stats:', error);
+            if (process.env.NODE_ENV !== 'production') {
+                setStats(mockStats);
+            }
         }
     };
 
@@ -96,13 +197,18 @@ export default function CommunicationsPage() {
             const res = await fetch(`${API_BASE}/api/admin/communications?${params}`);
             if (res.ok) {
                 const data = await res.json();
-                setLogs(data.data);
-                setTotalPages(data.totalPages);
+                setLogs(data.data?.length > 0 ? data.data : (process.env.NODE_ENV !== 'production' ? mockLogs : []));
+                setTotalPages(data.totalPages || 1);
+            } else if (process.env.NODE_ENV !== 'production') {
+                setLogs(mockLogs);
+                setTotalPages(1);
             }
         } catch (error) {
             console.error('Failed to fetch logs:', error);
-            // Use mock data in dev
-            setLogs([]);
+            if (process.env.NODE_ENV !== 'production') {
+                setLogs(mockLogs);
+                setTotalPages(1);
+            }
         } finally {
             setLoading(false);
         }
@@ -168,70 +274,71 @@ export default function CommunicationsPage() {
                 </div>
             )}
 
-            {/* Tabs */}
-            <div className={styles.tabs}>
-                <button
-                    className={`${styles.tab} ${activeTab === 'all' ? styles.activeTab : ''}`}
-                    onClick={() => { setActiveTab('all'); setPage(1); }}
-                >
-                    <Mail size={16} /> All Emails
-                </button>
-                <button
-                    className={`${styles.tab} ${activeTab === 'failures' ? styles.activeTab : ''}`}
-                    onClick={() => { setActiveTab('failures'); setPage(1); }}
-                >
-                    <AlertTriangle size={16} /> Failures
-                    {stats && stats.failed > 0 && (
-                        <span className={styles.tabBadge}>{stats.failed}</span>
-                    )}
-                </button>
-            </div>
-
-            {/* Filters */}
-            <div className={styles.filters}>
-                <div className={styles.searchBox}>
-                    <Search size={18} />
-                    <input
-                        type="text"
-                        placeholder="Search by email or name..."
-                        value={searchQuery}
-                        onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
-                    />
+            {/* Toolbar - Tabs + Filters on same row */}
+            <div className={styles.toolbar}>
+                <div className={styles.tabs}>
+                    <button
+                        className={`${styles.tab} ${activeTab === 'all' ? styles.activeTab : ''}`}
+                        onClick={() => { setActiveTab('all'); setPage(1); }}
+                    >
+                        <Mail size={16} /> All Emails
+                    </button>
+                    <button
+                        className={`${styles.tab} ${activeTab === 'failures' ? styles.activeTab : ''}`}
+                        onClick={() => { setActiveTab('failures'); setPage(1); }}
+                    >
+                        <AlertTriangle size={16} /> Failures
+                        {stats && stats.failed > 0 && (
+                            <span className={styles.tabBadge}>{stats.failed}</span>
+                        )}
+                    </button>
                 </div>
 
-                <div className={styles.filterGroup}>
-                    <Filter size={16} />
-                    {activeTab === 'all' && (
+                <div className={styles.filters}>
+                    <div className={styles.searchBox}>
+                        <Search size={18} />
+                        <input
+                            type="text"
+                            placeholder="Search by email or name..."
+                            value={searchQuery}
+                            onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
+                        />
+                    </div>
+
+                    <div className={styles.filterGroup}>
+                        <Filter size={16} />
+                        {activeTab === 'all' && (
+                            <Select
+                                value={statusFilter}
+                                onChange={(val) => { setStatusFilter(val); setPage(1); }}
+                                options={[
+                                    { value: 'ALL', label: 'All Status' },
+                                    { value: 'QUEUED', label: 'Queued' },
+                                    { value: 'SENT', label: 'Sent' },
+                                    { value: 'DELIVERED', label: 'Delivered' },
+                                    { value: 'FAILED', label: 'Failed' },
+                                ]}
+                            />
+                        )}
+
                         <Select
-                            value={statusFilter}
-                            onChange={(val) => { setStatusFilter(val); setPage(1); }}
+                            value={sourceFilter}
+                            onChange={(val) => { setSourceFilter(val); setPage(1); }}
                             options={[
-                                { value: 'ALL', label: 'All Status' },
-                                { value: 'QUEUED', label: 'Queued' },
-                                { value: 'SENT', label: 'Sent' },
-                                { value: 'DELIVERED', label: 'Delivered' },
-                                { value: 'FAILED', label: 'Failed' },
+                                { value: 'ALL', label: 'All Sources' },
+                                { value: 'INTAKE', label: 'Intake' },
+                                { value: 'ADMISSION', label: 'Admission' },
+                                { value: 'AUTH', label: 'Auth' },
+                                { value: 'STAFF', label: 'Staff' },
+                                { value: 'SYSTEM', label: 'System' },
                             ]}
                         />
-                    )}
+                    </div>
 
-                    <Select
-                        value={sourceFilter}
-                        onChange={(val) => { setSourceFilter(val); setPage(1); }}
-                        options={[
-                            { value: 'ALL', label: 'All Sources' },
-                            { value: 'INTAKE', label: 'Intake' },
-                            { value: 'ADMISSION', label: 'Admission' },
-                            { value: 'AUTH', label: 'Auth' },
-                            { value: 'STAFF', label: 'Staff' },
-                            { value: 'SYSTEM', label: 'System' },
-                        ]}
-                    />
+                    <button className={styles.refreshBtn} onClick={fetchLogs} title="Refresh">
+                        <RefreshCw size={16} />
+                    </button>
                 </div>
-
-                <button className={styles.refreshBtn} onClick={fetchLogs} title="Refresh">
-                    <RefreshCw size={16} />
-                </button>
             </div>
 
             {/* Email List */}

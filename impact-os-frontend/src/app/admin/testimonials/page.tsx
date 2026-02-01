@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Filter, Check, X, Clock, Star, Loader2, MessageSquareQuote, LayoutGrid, LayoutList, MapPin, Briefcase, Eye } from 'lucide-react';
+import { Search, Filter, Check, X, Clock, Star, Loader2, MessageSquareQuote, LayoutGrid, LayoutList, MapPin, Briefcase, Eye, PenSquare } from 'lucide-react';
 import { Select } from '@/components/ui/Select';
 import styles from './page.module.css';
 
@@ -31,15 +31,82 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof
     REJECTED: { label: 'Rejected', color: 'var(--accent-danger)', icon: X },
 };
 
+// Mock data for development
+const mockTestimonials: Testimonial[] = [
+    {
+        id: 'test-001',
+        name: 'Adaeze Okonkwo',
+        role: 'Freelance Developer',
+        company: 'Self-Employed',
+        location: 'Lagos, Nigeria',
+        quote: 'Impact OS completely transformed my approach to freelancing. Within 3 months of joining, I landed my first paying client and have not looked back since. The structured missions and accountability system kept me on track when I wanted to give up.',
+        skills: ['Web Development', 'React', 'Node.js'],
+        status: 'APPROVED',
+        isFeatured: true,
+        submittedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        approvedAt: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
+        approvedBy: 'admin',
+    },
+    {
+        id: 'test-002',
+        name: 'Chidi Eze',
+        role: 'Graphic Designer',
+        location: 'Abuja, Nigeria',
+        quote: 'I was skeptical at first, but the program really works. The community support is amazing and I have made lifelong friends. Now I earn consistently from design work.',
+        skills: ['Graphic Design', 'Canva', 'Adobe Illustrator'],
+        status: 'PENDING',
+        isFeatured: false,
+        submittedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+        id: 'test-003',
+        name: 'Ngozi Ibe',
+        role: 'Content Writer',
+        company: 'Fiverr Pro',
+        location: 'Port Harcourt, Nigeria',
+        quote: 'From zero writing experience to Fiverr Pro seller in 6 months. The behavioral approach here is unlike anything I have seen. It actually forces you to take action instead of just consuming content.',
+        skills: ['Content Writing', 'SEO', 'Copywriting'],
+        status: 'APPROVED',
+        isFeatured: false,
+        displayOrder: 2,
+        submittedAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+        approvedAt: new Date(Date.now() - 43 * 24 * 60 * 60 * 1000).toISOString(),
+        approvedBy: 'admin',
+    },
+    {
+        id: 'test-004',
+        name: 'Tunde Adeyemi',
+        role: 'Student',
+        location: 'Ibadan, Nigeria',
+        quote: 'This program helped me balance my studies with learning real skills. I started making money before even graduating.',
+        skills: ['Social Media', 'Video Editing'],
+        status: 'PENDING',
+        isFeatured: false,
+        submittedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+        id: 'test-005',
+        name: 'Fake Testimonial',
+        role: 'Scammer',
+        location: 'Unknown',
+        quote: 'This is obviously fake and should be rejected.',
+        skills: [],
+        status: 'REJECTED',
+        isFeatured: false,
+        submittedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+];
+
 export default function AdminTestimonialsPage() {
     const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('ALL');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedTestimonial, setSelectedTestimonial] = useState<Testimonial | null>(null);
-    const [actionModal, setActionModal] = useState<'view' | 'approve' | 'reject' | null>(null);
+    const [actionModal, setActionModal] = useState<'view' | 'approve' | 'reject' | 'edit' | null>(null);
     const [processing, setProcessing] = useState(false);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [editForm, setEditForm] = useState<Partial<Testimonial>>({});
 
     // Fetch testimonials from API
     useEffect(() => {
@@ -48,10 +115,15 @@ export default function AdminTestimonialsPage() {
                 const res = await fetch(`${API_BASE}/testimonials/admin/all`);
                 if (res.ok) {
                     const data = await res.json();
-                    setTestimonials(data);
+                    setTestimonials(data.length > 0 ? data : (process.env.NODE_ENV !== 'production' ? mockTestimonials : []));
+                } else if (process.env.NODE_ENV !== 'production') {
+                    setTestimonials(mockTestimonials);
                 }
             } catch (error) {
                 console.error('Failed to fetch testimonials:', error);
+                if (process.env.NODE_ENV !== 'production') {
+                    setTestimonials(mockTestimonials);
+                }
             } finally {
                 setLoading(false);
             }
@@ -136,6 +208,59 @@ export default function AdminTestimonialsPage() {
             }
         } catch (error) {
             console.error('Failed to toggle featured:', error);
+        }
+    };
+
+    const handleEdit = (testimonial: Testimonial) => {
+        setSelectedTestimonial(testimonial);
+        setEditForm({
+            name: testimonial.name,
+            role: testimonial.role,
+            company: testimonial.company || '',
+            location: testimonial.location,
+            quote: testimonial.quote,
+            skills: testimonial.skills,
+        });
+        setActionModal('edit');
+    };
+
+    const handleSaveEdit = async () => {
+        if (!selectedTestimonial) return;
+        setProcessing(true);
+
+        try {
+            const res = await fetch(`${API_BASE}/testimonials/admin/${selectedTestimonial.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editForm),
+            });
+
+            if (res.ok) {
+                const updated = await res.json();
+                setTestimonials(prev => prev.map(t =>
+                    t.id === selectedTestimonial.id ? { ...t, ...updated } : t
+                ));
+            } else {
+                // In dev mode, update locally
+                if (process.env.NODE_ENV !== 'production') {
+                    setTestimonials(prev => prev.map(t =>
+                        t.id === selectedTestimonial.id ? { ...t, ...editForm } : t
+                    ));
+                }
+            }
+        } catch (error) {
+            console.error('Failed to save edit:', error);
+            // In dev mode, update locally anyway
+            if (process.env.NODE_ENV !== 'production') {
+                setTestimonials(prev => prev.map(t =>
+                    t.id === selectedTestimonial.id ? { ...t, ...editForm } : t
+                ));
+            }
+        } finally {
+            setProcessing(false);
+            setActionModal(null);
+            setSelectedTestimonial(null);
+            setEditForm({});
         }
     };
 
@@ -293,6 +418,12 @@ export default function AdminTestimonialsPage() {
                                             }}
                                         >
                                             <Eye size={16} /> View
+                                        </button>
+                                        <button
+                                            className={`${styles.actionBtn} ${styles.editBtn}`}
+                                            onClick={() => handleEdit(testimonial)}
+                                        >
+                                            <PenSquare size={16} /> Edit
                                         </button>
                                         {testimonial.status === 'PENDING' && (
                                             <>
@@ -460,6 +591,82 @@ export default function AdminTestimonialsPage() {
                             >
                                 {processing ? <Loader2 size={16} className={styles.spinner} /> : <X size={16} />}
                                 Yes, Reject
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Modal */}
+            {actionModal === 'edit' && selectedTestimonial && (
+                <div className={styles.modalOverlay} onClick={() => setActionModal(null)}>
+                    <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.modalHeader}>
+                            <h2>Edit Testimonial</h2>
+                            <button className={styles.closeBtn} onClick={() => setActionModal(null)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className={styles.editForm}>
+                            <div className={styles.formGroup}>
+                                <label>Name</label>
+                                <input
+                                    type="text"
+                                    value={editForm.name || ''}
+                                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                                />
+                            </div>
+
+                            <div className={styles.formRow}>
+                                <div className={styles.formGroup}>
+                                    <label>Role</label>
+                                    <input
+                                        type="text"
+                                        value={editForm.role || ''}
+                                        onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                                    />
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Company (optional)</label>
+                                    <input
+                                        type="text"
+                                        value={editForm.company || ''}
+                                        onChange={(e) => setEditForm({ ...editForm, company: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className={styles.formGroup}>
+                                <label>Location</label>
+                                <input
+                                    type="text"
+                                    value={editForm.location || ''}
+                                    onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+                                />
+                            </div>
+
+                            <div className={styles.formGroup}>
+                                <label>Quote</label>
+                                <textarea
+                                    rows={5}
+                                    value={editForm.quote || ''}
+                                    onChange={(e) => setEditForm({ ...editForm, quote: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        <div className={styles.modalActions}>
+                            <button className={styles.cancelBtn} onClick={() => setActionModal(null)}>
+                                Cancel
+                            </button>
+                            <button
+                                className={styles.confirmApproveBtn}
+                                onClick={handleSaveEdit}
+                                disabled={processing}
+                            >
+                                {processing ? <Loader2 size={16} className={styles.spinner} /> : <Check size={16} />}
+                                Save Changes
                             </button>
                         </div>
                     </div>

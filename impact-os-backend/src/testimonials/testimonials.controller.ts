@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Put, Body, Param } from '@nestjs/common';
 import { TestimonialsService } from './testimonials.service';
-import { SubmitTestimonialDto } from './dto';
+import { SubmitTestimonialDto, UpdateTestimonialDto } from './dto';
 
 @Controller('testimonials')
 export class TestimonialsController {
@@ -23,6 +23,12 @@ export class TestimonialsController {
     getAll() {
         // TODO: Add auth guard for admin
         return this.testimonialsService.getAll();
+    }
+
+    // PUT /testimonials/admin/:id - Admin: Edit testimonial
+    @Put('admin/:id')
+    update(@Param('id') id: string, @Body() dto: UpdateTestimonialDto) {
+        return this.testimonialsService.update(id, dto);
     }
 
     // PUT /testimonials/admin/:id/approve - Admin: Approve

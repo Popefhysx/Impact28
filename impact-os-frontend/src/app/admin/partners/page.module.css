@@ -1,0 +1,426 @@
+.container {
+    padding: 0;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-lg);
+    gap: var(--spacing-md);
+}
+
+.headerContent {
+    flex: 1;
+}
+
+.title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.25rem 0;
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.newBadge {
+    background: var(--accent-danger);
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+}
+
+/* Filters */
+.filters {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    flex-wrap: wrap;
+}
+
+.searchBox {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+}
+
+.searchIcon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+}
+
+.searchInput {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-sm) 40px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.searchInput:focus {
+    outline: none;
+    border-color: var(--gold-warm);
+}
+
+/* Content */
+.content {
+    min-height: 400px;
+}
+
+.loadingState,
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-2xl);
+    color: var(--text-tertiary);
+    text-align: center;
+    min-height: 300px;
+}
+
+.loadingState h3,
+.emptyState h3 {
+    margin: var(--spacing-md) 0 var(--spacing-xs) 0;
+    color: var(--text-secondary);
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Card Grid */
+.cardGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.card:hover {
+    border-color: var(--gold-warm);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.cardTitle h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.orgType,
+.contact {
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+}
+
+.statusBadge {
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: white;
+    white-space: nowrap;
+}
+
+.cardMeta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.cardMeta span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.cardType {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.cardType strong {
+    color: var(--gold-warm);
+    font-size: 0.9rem;
+}
+
+.amount {
+    font-weight: 600;
+    color: var(--accent-success);
+}
+
+.cardMessage {
+    display: flex;
+    gap: 6px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin: 0 0 var(--spacing-sm) 0;
+}
+
+.cardFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--border-light);
+}
+
+.typeBadge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    background: var(--bg-elevated);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+}
+
+.date {
+    color: var(--text-tertiary);
+    font-size: 0.8rem;
+}
+
+/* Modal */
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: var(--spacing-md);
+}
+
+.modal {
+    background: var(--bg-surface);
+    border-radius: var(--radius-lg);
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.modalHeader h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+}
+
+.closeButton {
+    background: transparent;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+}
+
+.closeButton:hover {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+}
+
+.modalContent {
+    padding: var(--spacing-lg);
+}
+
+.detailGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.detailItem {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.detailItem label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-tertiary);
+}
+
+.detailItem span,
+.detailItem a {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.detailItem a {
+    color: var(--gold-warm);
+    text-decoration: none;
+}
+
+.detailItem a:hover {
+    text-decoration: underline;
+}
+
+.messageSection {
+    margin-bottom: var(--spacing-lg);
+}
+
+.messageSection label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-tertiary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.messageSection p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.notesInput {
+    margin-bottom: var(--spacing-lg);
+}
+
+.notesInput label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-tertiary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.notesInput textarea {
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    resize: vertical;
+}
+
+.notesInput textarea:focus {
+    outline: none;
+    border-color: var(--gold-warm);
+}
+
+.statusActions label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-tertiary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.actionButtons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+}
+
+.statusButton {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.statusButton:hover:not(:disabled) {
+    border-color: var(--status-color, var(--gold-warm));
+    color: var(--status-color, var(--gold-warm));
+}
+
+.statusButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.activeStatus {
+    background: var(--status-color, var(--gold-warm));
+    border-color: var(--status-color, var(--gold-warm));
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .cardGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .detailGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .filters {
+        flex-direction: column;
+    }
+
+    .searchBox {
+        min-width: 100%;
+    }
+}

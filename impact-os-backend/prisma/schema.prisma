@@ -760,7 +760,8 @@ model Testimonial {
   // Content
   quote         String              @db.Text
   skills        String[]
-  imageUrl      String?
+  imageKey      String?             // R2 object key (source of truth)
+  imageUrl      String?             // Kept for backward compatibility
   
   // Moderation
   status        TestimonialStatus   @default(PENDING)
@@ -1487,6 +1488,7 @@ model CommunicationTemplate {
   id          String              @id @default(cuid())
   name        String              // Human-readable name "Welcome Email"
   slug        String              @unique // URL-safe identifier "welcome_email"
+  description String?             // What this template is for
   category    CommunicationSource // INTAKE, ADMISSION, etc.
   
   // Template content
@@ -1496,7 +1498,17 @@ model CommunicationTemplate {
   // Variable definitions
   variables   Json?               // Array of { name, description, required }
   
-  // Status
+  // Approval workflow
+  status      TemplateStatus      @default(DRAFT)
+  approvedAt  DateTime?
+  approvedBy  String?             // Staff userId who approved
+  
+  // Versioning - keep previous version for safety
+  version     Int                 @default(1)
+  previousHtml String?            @db.Text  // Last approved HTML (fallback)
+  previousSubject String?         // Last approved subject
+  
+  // Flags
   isActive    Boolean             @default(true)
   isSystem    Boolean             @default(false) // System templates can't be deleted
   
@@ -1506,7 +1518,16 @@ model CommunicationTemplate {
   updatedAt   DateTime            @updatedAt
   
   @@index([category])
+  @@index([status])
   @@index([isActive])
+  @@index([slug])
+}
+
+enum TemplateStatus {
+  DRAFT            // Initial creation, not yet approved
+  PENDING_APPROVAL // Edited and awaiting approval
+  APPROVED         // Ready for use
+  DEPRECATED       // No longer in use
 }
 
 enum CommunicationSource {

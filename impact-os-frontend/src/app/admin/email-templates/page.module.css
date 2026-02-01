@@ -1,0 +1,323 @@
+.container {
+    padding: 0;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-lg);
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.headerContent {
+    flex: 1;
+}
+
+.title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.25rem 0;
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.pendingAlert {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(var(--gold-warm-rgb, 212, 175, 55), 0.15);
+    border: 1px solid var(--gold-warm);
+    border-radius: var(--radius-md);
+    color: var(--gold-warm);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Filters */
+.filters {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    flex-wrap: wrap;
+}
+
+/* Content */
+.content {
+    min-height: 400px;
+}
+
+.loadingState,
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-2xl);
+    color: var(--text-tertiary);
+    text-align: center;
+    min-height: 300px;
+}
+
+.loadingState h3,
+.emptyState h3 {
+    margin: var(--spacing-md) 0 var(--spacing-xs) 0;
+    color: var(--text-secondary);
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Category Sections */
+.categorySection {
+    margin-bottom: var(--spacing-xl);
+}
+
+.categoryTitle {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin: 0 0 var(--spacing-md) 0;
+    padding-bottom: var(--spacing-xs);
+    border-bottom: 1px solid var(--border-light);
+}
+
+/* Template Grid */
+.templateGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.templateCard {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    transition: all 0.2s ease;
+}
+
+.templateCard:hover {
+    border-color: var(--gold-warm);
+}
+
+.templateCard.pending {
+    border-color: var(--gold-warm);
+    box-shadow: 0 0 0 2px rgba(var(--gold-warm-rgb, 212, 175, 55), 0.1);
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.cardTitle h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.slug {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    font-family: monospace;
+}
+
+.statusBadge {
+    padding: 3px 8px;
+    border-radius: var(--radius-full);
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: white;
+    white-space: nowrap;
+}
+
+.description {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin: 0 0 var(--spacing-sm) 0;
+    line-height: 1.4;
+}
+
+.subject {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.subject strong {
+    color: var(--text-tertiary);
+}
+
+.cardMeta {
+    display: flex;
+    gap: var(--spacing-sm);
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.systemBadge {
+    background: var(--bg-elevated);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    font-size: 0.7rem;
+}
+
+.cardActions {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--border-light);
+}
+
+.actionButton {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.actionButton:hover:not(:disabled) {
+    border-color: var(--gold-warm);
+    color: var(--gold-warm);
+}
+
+.actionButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.approveButton {
+    border-color: var(--accent-success);
+    color: var(--accent-success);
+}
+
+.approveButton:hover:not(:disabled) {
+    background: var(--accent-success);
+    color: white;
+}
+
+.rejectButton {
+    border-color: var(--accent-danger);
+    color: var(--accent-danger);
+}
+
+.rejectButton:hover:not(:disabled) {
+    background: var(--accent-danger);
+    color: white;
+}
+
+/* Preview Modal */
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: var(--spacing-md);
+}
+
+.previewModal {
+    background: var(--bg-surface);
+    border-radius: var(--radius-lg);
+    max-width: 800px;
+    width: 100%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.modalHeader h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+}
+
+.previewSubject {
+    margin: var(--spacing-xs) 0 0 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.closeButton {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.closeButton:hover {
+    color: var(--text-primary);
+}
+
+.previewContent {
+    flex: 1;
+    overflow: hidden;
+    padding: var(--spacing-md);
+}
+
+.previewFrame {
+    width: 100%;
+    height: 500px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    background: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .templateGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .header {
+        flex-direction: column;
+    }
+
+    .pendingAlert {
+        width: 100%;
+    }
+}

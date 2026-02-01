@@ -1,87 +1,95 @@
-/* Public Wall Page CSS */
+/* Public Wall Page CSS - Twitter-style Grid Layout */
 .container {
-    max-width: 800px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 2rem 1rem;
+    padding: 1.5rem;
 }
 
 .header {
     text-align: center;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
 }
 
 .header h1 {
-    font-size: 2.5rem;
+    font-size: 1.75rem;
     font-weight: 700;
     color: var(--navy-deep);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
 }
 
 .subtitle {
     color: var(--text-secondary);
-    font-size: 1.1rem;
+    font-size: 0.95rem;
 }
 
-/* Featured Section */
-.featuredSection {
-    margin-bottom: 4rem;
-}
-
+/* Section Titles */
 .sectionTitle {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 1.25rem;
+    font-size: 1rem;
     color: var(--navy-deep);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     padding-bottom: 0.5rem;
     border-bottom: 2px solid var(--gold-warm);
 }
 
+/* Featured Section */
+.featuredSection {
+    margin-bottom: 2rem;
+}
+
 .featuredGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
 }
 
-/* Feed */
+/* Feed Grid */
+.feedSection {
+    margin-bottom: 2rem;
+}
+
 .feed {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
 }
 
+/* Compact Post Card */
 .postCard {
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md);
+    border-radius: 12px;
     overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: flex;
+    flex-direction: column;
 }
 
 .postCard:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: var(--gold-warm);
 }
 
 .postHeader {
-    padding: 1rem 1.5rem;
+    padding: 0.75rem 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--border-subtle);
-    background: var(--bg-elevated);
 }
 
 .userInfo {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
 }
 
 .avatar {
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 32px;
+    height: 32px;
     background: var(--navy-light);
     color: var(--gold-light);
     border-radius: 50%;
@@ -89,38 +97,43 @@
     align-items: center;
     justify-content: center;
     font-weight: 600;
+    font-size: 0.75rem;
 }
 
 .userName {
     font-weight: 600;
+    font-size: 0.85rem;
     color: var(--navy-deep);
     display: block;
+    line-height: 1.2;
 }
 
 .userLevel {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-secondary);
     display: block;
 }
 
 .postDate {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     color: var(--text-tertiary);
 }
 
 .postContent {
-    padding: 1.5rem;
+    padding: 0.75rem 1rem;
+    flex: 1;
 }
 
 .platformBadge {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.25rem 0.75rem;
-    border-radius: var(--radius-full);
-    font-size: 0.75rem;
+    gap: 0.3rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.65rem;
     font-weight: 600;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
 }
 
 /* Platform Colors */
@@ -129,32 +142,30 @@
     color: #0077b5;
 }
 
-/* LinkedIn Blue */
 .platformTwitter {
     background: #1da1f220;
     color: #1da1f2;
 }
 
-/* Twitter Blue */
 .platformInstagram {
     background: #e1306c20;
     color: #e1306c;
 }
 
-/* Insta Gradientish */
 .platformYoutube {
     background: #ff000020;
     color: #ff0000;
 }
 
-/* YT Red */
-
 .caption {
-    font-size: 1rem;
+    font-size: 0.85rem;
     color: var(--text-primary);
-    line-height: 1.6;
-    margin-bottom: 1rem;
-    white-space: pre-wrap;
+    line-height: 1.5;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .hashtag {
@@ -163,7 +174,7 @@
 }
 
 .postFooter {
-    padding: 1rem 1.5rem;
+    padding: 0.5rem 1rem;
     background: var(--bg-subtle);
     border-top: 1px solid var(--border-subtle);
     display: flex;
@@ -173,11 +184,11 @@
 .viewLink {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
+    gap: 0.35rem;
+    font-size: 0.75rem;
     color: var(--text-secondary);
     text-decoration: none;
-    transition: color 0.2s;
+    transition: color 0.15s;
 }
 
 .viewLink:hover {
@@ -187,10 +198,11 @@
 /* Empty State */
 .emptyState {
     text-align: center;
-    padding: 4rem 2rem;
+    padding: 3rem 2rem;
     color: var(--text-secondary);
     background: var(--bg-subtle);
-    border-radius: var(--radius-lg);
+    border-radius: 12px;
+    grid-column: 1 / -1;
 }
 
 /* Loading */
@@ -205,7 +217,7 @@
 
 .spinner {
     animation: spin 1s linear infinite;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 @keyframes spin {
@@ -215,5 +227,36 @@
 
     to {
         transform: rotate(360deg);
+    }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .featuredGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .header h1 {
+        font-size: 1.5rem;
+    }
+
+    .featuredGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .feed {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 1200px) {
+    .feed {
+        grid-template-columns: repeat(4, 1fr);
     }
 }

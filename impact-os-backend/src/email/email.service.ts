@@ -76,6 +76,53 @@ export class EmailService {
     return createHash('sha256').update(html).digest('hex').substring(0, 16);
   }
 
+  /**
+   * Fetch email template from database with fallback to hardcoded templates.
+   * Only returns APPROVED templates from the database.
+   */
+  private async getTemplateFromDb(
+    slug: string,
+    data: Record<string, string>
+  ): Promise<EmailTemplate | null> {
+    try {
+      const template = await this.prisma.communicationTemplate.findFirst({
+        where: {
+          slug,
+          status: 'APPROVED',
+        },
+      });
+
+      if (!template) {
+        return null;
+      }
+
+      // Render template with variable substitution
+      let subject = template.subject;
+      let html = template.htmlContent;
+
+      // Replace {{variable}} placeholders
+      for (const [key, value] of Object.entries(data)) {
+        const placeholder = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+        subject = subject.replace(placeholder, String(value));
+        html = html.replace(placeholder, String(value));
+      }
+
+      // Handle simple conditionals {{#if var}}...{{/if}}
+      const conditionalRegex = /\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g;
+      html = html.replace(conditionalRegex, (_, varName, content) => {
+        return data[varName] ? content : '';
+      });
+      subject = subject.replace(conditionalRegex, (_, varName, content) => {
+        return data[varName] ? content : '';
+      });
+
+      return { subject, html };
+    } catch (error) {
+      this.logger.warn(`Failed to fetch template ${slug} from DB, using fallback: ${error}`);
+      return null;
+    }
+  }
+
   // ===== EMAIL TEMPLATES =====
   // These can later be moved to database for CMS editing
 
@@ -350,10 +397,25 @@ export class EmailService {
 
   /**
    * Legacy sendEmail method - wraps sendEmailWithContext with default SYSTEM context.
-   * Maintained for backward compatibility with existing callers.
+   * Now tries database templates first, falling back to hardcoded templates.
    */
   async sendEmail(to: string, templateType: EmailTemplateType, data: TemplateData): Promise<boolean> {
-    const template = this.templates[templateType](data);
+    // Convert TemplateData to Record<string, string> for DB lookup
+    const dataRecord: Record<string, string> = {};
+    for (const [key, value] of Object.entries(data)) {
+      if (value !== undefined) {
+        dataRecord[key] = String(value);
+      }
+    }
+
+    // Try database template first (approved templates only)
+    let template = await this.getTemplateFromDb(templateType, dataRecord);
+
+    // Fallback to hardcoded template if DB template not found
+    if (!template) {
+      this.logger.debug(`Using hardcoded template for ${templateType} (no approved DB template found)`);
+      template = this.templates[templateType](data);
+    }
 
     // Map template types to trigger sources
     const sourceMap: Record<EmailTemplateType, CommunicationSource> = {

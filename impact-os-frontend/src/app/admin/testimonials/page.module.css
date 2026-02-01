@@ -590,20 +590,24 @@
 /* Responsive */
 @media (max-width: 768px) {
     .filters {
-        flex-direction: column;
-        align-items: stretch;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: var(--space-sm);
+        align-items: center;
     }
 
     .searchBox {
+        grid-column: 1 / -1;
         max-width: none;
     }
 
     .filterGroup {
-        flex-wrap: wrap;
+        display: flex;
+        flex-wrap: nowrap;
     }
 
     .viewToggle {
-        margin-left: 0;
+        margin-left: auto;
     }
 
     .testimonialList.gridView {
@@ -611,26 +615,105 @@
     }
 
     .cardHeader {
-        flex-direction: column;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .personInfo {
+        flex: 1;
     }
 
     .cardMeta {
         flex-direction: row;
         align-items: center;
-        width: 100%;
+        gap: var(--space-xs);
     }
 
     .cardFooter {
-        flex-direction: column;
+        flex-direction: row;
+        flex-wrap: wrap;
         gap: var(--space-sm);
-        align-items: stretch;
+        align-items: center;
     }
 
     .actions {
+        display: flex;
         flex-wrap: wrap;
+        gap: var(--space-xs);
+    }
+
+    .actionBtn {
+        padding: var(--space-xs) var(--space-sm);
+        font-size: 0.75rem;
     }
 
     .modal {
         padding: var(--space-lg);
+    }
+}
+
+/* Edit Button Styles */
+.editBtn {
+    color: var(--accent-info) !important;
+    border-color: var(--accent-info) !important;
+}
+
+.editBtn:hover {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+/* Edit Form Styles */
+.editForm {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.formGroup label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.formGroup input,
+.formGroup textarea {
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: border-color 0.2s ease;
+}
+
+.formGroup input:focus,
+.formGroup textarea:focus {
+    outline: none;
+    border-color: var(--gold-warm);
+}
+
+.formGroup textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+}
+
+@media (max-width: 480px) {
+    .formRow {
+        grid-template-columns: 1fr;
     }
 }

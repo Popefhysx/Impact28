@@ -43,27 +43,101 @@ interface WallPost {
     rankScore: number;
 }
 
+// Mock data for development
+const mockPosts: WallPost[] = [
+    {
+        id: 'wall-001',
+        caption: 'Just landed my first freelance gig! Built a full e-commerce website for a local boutique. The skills from Impact OS made all the difference.',
+        platform: 'LINKEDIN',
+        postUrl: 'https://linkedin.com/posts/example1',
+        usedHashtag: true,
+        submittedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        user: { firstName: 'Adaeze', lastName: 'Okonkwo', identityLevel: 'L4_EARNER' },
+        rankScore: 95,
+    },
+    {
+        id: 'wall-002',
+        caption: 'From zero coding experience to building mobile apps in 3 months. Never thought I could do this! Big thanks to my mentors.',
+        platform: 'TWITTER',
+        postUrl: 'https://twitter.com/example2',
+        usedHashtag: true,
+        submittedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+        user: { firstName: 'Chidi', lastName: 'Eze', identityLevel: 'L3_EXPOSED' },
+        rankScore: 88,
+    },
+    {
+        id: 'wall-003',
+        caption: 'Completed my 30-day streak! Consistency is everything. Every small step counts towards the bigger picture.',
+        platform: 'INSTAGRAM',
+        postUrl: 'https://instagram.com/p/example3',
+        usedHashtag: true,
+        submittedAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+        user: { firstName: 'Ngozi', lastName: 'Ibe', identityLevel: 'L2_SKILLED' },
+        rankScore: 82,
+    },
+    {
+        id: 'wall-004',
+        caption: 'Just published my first YouTube tutorial on graphic design basics! Sharing what I learned with others.',
+        platform: 'YOUTUBE',
+        postUrl: 'https://youtube.com/watch?v=example4',
+        usedHashtag: false,
+        submittedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        user: { firstName: 'Emeka', lastName: 'Nnamdi', identityLevel: 'L3_EXPOSED' },
+        rankScore: 75,
+    },
+    {
+        id: 'wall-005',
+        caption: 'Client just paid for my first logo design! ₦25,000 from skills I learned in 6 weeks. The journey continues!',
+        platform: 'LINKEDIN',
+        postUrl: 'https://linkedin.com/posts/example5',
+        usedHashtag: true,
+        submittedAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+        user: { firstName: 'Amara', lastName: 'Okoro', identityLevel: 'L4_EARNER' },
+        rankScore: 70,
+    },
+    {
+        id: 'wall-006',
+        caption: 'Day 7 of my coding journey. Built my first portfolio website today. It is not perfect but it is mine!',
+        platform: 'TWITTER',
+        usedHashtag: true,
+        submittedAt: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
+        user: { firstName: 'Tunde', lastName: 'Adeyemi', identityLevel: 'L1_ACTIVATED' },
+        rankScore: 60,
+    },
+];
+
 export default function PublicWallPage() {
     const [posts, setPosts] = useState<WallPost[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+
     useEffect(() => {
         const fetchWall = async () => {
             try {
-                const res = await fetch('/api/wall');
+                const res = await fetch(`${API_BASE}/wall`);
                 if (res.ok) {
                     const data = await res.json();
-                    setPosts(data);
+                    setPosts(data.length > 0 ? data : (process.env.NODE_ENV !== 'production' ? mockPosts : []));
+                } else if (process.env.NODE_ENV !== 'production') {
+                    setPosts(mockPosts);
+                } else {
+                    setPosts([]);
                 }
             } catch (error) {
                 console.error('Failed to fetch wall:', error);
+                if (process.env.NODE_ENV !== 'production') {
+                    setPosts(mockPosts);
+                } else {
+                    setPosts([]);
+                }
             } finally {
                 setLoading(false);
             }
         };
 
         fetchWall();
-    }, []);
+    }, [API_BASE]);
 
     if (loading) {
         return (
