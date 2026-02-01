@@ -168,17 +168,29 @@ export default function ApplicantsPage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const applicantsRes = await fetch(`${API_BASE}/admin/applicants`);
+                const token = localStorage.getItem('auth_token');
+                const applicantsRes = await fetch(`${API_BASE}/admin/applicants`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
 
                 if (applicantsRes.ok) {
                     const data = await applicantsRes.json();
-                    setApplicants(data?.length > 0 ? data : mockApplicants);
-                } else {
+                    setApplicants(data?.length > 0 ? data : (process.env.NODE_ENV !== 'production' ? mockApplicants : []));
+                } else if (process.env.NODE_ENV !== 'production') {
                     setApplicants(mockApplicants);
+                } else {
+                    setApplicants([]);
                 }
             } catch (error) {
                 console.error('Failed to fetch data:', error);
-                setApplicants(mockApplicants);
+                if (process.env.NODE_ENV !== 'production') {
+                    setApplicants(mockApplicants);
+                } else {
+                    setApplicants([]);
+                }
             } finally {
                 setLoading(false);
             }

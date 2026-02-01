@@ -116,11 +116,38 @@ export default function AdminSupportQueuePage() {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
     useEffect(() => {
-        // Simulate API call
-        setTimeout(() => {
-            setRequests(mockRequests);
-            setLoading(false);
-        }, 500);
+        const fetchRequests = async () => {
+            try {
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+                const token = localStorage.getItem('auth_token');
+                const response = await fetch(`${API_URL}/support-request/admin/all`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    setRequests(data);
+                } else if (process.env.NODE_ENV !== 'production') {
+                    // Only use mock data in development
+                    setRequests(mockRequests);
+                } else {
+                    setRequests([]);
+                }
+            } catch (error) {
+                console.error('Failed to fetch support requests:', error);
+                if (process.env.NODE_ENV !== 'production') {
+                    setRequests(mockRequests);
+                } else {
+                    setRequests([]);
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchRequests();
     }, []);
 
     const filteredRequests = requests.filter(r => {

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Target, TrendingUp, Trophy, Wallet, HeartHandshake, User, Star, PanelLeftClose, LogOut, Menu, X, Settings, ChevronUp, BookOpen, HelpCircle } from 'lucide-react';
+import { Home, Target, TrendingUp, Trophy, Wallet, HeartHandshake, User, Star, PanelLeftClose, LogOut, Menu, X, Settings, ChevronUp, BookOpen, HelpCircle, ImageIcon } from 'lucide-react';
 import { UserProvider } from '../context/UserContext';
 import styles from './layout.module.css';
 
@@ -135,6 +135,13 @@ export default function DashboardLayout({
 
                     {/* Secondary Links */}
                     <div className={styles.secondaryNav}>
+                        <Link
+                            href="/wall"
+                            className={`${styles.secondaryItem} ${pathname === '/wall' ? styles.active : ''}`}
+                        >
+                            <ImageIcon size={18} />
+                            <span>The Wall</span>
+                        </Link>
                         <Link
                             href="/arena"
                             className={`${styles.secondaryItem} ${pathname === '/arena' ? styles.active : ''}`}

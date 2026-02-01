@@ -201,17 +201,28 @@ export default function AdminMissionsPage() {
 
     const fetchMissions = async () => {
         try {
-            const response = await fetch(`${API_URL}/api/missions/all`);
+            const token = localStorage.getItem('auth_token');
+            const response = await fetch(`${API_URL}/api/missions/all`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
             if (response.ok) {
                 const data = await response.json();
-                setMissions(data.length > 0 ? data : MOCK_MISSIONS);
-            } else {
-                // Use mock data if API fails
+                setMissions(data.length > 0 ? data : (process.env.NODE_ENV !== 'production' ? MOCK_MISSIONS : []));
+            } else if (process.env.NODE_ENV !== 'production') {
                 setMissions(MOCK_MISSIONS);
+            } else {
+                setMissions([]);
             }
         } catch (error) {
-            console.error('Failed to fetch missions, using mock data:', error);
-            setMissions(MOCK_MISSIONS);
+            console.error('Failed to fetch missions:', error);
+            if (process.env.NODE_ENV !== 'production') {
+                setMissions(MOCK_MISSIONS);
+            } else {
+                setMissions([]);
+            }
         } finally {
             setLoading(false);
         }
@@ -219,16 +230,28 @@ export default function AdminMissionsPage() {
 
     const fetchStats = async () => {
         try {
-            const response = await fetch(`${API_URL}/api/missions/admin/stats`);
+            const token = localStorage.getItem('auth_token');
+            const response = await fetch(`${API_URL}/api/missions/admin/stats`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
             if (response.ok) {
                 const data = await response.json();
                 setStats(data);
-            } else {
+            } else if (process.env.NODE_ENV !== 'production') {
                 setStats(MOCK_STATS);
+            } else {
+                setStats(null);
             }
         } catch (error) {
-            console.error('Failed to fetch stats, using mock data:', error);
-            setStats(MOCK_STATS);
+            console.error('Failed to fetch stats:', error);
+            if (process.env.NODE_ENV !== 'production') {
+                setStats(MOCK_STATS);
+            } else {
+                setStats(null);
+            }
         }
     };
 
