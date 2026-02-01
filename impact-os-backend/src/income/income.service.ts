@@ -44,6 +44,8 @@ const INCOME_THRESHOLDS = {
     L5_CATALYST: 500,         // Threshold for L5 (can mentor others)
 };
 
+import { MissionEngineService } from '../mission/mission-engine.service';
+
 @Injectable()
 export class IncomeService {
     private readonly logger = new Logger(IncomeService.name);
@@ -51,13 +53,14 @@ export class IncomeService {
     constructor(
         private prisma: PrismaService,
         private currencyService: CurrencyService,
+        private missionEngine: MissionEngineService,
     ) { }
 
     /**
-     * Submit income for verification
+     * Submit income proof for verification
      */
-    async submitIncome(userId: string, dto: SubmitIncomeDto): Promise<{ id: string }> {
-        // Convert to USD if NGN
+    async submitIncome(userId: string, dto: SubmitIncomeDto) {
+        // Convert to USD for normalization
         const amountUSD = dto.currency === 'USD'
             ? dto.amount
             : dto.amount * NGN_TO_USD_RATE;
@@ -74,78 +77,89 @@ export class IncomeService {
                 description: dto.description,
                 proofUrl: dto.proofUrl,
                 proofType: dto.proofType,
-                earnedAt: dto.earnedAt,
+                earnedAt: new Date(dto.earnedAt),
                 status: VerificationStatus.SUBMITTED,
             },
         });
 
         this.logger.log(`Income submitted by ${userId}: ${dto.amount} ${dto.currency || 'NGN'}`);
-
-        return { id: record.id };
+        return record;
     }
 
     /**
      * Get user's income records
      */
     async getUserIncome(userId: string, status?: VerificationStatus) {
+        const where: any = { userId };
+        if (status) {
+            where.status = status;
+        }
+
         return this.prisma.incomeRecord.findMany({
-            where: {
-                userId,
-                ...(status && { status }),
-            },
+            where,
             orderBy: { earnedAt: 'desc' },
-            select: {
-                id: true,
-                amount: true,
-                currency: true,
-                amountUSD: true,
-                source: true,
-                platform: true,
-                clientName: true,
-                description: true,
-                proofUrl: true,
-                proofType: true,
-                status: true,
-                earnedAt: true,
-                submittedAt: true,
-                verifiedAt: true,
-                rejectionReason: true,
-            },
         });
     }
 
     /**
-     * Admin: Get pending income records for review
+     * Get user's income statistics
      */
-    async getPendingReviews(limit: number = 50) {
+    async getUserIncomeStats(userId: string): Promise<IncomeStats> {
+        const [verified, pending, rejected] = await Promise.all([
+            this.prisma.incomeRecord.aggregate({
+                where: { userId, status: VerificationStatus.VERIFIED },
+                _sum: { amount: true, amountUSD: true },
+                _count: true,
+            }),
+            this.prisma.incomeRecord.aggregate({
+                where: { userId, status: VerificationStatus.SUBMITTED },
+                _sum: { amount: true },
+                _count: true,
+            }),
+            this.prisma.incomeRecord.aggregate({
+                where: { userId, status: VerificationStatus.REJECTED },
+                _count: true,
+            }),
+        ]);
+
+        return {
+            totalVerified: verified._count,
+            totalPending: pending._count,
+            totalRejected: rejected._count,
+            verifiedAmountNGN: Number(verified._sum.amount || 0),
+            verifiedAmountUSD: Number(verified._sum.amountUSD || 0),
+            recordCount: verified._count + pending._count + rejected._count,
+        };
+    }
+
+    /**
+     * Get pending income reviews for admin
+     */
+    async getPendingReviews(limit?: number) {
         return this.prisma.incomeRecord.findMany({
             where: { status: VerificationStatus.SUBMITTED },
             include: {
                 user: {
                     select: {
                         id: true,
-                        email: true,
                         firstName: true,
                         lastName: true,
+                        email: true,
                         identityLevel: true,
                     },
                 },
             },
             orderBy: { submittedAt: 'asc' },
-            take: limit,
+            take: limit || 20,
         });
     }
 
     /**
-     * Admin: Approve income record
+     * Approve income record
      */
-    async approveIncome(
-        recordId: string,
-        adminId: string,
-    ): Promise<{ success: boolean; newTotal: number }> {
+    async approveIncome(recordId: string, adminId: string) {
         const record = await this.prisma.incomeRecord.findUnique({
             where: { id: recordId },
-            include: { user: true },
         });
 
         if (!record) {
@@ -153,114 +167,68 @@ export class IncomeService {
         }
 
         if (record.status !== VerificationStatus.SUBMITTED) {
-            return { success: false, newTotal: 0 };
+            throw new Error('Record is not pending verification');
         }
 
-        // Update record status
-        await this.prisma.incomeRecord.update({
+        // Update record
+        const updated = await this.prisma.incomeRecord.update({
             where: { id: recordId },
             data: {
                 status: VerificationStatus.VERIFIED,
-                verifiedBy: adminId,
                 verifiedAt: new Date(),
+                verifiedBy: adminId,
             },
         });
 
         // Credit INCOME_PROOF currency
-        const amountUSD = record.amountUSD?.toNumber() || (record.amount.toNumber() * NGN_TO_USD_RATE);
-        const creditAmount = Math.floor(amountUSD * 100); // 1 USD = 100 INCOME_PROOF points
-
-        await this.currencyService.recordIncomeProof(
-            record.userId,
-            creditAmount,
-            recordId,
-        );
+        const amountUSDValue = record.amountUSD ? Number(record.amountUSD) : 0;
+        if (amountUSDValue > 0) {
+            await this.currencyService.credit(
+                record.userId,
+                CurrencyType.INCOME_PROOF,
+                Math.round(amountUSDValue * 100), // Convert to cents/points
+                `Income verified: ${record.description}`,
+                recordId
+            );
+        }
 
         // Check for level upgrade
         await this.checkLevelUpgrade(record.userId);
 
-        // Get new total
-        const stats = await this.getUserIncomeStats(record.userId);
-
-        this.logger.log(`Income ${recordId} verified by ${adminId}: $${amountUSD.toFixed(2)}`);
-
-        return { success: true, newTotal: stats.verifiedAmountUSD };
+        this.logger.log(`Income ${recordId} approved by ${adminId}`);
+        return updated;
     }
 
     /**
-     * Admin: Reject income record
+     * Reject income record
      */
-    async rejectIncome(
-        recordId: string,
-        adminId: string,
-        reason: string,
-    ): Promise<boolean> {
+    async rejectIncome(recordId: string, adminId: string, reason: string) {
         const record = await this.prisma.incomeRecord.findUnique({
             where: { id: recordId },
         });
 
-        if (!record || record.status !== VerificationStatus.SUBMITTED) {
-            return false;
+        if (!record) {
+            throw new NotFoundException('Income record not found');
         }
 
-        await this.prisma.incomeRecord.update({
+        if (record.status !== VerificationStatus.SUBMITTED) {
+            throw new Error('Record is not pending verification');
+        }
+
+        const updated = await this.prisma.incomeRecord.update({
             where: { id: recordId },
             data: {
                 status: VerificationStatus.REJECTED,
-                verifiedBy: adminId,
-                verifiedAt: new Date(),
                 rejectionReason: reason,
+                verifiedAt: new Date(),
+                verifiedBy: adminId,
             },
         });
 
         this.logger.log(`Income ${recordId} rejected by ${adminId}: ${reason}`);
-
-        return true;
+        return updated;
     }
 
-    /**
-     * Get user's income statistics
-     */
-    async getUserIncomeStats(userId: string): Promise<IncomeStats> {
-        const records = await this.prisma.incomeRecord.groupBy({
-            by: ['status'],
-            where: { userId },
-            _sum: {
-                amount: true,
-                amountUSD: true,
-            },
-            _count: true,
-        });
-
-        const stats: IncomeStats = {
-            totalVerified: 0,
-            totalPending: 0,
-            totalRejected: 0,
-            verifiedAmountNGN: 0,
-            verifiedAmountUSD: 0,
-            recordCount: 0,
-        };
-
-        for (const group of records) {
-            stats.recordCount += group._count;
-
-            switch (group.status) {
-                case VerificationStatus.VERIFIED:
-                    stats.totalVerified = group._count;
-                    stats.verifiedAmountNGN = group._sum.amount?.toNumber() || 0;
-                    stats.verifiedAmountUSD = group._sum.amountUSD?.toNumber() || 0;
-                    break;
-                case VerificationStatus.SUBMITTED:
-                    stats.totalPending = group._count;
-                    break;
-                case VerificationStatus.REJECTED:
-                    stats.totalRejected = group._count;
-                    break;
-            }
-        }
-
-        return stats;
-    }
 
     /**
      * Check if user qualifies for level upgrade based on income
@@ -284,6 +252,14 @@ export class IncomeService {
                 where: { id: userId },
                 data: { identityLevel: IdentityLevel.L4_EARNER },
             });
+
+            await this.missionEngine.logIdentityUpgrade(
+                userId,
+                IdentityLevel.L3_EXPOSED,
+                IdentityLevel.L4_EARNER,
+                'INCOME_THRESHOLD_L4'
+            );
+
             this.logger.log(`User ${userId} upgraded to L4_EARNER`);
         }
 
@@ -296,6 +272,14 @@ export class IncomeService {
                 where: { id: userId },
                 data: { identityLevel: IdentityLevel.L5_CATALYST },
             });
+
+            await this.missionEngine.logIdentityUpgrade(
+                userId,
+                IdentityLevel.L4_EARNER,
+                IdentityLevel.L5_CATALYST,
+                'INCOME_THRESHOLD_L5'
+            );
+
             this.logger.log(`User ${userId} upgraded to L5_CATALYST`);
         }
     }

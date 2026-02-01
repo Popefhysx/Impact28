@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, FileText, Users, DollarSign, Target, PanelLeftClose, Menu, X, Settings, LogOut, ChevronUp, UserCog, BookOpen, HeartHandshake, Trophy } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, DollarSign, Target, PanelLeftClose, Menu, X, Settings, LogOut, ChevronUp, UserCog, BookOpen, HeartHandshake, Trophy, Mail, MessageSquareQuote } from 'lucide-react';
 import styles from './layout.module.css';
 
 const navItems = [
@@ -12,7 +12,9 @@ const navItems = [
     { href: '/admin/applicants', label: 'Applicants', Icon: FileText },
     { href: '/admin/participants', label: 'Participants', Icon: Users },
     { href: '/admin/support', label: 'Support Queue', Icon: HeartHandshake },
+    { href: '/admin/communications', label: 'Comms', Icon: Mail },
     { href: '/admin/income', label: 'Income Review', Icon: DollarSign },
+    { href: '/admin/testimonials', label: 'Testimonials', Icon: MessageSquareQuote },
     { href: '/admin/missions', label: 'Missions', Icon: Target },
     { href: '/admin/staff', label: 'Staff', Icon: UserCog },
 ];

@@ -171,7 +171,7 @@ export default function PsnForecastWidget({ cohortId }: PsnForecastWidgetProps) 
 
             {/* Disclaimer */}
             <div className={styles.disclaimer}>
-                PSN is a forecast estimate only. Support is still request-based and behavior-gated.
+                PSN (Predicted Support Need) is a forecast estimate only. Support is still request-based and behavior-gated.
             </div>
         </div>
     );

@@ -302,6 +302,198 @@ export class PsnService {
     }
 
     // ============================================================================
+    // BEHAVIORAL TRIGGER DETECTION (Triggers A-D)
+    // ============================================================================
+
+    /**
+     * Run all behavioral trigger detections for all active participants
+     * Can be called by a scheduled job
+     */
+    async runBehavioralTriggerDetection(): Promise<{
+        triggersCreated: number;
+        participantsChecked: number;
+        triggersByType: Record<string, number>;
+    }> {
+        const participants = await this.prisma.user.findMany({
+            where: { isActive: true },
+            select: { id: true },
+        });
+
+        let triggersCreated = 0;
+        const triggersByType: Record<string, number> = {};
+
+        for (const participant of participants) {
+            const triggers = await this.detectTriggersForParticipant(participant.id);
+            triggersCreated += triggers.length;
+
+            for (const t of triggers) {
+                triggersByType[t.signalType] = (triggersByType[t.signalType] || 0) + 1;
+            }
+        }
+
+        this.logger.log(`Behavioral trigger detection complete: ${triggersCreated} triggers for ${participants.length} participants`);
+
+        return {
+            triggersCreated,
+            participantsChecked: participants.length,
+            triggersByType,
+        };
+    }
+
+    /**
+     * Detect all behavioral triggers for a single participant
+     */
+    async detectTriggersForParticipant(participantId: string) {
+        const triggers: Array<{ signalType: string; severity: DetectionSeverity }> = [];
+
+        // Trigger A: Early Momentum Drop
+        const momentumDrop = await this.detectMomentumDrop(participantId);
+        if (momentumDrop) triggers.push(momentumDrop);
+
+        // Trigger B: Phase Transition Blocker
+        const phaseBlocker = await this.detectPhaseBlocker(participantId);
+        if (phaseBlocker) triggers.push(phaseBlocker);
+
+        // Trigger C: Repeated Near-Misses
+        const nearMisses = await this.detectRepeatedNearMisses(participantId);
+        if (nearMisses) triggers.push(nearMisses);
+
+        // Create detection triggers
+        const created: Awaited<ReturnType<typeof this.createDetectionTrigger>>[] = [];
+        for (const t of triggers) {
+            // Skip if already a pending trigger of this type
+            const existing = await this.prisma.detectionTrigger.findFirst({
+                where: {
+                    participantId,
+                    signalType: t.signalType,
+                    resolvedAt: null,
+                },
+            });
+
+            if (!existing) {
+                const trigger = await this.createDetectionTrigger(
+                    participantId,
+                    t.signalType,
+                    t.severity,
+                );
+                created.push(trigger);
+            }
+        }
+
+        return created;
+    }
+
+    /**
+     * Trigger A: Early Momentum Drop Detection
+     * Signal: Momentum dropped >20 points in the last 7 days
+     */
+    private async detectMomentumDrop(participantId: string): Promise<{ signalType: string; severity: DetectionSeverity } | null> {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const momentumLedger = await this.prisma.currencyLedger.findMany({
+            where: {
+                userId: participantId,
+                currencyType: 'MOMENTUM',
+                createdAt: { gte: sevenDaysAgo },
+            },
+            orderBy: { createdAt: 'asc' },
+        });
+
+        if (momentumLedger.length < 2) return null;
+
+        // Calculate net change over period
+        const netChange = momentumLedger.reduce((sum, entry) => sum + entry.amount, 0);
+
+        if (netChange <= -20) {
+            return {
+                signalType: 'MOMENTUM_DROP',
+                severity: netChange <= -40 ? DetectionSeverity.HIGH : DetectionSeverity.MEDIUM,
+            };
+        }
+
+        return null;
+    }
+
+    /**
+     * Trigger B: Phase Transition Blocker Detection
+     * Signal: User stuck at phase boundary for 7+ days
+     */
+    private async detectPhaseBlocker(participantId: string): Promise<{ signalType: string; severity: DetectionSeverity } | null> {
+        const user = await this.prisma.user.findUnique({
+            where: { id: participantId },
+            include: {
+                missions: {
+                    where: { status: 'VERIFIED' },
+                    orderBy: { completedAt: 'desc' },
+                    take: 1,
+                },
+            },
+        });
+
+        if (!user) return null;
+
+        // Check if user has been at same level for 7+ days
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const lastMission = user.missions[0];
+        const lastActivity = lastMission?.completedAt || user.createdAt;
+
+        if (lastActivity < sevenDaysAgo) {
+            return {
+                signalType: 'PHASE_BLOCKER',
+                severity: DetectionSeverity.MEDIUM,
+            };
+        }
+
+        return null;
+    }
+
+    /**
+     * Trigger C: Repeated Near-Misses Detection
+     * Signal: 3+ failed/rejected missions in the last 14 days
+     */
+    private async detectRepeatedNearMisses(participantId: string): Promise<{ signalType: string; severity: DetectionSeverity } | null> {
+        const fourteenDaysAgo = new Date();
+        fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+        const failedMissions = await this.prisma.missionAssignment.count({
+            where: {
+                userId: participantId,
+                status: 'FAILED',
+                completedAt: { gte: fourteenDaysAgo },
+            },
+        });
+
+        if (failedMissions >= 3) {
+            return {
+                signalType: 'REPEATED_NEAR_MISSES',
+                severity: failedMissions >= 5 ? DetectionSeverity.HIGH : DetectionSeverity.MEDIUM,
+            };
+        }
+
+        return null;
+    }
+
+    /**
+     * Trigger D: Mentor Signal (Manual)
+     * Signal: Manually flagged by operator/admin
+     */
+    async createMentorSignal(
+        participantId: string,
+        operatorId: string,
+        notes?: string,
+    ) {
+        return this.createDetectionTrigger(
+            participantId,
+            'MENTOR_SIGNAL',
+            DetectionSeverity.HIGH,
+            { operatorId, notes },
+        );
+    }
+
+    // ============================================================================
     // PRIVATE CALCULATION METHODS
     // ============================================================================
 

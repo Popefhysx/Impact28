@@ -42,15 +42,15 @@
 }
 
 .statIcon {
-    color: #10b981;
+    color: var(--accent-success);
 }
 
 .pendingIcon {
-    color: #f59e0b;
+    color: var(--accent-warning);
 }
 
 .recordsIcon {
-    color: #6366f1;
+    color: var(--navy-medium);
 }
 
 .statInfo {

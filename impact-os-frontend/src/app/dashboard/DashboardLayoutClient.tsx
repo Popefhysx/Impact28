@@ -10,9 +10,7 @@ import styles from './layout.module.css';
 
 const navItems = [
     { href: '/dashboard', label: 'Home', Icon: Home },
-    { href: '/dashboard/missions', label: 'Missions', Icon: Target },
-    { href: '/dashboard/progress', label: 'Progress', Icon: TrendingUp },
-    { href: '/dashboard/arenatracker', label: 'Tracker', Icon: Trophy },
+    { href: '/dashboard/missions', label: 'Mission Control', Icon: Target },
     { href: '/dashboard/income', label: 'Income', Icon: Wallet },
     { href: '/dashboard/profile', label: 'Profile', Icon: User },
 ];

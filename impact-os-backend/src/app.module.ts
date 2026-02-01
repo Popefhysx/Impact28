@@ -20,6 +20,9 @@ import { ProgressModule } from './progress';
 import { PsnModule } from './psn';
 import { SupportRequestModule } from './support-request';
 import { ResourceModule } from './resource/resource.module';
+import { ScheduledTasksModule } from './scheduled-tasks';
+import { WallModule } from './wall';
+import { CommunicationsModule } from './communications';
 
 @Module({
   imports: [
@@ -46,6 +49,10 @@ import { ResourceModule } from './resource/resource.module';
     PsnModule,
     SupportRequestModule,
     ResourceModule,
+    ScheduledTasksModule,
+    WallModule,
+    CommunicationsModule,
   ],
 })
 export class AppModule { }
+

@@ -37,4 +37,13 @@ export class TestimonialsController {
     reject(@Param('id') id: string) {
         return this.testimonialsService.reject(id);
     }
+
+    // PUT /testimonials/admin/:id/display - Admin: Update display order/featured
+    @Put('admin/:id/display')
+    updateDisplay(
+        @Param('id') id: string,
+        @Body() body: { displayOrder?: number; isFeatured?: boolean }
+    ) {
+        return this.testimonialsService.updateDisplay(id, body.displayOrder, body.isFeatured);
+    }
 }

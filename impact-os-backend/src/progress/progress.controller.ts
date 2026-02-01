@@ -41,6 +41,21 @@ export class ProgressController {
     }
 
     /**
+     * GET /api/progress/history
+     * Get identity history for authenticated user
+     */
+    @Get('history')
+    async getIdentityHistory(@Req() req: any) {
+        const userId = req.user?.id || req.user?.userId;
+
+        if (!userId) {
+            throw new Error('User not authenticated');
+        }
+
+        return this.progressService.getIdentityHistory(userId);
+    }
+
+    /**
      * GET /api/progress/leaderboard
      * Get cohort leaderboard for authenticated user
      */

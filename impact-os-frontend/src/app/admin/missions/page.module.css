@@ -201,22 +201,23 @@
 
 .phaseTag.onboarding {
     background: rgba(59, 130, 246, 0.1);
-    color: #3b82f6;
+    color: var(--navy-medium);
 }
 
 .phaseTag.skill_building {
-    background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
+    background: rgba(22, 163, 74, 0.1);
+    color: var(--accent-success);
 }
 
 .phaseTag.market_exposure {
-    background: rgba(245, 158, 11, 0.1);
-    color: #f59e0b;
+    background: rgba(197, 173, 103, 0.15);
+    color: var(--gold-dark);
 }
 
 .phaseTag.income_generation {
     background: rgba(139, 92, 246, 0.1);
-    color: #8b5cf6;
+    color: var(--navy-light);
+    /* Using navy-light since we don't have purple token */
 }
 
 /* Difficulty */
@@ -272,7 +273,7 @@
 
 .completionFill {
     height: 100%;
-    background: var(--success);
+    background: var(--accent-success);
     border-radius: 3px;
 }
 
@@ -291,8 +292,8 @@
 }
 
 .statusTag.active {
-    background: rgba(var(--success-rgb), 0.1);
-    color: var(--success);
+    background: rgba(22, 163, 74, 0.1);
+    color: var(--accent-success);
 }
 
 .statusTag.draft {
@@ -301,8 +302,8 @@
 }
 
 .statusTag.archived {
-    background: rgba(var(--error-rgb), 0.1);
-    color: var(--error);
+    background: rgba(220, 38, 38, 0.1);
+    color: var(--accent-danger);
 }
 
 /* More Button */
@@ -341,18 +342,40 @@
         gap: var(--space-md);
     }
 
-    .addButton {
+    .headerActions {
+        width: 100%;
+        flex-direction: column;
+        gap: var(--space-sm);
+    }
+
+    .addButton,
+    .reviewsLink {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .createBtn {
         width: 100%;
         justify-content: center;
     }
 
     .statsRow {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-sm);
+    }
+
+    .statCard {
+        padding: var(--space-md);
+    }
+
+    .statValue {
+        font-size: 20px;
     }
 
     .toolbar {
         flex-direction: column;
         align-items: stretch;
+        gap: var(--space-sm);
     }
 
     .searchBox {
@@ -361,13 +384,511 @@
 
     .filters {
         flex-wrap: wrap;
+        gap: var(--space-xs);
+    }
+
+    .filterSelect {
+        flex: 1;
+        min-width: 120px;
     }
 
     .tableContainer {
-        overflow-x: auto;
+        border: none;
+        background: transparent;
+    }
+
+    /* Hide table on mobile, show cards */
+    .table {
+        display: none !important;
+    }
+
+    .mobileCards {
+        display: flex !important;
+        padding: 0;
+    }
+
+    /* Modal responsive */
+    .modalOverlay {
+        padding: var(--space-sm);
+        align-items: flex-start;
+        padding-top: var(--space-xl);
+    }
+
+    .modal {
+        max-width: none;
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+
+    .modalHeader {
+        position: sticky;
+        top: 0;
+        background: var(--bg-card);
+        z-index: 1;
+    }
+
+    .formRow {
+        grid-template-columns: 1fr;
+    }
+
+    .rewardsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .modalFooter {
+        position: sticky;
+        bottom: 0;
+        background: var(--bg-card);
+        flex-direction: column;
+        gap: var(--space-sm);
+    }
+
+    .modalFooter button {
+        width: 100%;
+    }
+}
+
+/* Loading */
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    min-height: 300px;
+    color: var(--text-muted);
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Header Actions */
+.headerActions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.reviewsLink {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.reviewsLink:hover {
+    border-color: var(--gold-warm);
+    color: var(--navy-deep);
+}
+
+.reviewsLink .badge {
+    background: var(--gold-warm);
+    color: var(--navy-deep);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+
+/* Domain Tags - using design token patterns */
+.domainTag {
+    display: inline-block;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+}
+
+.domainTag.technical {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--navy-medium);
+}
+
+.domainTag.soft {
+    background: rgba(22, 163, 74, 0.1);
+    color: var(--accent-success);
+}
+
+.domainTag.commercial {
+    background: rgba(197, 173, 103, 0.15);
+    color: var(--gold-dark);
+}
+
+/* Rewards Cell */
+.rewardsCell {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.rewardBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 6px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.rewardBadge svg {
+    color: var(--gold-warm);
+}
+
+/* Status Inactive */
+.statusTag.inactive {
+    background: var(--bg-elevated);
+    color: var(--text-muted);
+}
+
+/* Status Active - use design tokens */
+.statusTag.active {
+    background: rgba(22, 163, 74, 0.1);
+    color: var(--accent-success);
+}
+
+/* Mobile Card View */
+.mobileCards {
+    display: none;
+    flex-direction: column;
+    gap: var(--space-md);
+    padding: var(--space-md);
+}
+
+.missionCard {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+}
+
+.cardHeader {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+}
+
+.cardTitle {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-sm);
+}
+
+.cardTitle .missionTitle {
+    flex: 1;
+}
+
+.cardMeta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.cardDesc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin: 0 0 var(--space-md) 0;
+}
+
+.cardStats {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    padding: var(--space-md) 0;
+    border-top: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.cardStat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cardLabel {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.cardValue {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy-deep);
+}
+
+.cardActions {
+    display: flex;
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+}
+
+.cardActionBtn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    flex: 1;
+    justify-content: center;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-family: var(--font-sans);
+}
+
+.cardActionBtn:hover {
+    background: var(--gold-pale);
+    border-color: var(--gold-warm);
+    color: var(--navy-deep);
+}
+
+@media (max-width: 768px) {
+    .mobileCards {
+        display: flex;
     }
 
     .table {
-        min-width: 800px;
+        display: none;
     }
+}
+
+/* Action Menu */
+.actionContainer {
+    position: relative;
+}
+
+.actionMenu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 100;
+    min-width: 140px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+}
+
+.actionMenu button {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    background: none;
+    border: none;
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    text-align: left;
+}
+
+.actionMenu button:hover {
+    background: var(--bg-elevated);
+    color: var(--navy-deep);
+}
+
+/* Modal */
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    padding: var(--space-lg);
+}
+
+.modal {
+    width: 100%;
+    max-width: 500px;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.modalHeader h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    margin: 0;
+}
+
+.modalHeader button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-xs);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.modalHeader button:hover {
+    color: var(--navy-deep);
+}
+
+.modalBody {
+    padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.formGroup label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.formGroup label svg {
+    color: var(--gold-warm);
+}
+
+.formGroup input,
+.formGroup textarea,
+.formGroup select {
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    color: var(--text-primary);
+    outline: none;
+}
+
+.formGroup input:focus,
+.formGroup textarea:focus,
+.formGroup select:focus {
+    border-color: var(--gold-warm);
+}
+
+.formGroup textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: var(--space-md);
+}
+
+.checkbox {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: 14px;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.checkbox input {
+    accent-color: var(--gold-warm);
+}
+
+.modalFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    border-top: 1px solid var(--border-subtle);
+}
+
+.cancelBtn {
+    padding: var(--space-sm) var(--space-lg);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.cancelBtn:hover {
+    background: var(--border-subtle);
+}
+
+.createBtn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-lg);
+    background: var(--gold-warm);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    cursor: pointer;
+}
+
+.createBtn:hover:not(:disabled) {
+    background: var(--gold-dark);
+}
+
+.createBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Empty State */
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    padding: var(--space-xxl);
+    color: var(--text-muted);
+}
+
+.emptyState p {
+    margin: 0;
 }

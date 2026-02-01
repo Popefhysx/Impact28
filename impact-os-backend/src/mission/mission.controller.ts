@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Param, Body, Query } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Param, Body, Query } from '@nestjs/common';
 import { MissionService } from './mission.service';
 import { SkillDomain, Difficulty, IdentityLevel, MissionStatus } from '@prisma/client';
 
@@ -106,5 +106,47 @@ export class MissionController {
     async assignDailyMissions() {
         const count = await this.missionService.assignDailyMissions();
         return { assigned: count };
+    }
+
+    // New endpoints for mission management
+
+    @Get('all')
+    async getAllMissions(
+        @Query('isActive') isActive?: string,
+        @Query('skillDomain') skillDomain?: SkillDomain,
+        @Query('difficulty') difficulty?: Difficulty,
+    ) {
+        const filters: any = {};
+        if (isActive !== undefined) {
+            filters.isActive = isActive === 'true';
+        }
+        if (skillDomain) {
+            filters.skillDomain = skillDomain;
+        }
+        if (difficulty) {
+            filters.difficulty = difficulty;
+        }
+        return this.missionService.getAllMissions(filters);
+    }
+
+    @Get('admin/stats')
+    async getMissionStats() {
+        return this.missionService.getMissionStats();
+    }
+
+    @Patch('admin/:missionId')
+    async updateMission(
+        @Param('missionId') missionId: string,
+        @Body() dto: Partial<CreateMissionDto>,
+    ) {
+        return this.missionService.updateMission(missionId, dto);
+    }
+
+    @Patch('admin/:missionId/status')
+    async updateMissionStatus(
+        @Param('missionId') missionId: string,
+        @Body('isActive') isActive: boolean,
+    ) {
+        return this.missionService.updateMissionStatus(missionId, isActive);
     }
 }

@@ -255,7 +255,7 @@
 /* Not Eligible */
 .stipendBadge.notEligible {
     background: rgba(220, 38, 38, 0.1);
-    color: #dc2626;
+    color: var(--accent-danger);
 }
 
 /* Tier Badge */
@@ -310,4 +310,61 @@
 /* Support Section */
 .supportSection {
     margin-top: var(--space-xl);
+}
+
+/* Identity History Timeline */
+.historyPanel {
+    grid-column: span 1;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 1.5rem;
+    margin-top: 1rem;
+    border-left: 2px solid var(--border-subtle);
+}
+
+.timelineItem {
+    position: relative;
+    padding-bottom: 2rem;
+}
+
+.timelineItem:last-child {
+    padding-bottom: 0;
+}
+
+.timelineDot {
+    position: absolute;
+    left: -1.85rem;
+    top: 0.25rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    background: var(--navy-light);
+    border: 2px solid var(--bg-primary);
+}
+
+.timelineItem.active .timelineDot {
+    background: var(--accent-success);
+    box-shadow: 0 0 0 4px var(--accent-success-faded);
+}
+
+.timelineContent h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.timelineContent p {
+    margin: 0.25rem 0 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.timelineDate {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    margin-bottom: 0.25rem;
+    display: block;
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body } from '@nestjs/common';
 import { PsnService } from './psn.service';
 
 /**
@@ -81,6 +81,40 @@ export class PsnController {
     @Post('detection/triggers/:triggerId/resolve')
     async resolveDetectionTrigger(@Param('triggerId') triggerId: string) {
         const trigger = await this.psnService.resolveDetectionTrigger(triggerId);
+        return {
+            success: true,
+            data: trigger,
+        };
+    }
+
+    /**
+     * Run behavioral trigger detection for all active participants
+     * Typically called by a cron job
+     */
+    @Post('detection/run')
+    async runBehavioralTriggerDetection() {
+        const result = await this.psnService.runBehavioralTriggerDetection();
+        return {
+            success: true,
+            data: result,
+            message: `Detected ${result.triggersCreated} triggers across ${result.participantsChecked} participants`,
+        };
+    }
+
+    /**
+     * Create a mentor signal for a participant (manual trigger)
+     */
+    @Post('detection/mentor-signal/:participantId')
+    async createMentorSignal(
+        @Param('participantId') participantId: string,
+        @Body('operatorId') operatorId: string,
+        @Body('notes') notes?: string,
+    ) {
+        const trigger = await this.psnService.createMentorSignal(
+            participantId,
+            operatorId,
+            notes,
+        );
         return {
             success: true,
             data: trigger,

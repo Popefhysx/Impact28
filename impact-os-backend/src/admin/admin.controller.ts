@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { ApplicantStatus, IdentityLevel } from '@prisma/client';
+import { ApplicantStatus, IdentityLevel, SupportDenialReason } from '@prisma/client';
 import { CapabilityGuard, RequireCapability, RequireCategory } from '../staff/guards';
 
 @Controller('admin')
@@ -125,6 +125,36 @@ export class AdminController {
     @RequireCategory('ADMIN')
     async reactivateUser(@Param('id') id: string) {
         return this.adminService.reactivateUser(id);
+    }
+
+    // ===== SUPPORT REQUESTS =====
+
+    @Get('support-requests')
+    @RequireCapability('support.manage')
+    async getPendingSupportRequests(
+        @Query('limit') limit?: number,
+        @Query('offset') offset?: number,
+    ) {
+        return this.adminService.getPendingSupportRequests({
+            limit: limit || 50,
+            offset: offset || 0,
+        });
+    }
+
+    @Post('support-requests/:id/decision')
+    @RequireCapability('support.manage')
+    async decideSupportRequest(
+        @Param('id') id: string,
+        @Body('decision') decision: 'APPROVE' | 'DENY' | 'COMPLETE',
+        @Body('denialReasonCode') denialReasonCode?: SupportDenialReason,
+        @Body('amount') amount?: number,
+        @Body('notes') notes?: string,
+    ) {
+        return this.adminService.decideSupportRequest(id, decision, {
+            denialReasonCode,
+            amount,
+            notes,
+        });
     }
 }
 

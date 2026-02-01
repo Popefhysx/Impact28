@@ -1,0 +1,417 @@
+.container {
+    padding: 24px;
+    max-width: 1200px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+}
+
+.header h1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--navy-deep);
+    font-size: 24px;
+    margin: 0;
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    margin-top: 4px;
+    font-size: 14px;
+}
+
+.composeBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: var(--gold-warm);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.composeBtn:hover {
+    filter: brightness(1.1);
+}
+
+/* Stats Grid */
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.statCard {
+    background: var(--surface-soft);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.statValue {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--navy-deep);
+}
+
+.statLabel {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 12px;
+}
+
+.tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab:hover {
+    background: var(--surface-soft);
+    color: var(--navy-deep);
+}
+
+.activeTab {
+    background: var(--navy-deep);
+    color: white;
+}
+
+.activeTab:hover {
+    background: var(--navy-deep);
+    color: white;
+}
+
+.tabBadge {
+    background: var(--accent-danger);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+}
+
+/* Filters */
+.filters {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.searchBox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 8px 12px;
+    flex: 1;
+    min-width: 200px;
+    max-width: 300px;
+}
+
+.searchBox svg {
+    color: var(--text-secondary);
+}
+
+.searchBox input {
+    border: none;
+    background: transparent;
+    flex: 1;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.searchBox input:focus {
+    outline: none;
+}
+
+.filterGroup {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+}
+
+.refreshBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+}
+
+.refreshBtn:hover {
+    background: var(--navy-deep);
+    color: white;
+    border-color: var(--navy-deep);
+}
+
+/* Loading & Empty States */
+.loadingState,
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+    gap: 12px;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.emptyState svg {
+    opacity: 0.4;
+}
+
+.emptyState h3 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.emptyState p {
+    margin: 0;
+}
+
+/* Email List */
+.emailList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.emailCard {
+    background: white;
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.2s;
+}
+
+.emailCard:hover {
+    border-color: var(--gold-warm);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.emailCard.failed {
+    border-left: 3px solid var(--accent-danger);
+}
+
+.emailHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.emailMeta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sourceBadge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.templateType {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.emailTime {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.emailBody {
+    margin-bottom: 12px;
+}
+
+.emailSubject {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    margin: 0 0 6px 0;
+}
+
+.emailRecipient {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.recipientName {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.recipientEmail {
+    color: var(--text-secondary);
+}
+
+.emailFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-light);
+}
+
+.statusBadge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.sentTime {
+    font-weight: 400;
+    opacity: 0.8;
+}
+
+.failureReason {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--accent-danger);
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-light);
+}
+
+.pagination button {
+    padding: 8px 16px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pagination button:hover:not(:disabled) {
+    background: var(--navy-deep);
+    color: white;
+    border-color: var(--navy-deep);
+}
+
+.pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination span {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        padding: 16px;
+    }
+
+    .statsGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .searchBox {
+        max-width: none;
+    }
+
+    .filterGroup {
+        flex-wrap: wrap;
+    }
+
+    .emailHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .emailFooter {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .failureReason {
+        max-width: 100%;
+    }
+}

@@ -1,5 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PrismaService } from '../prisma';
+import { CommunicationSource, RecipientType, DeliveryStatus } from '@prisma/client';
+import { createHash } from 'crypto';
 
 // Email template types
 export type EmailTemplateType =
@@ -40,13 +43,37 @@ export interface OfferEmailData {
   declineLink: string;
 }
 
+// Email logging context - used to track who/what triggered the email
+export interface EmailLogContext {
+  triggeredBy?: string;             // Staff userId or 'SYSTEM'
+  triggerSource: CommunicationSource;
+  recipientId?: string;             // User/Applicant/Partner ID
+  recipientType: RecipientType;
+  recipientName?: string;
+  linkedEntityType?: string;        // 'APPLICANT', 'SUPPORT_REQUEST', etc.
+  linkedEntityId?: string;
+}
+
 @Injectable()
 export class EmailService {
+  private readonly logger = new Logger(EmailService.name);
   private resendApiKey: string;
   private fromEmail = 'Project 3:10 <noreply@cycle28.org>';
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private prisma: PrismaService,
+  ) {
     this.resendApiKey = this.configService.get<string>('RESEND_API_KEY') || '';
+  }
+
+  // ===== UTILITY METHODS =====
+  private stripHtml(html: string): string {
+    return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  private createContentHash(html: string): string {
+    return createHash('sha256').update(html).digest('hex').substring(0, 16);
   }
 
   // ===== EMAIL TEMPLATES =====
@@ -219,17 +246,49 @@ export class EmailService {
     }),
   };
 
-  // ===== SEND EMAIL =====
-  async sendEmail(to: string, templateType: EmailTemplateType, data: TemplateData): Promise<boolean> {
-    const template = this.templates[templateType](data);
+  // ===== SEND EMAIL WITH LOGGING =====
 
-    // If no API key, log to console (dev mode)
+  /**
+   * Core email sending method with full audit logging.
+   * All emails should eventually route through this method.
+   */
+  async sendEmailWithContext(
+    to: string,
+    subject: string,
+    html: string,
+    templateType: string,
+    context: EmailLogContext,
+  ): Promise<{ success: boolean; logId?: string }> {
+    const contentPreview = this.stripHtml(html).substring(0, 200);
+    const contentHash = this.createContentHash(html);
+
+    // Create log record BEFORE sending (immutable audit trail)
+    const log = await this.prisma.communicationLog.create({
+      data: {
+        triggeredBy: context.triggeredBy || 'SYSTEM',
+        triggerSource: context.triggerSource,
+        templateType,
+        subject,
+        contentHash,
+        contentPreview,
+        recipientEmail: to,
+        recipientName: context.recipientName,
+        recipientId: context.recipientId,
+        recipientType: context.recipientType,
+        linkedEntityType: context.linkedEntityType,
+        linkedEntityId: context.linkedEntityId,
+        status: DeliveryStatus.QUEUED,
+      },
+    });
+
+    // If no API key, log to console (dev mode) but still record
     if (!this.resendApiKey) {
-      console.log('📧 [DEV] Email would be sent:');
-      console.log(`   To: ${to}`);
-      console.log(`   Subject: ${template.subject}`);
-      console.log(`   Template: ${templateType}`);
-      return true;
+      this.logger.log(`📧 [DEV] Email logged (${log.id}): ${templateType} → ${to}`);
+      await this.prisma.communicationLog.update({
+        where: { id: log.id },
+        data: { status: DeliveryStatus.SENT, sentAt: new Date() },
+      });
+      return { success: true, logId: log.id };
     }
 
     try {
@@ -242,21 +301,83 @@ export class EmailService {
         body: JSON.stringify({
           from: this.fromEmail,
           to,
-          subject: template.subject,
-          html: template.html,
+          subject,
+          html,
         }),
       });
 
       if (!response.ok) {
-        console.error('Failed to send email:', await response.text());
-        return false;
+        const errorText = await response.text();
+        this.logger.error(`Failed to send email (${log.id}): ${errorText}`);
+        await this.prisma.communicationLog.update({
+          where: { id: log.id },
+          data: {
+            status: DeliveryStatus.FAILED,
+            failedAt: new Date(),
+            failureReason: errorText.substring(0, 500),
+          },
+        });
+        return { success: false, logId: log.id };
       }
 
-      return true;
+      // Parse Resend response for message ID
+      const result = await response.json();
+      await this.prisma.communicationLog.update({
+        where: { id: log.id },
+        data: {
+          status: DeliveryStatus.SENT,
+          sentAt: new Date(),
+          resendId: result.id,
+        },
+      });
+
+      this.logger.log(`📧 Email sent (${log.id}): ${templateType} → ${to}`);
+      return { success: true, logId: log.id };
     } catch (error) {
-      console.error('Email send error:', error);
-      return false;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Email send error (${log.id}): ${errorMessage}`);
+      await this.prisma.communicationLog.update({
+        where: { id: log.id },
+        data: {
+          status: DeliveryStatus.FAILED,
+          failedAt: new Date(),
+          failureReason: errorMessage.substring(0, 500),
+        },
+      });
+      return { success: false, logId: log.id };
     }
+  }
+
+  /**
+   * Legacy sendEmail method - wraps sendEmailWithContext with default SYSTEM context.
+   * Maintained for backward compatibility with existing callers.
+   */
+  async sendEmail(to: string, templateType: EmailTemplateType, data: TemplateData): Promise<boolean> {
+    const template = this.templates[templateType](data);
+
+    // Map template types to trigger sources
+    const sourceMap: Record<EmailTemplateType, CommunicationSource> = {
+      'application_received': CommunicationSource.INTAKE,
+      'application_reminder': CommunicationSource.INTAKE,
+      'application_admitted': CommunicationSource.ADMISSION,
+      'application_conditional': CommunicationSource.ADMISSION,
+      'application_rejected': CommunicationSource.ADMISSION,
+      'resume_link': CommunicationSource.INTAKE,
+    };
+
+    const result = await this.sendEmailWithContext(
+      to,
+      template.subject,
+      template.html,
+      templateType,
+      {
+        triggerSource: sourceMap[templateType] || CommunicationSource.SYSTEM,
+        recipientType: RecipientType.APPLICANT,
+        recipientName: data.firstName,
+      },
+    );
+
+    return result.success;
   }
 
   // ===== CONVENIENCE METHODS =====
@@ -365,40 +486,20 @@ export class EmailService {
       </div>
     `;
 
-    // If no API key, log to console (dev mode)
-    if (!this.resendApiKey) {
-      console.log('📧 [DEV] Readiness Rejection Email would be sent:');
-      console.log(`To: ${email}`);
-      console.log(`Subject: ${tier.subject}`);
-      console.log(`Score: ${readinessScore}, Capacity rejection: ${isCapacityRejection}`);
-      return true;
-    }
+    // Use sendEmailWithContext for audit logging
+    const result = await this.sendEmailWithContext(
+      email,
+      tier.subject,
+      html,
+      'readiness_rejection',
+      {
+        triggerSource: CommunicationSource.ADMISSION,
+        recipientType: RecipientType.APPLICANT,
+        recipientName: firstName,
+      },
+    );
 
-    // Send via Resend API
-    try {
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.resendApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: this.fromEmail,
-          to: email,
-          subject: tier.subject,
-          html,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Resend API error: ${response.statusText}`);
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Failed to send readiness rejection email:', error);
-      return false;
-    }
+    return result.success;
   }
 
   async sendResumeLink(email: string, firstName: string, resumeLink: string) {
@@ -517,41 +618,22 @@ export class EmailService {
       </div>
     `;
 
-    // If no API key, log to console (dev mode)
-    if (!this.resendApiKey) {
-      console.log('📧 [DEV] Offer Email would be sent:');
-      console.log(`To: ${email}`);
-      console.log(`Subject: Your Project 3:10 Offer — ${offerLabel}`);
-      console.log('Data:', data);
-      return true;
-    }
+    const subject = `Your Project 3:10 Offer — ${offerLabel}`;
 
-    // Send via Resend API
-    try {
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.resendApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: this.fromEmail,
-          to: email,
-          subject: `Your Project 3:10 Offer — ${offerLabel}`,
-          html,
-        }),
-      });
+    // Use sendEmailWithContext for audit logging
+    const result = await this.sendEmailWithContext(
+      email,
+      subject,
+      html,
+      'offer_email',
+      {
+        triggerSource: CommunicationSource.ADMISSION,
+        recipientType: RecipientType.APPLICANT,
+        recipientName: data.firstName,
+      },
+    );
 
-      if (!response.ok) {
-        throw new Error(`Resend API error: ${response.statusText}`);
-      }
-
-
-      return true;
-    } catch (error) {
-      console.error('Failed to send offer email:', error);
-      return false;
-    }
+    return result.success;
   }
 
   /**
@@ -591,39 +673,22 @@ export class EmailService {
       </div>
     `;
 
-    // If no API key, log to console (dev mode)
-    if (!this.resendApiKey) {
-      console.log('📧 [DEV] OTP Email would be sent:');
-      console.log(`To: ${email}`);
-      console.log(`Code: ${data.otpCode}`);
-      return true;
-    }
+    const subject = `${data.otpCode} — Your Project 3:10 Login Code`;
 
-    // Send via Resend API
-    try {
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.resendApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: this.fromEmail,
-          to: email,
-          subject: `${data.otpCode} — Your Project 3:10 Login Code`,
-          html,
-        }),
-      });
+    // Use sendEmailWithContext for audit logging
+    const result = await this.sendEmailWithContext(
+      email,
+      subject,
+      html,
+      'otp_verification',
+      {
+        triggerSource: CommunicationSource.AUTH,
+        recipientType: RecipientType.USER,
+        recipientName: data.firstName,
+      },
+    );
 
-      if (!response.ok) {
-        throw new Error(`Resend API error: ${response.statusText}`);
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Failed to send OTP email:', error);
-      return false;
-    }
+    return result.success;
   }
 
   /**
@@ -698,39 +763,20 @@ export class EmailService {
       </div>
     `;
 
-    // If no API key, log to console (dev mode)
-    if (!this.resendApiKey) {
-      console.log('📧 [DEV] Staff Invite Email would be sent:');
-      console.log(`To: ${email}`);
-      console.log(`Category: ${data.category}`);
-      console.log(`Setup Link: ${data.setupLink}`);
-      return true;
-    }
+    const subject = `You're invited to join Project 3:10 as ${catInfo.label}`;
 
-    // Send via Resend API
-    try {
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.resendApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: this.fromEmail,
-          to: email,
-          subject: `You're invited to join Project 3:10 as ${catInfo.label}`,
-          html,
-        }),
-      });
+    // Use sendEmailWithContext for audit logging
+    const result = await this.sendEmailWithContext(
+      email,
+      subject,
+      html,
+      'staff_invite',
+      {
+        triggerSource: CommunicationSource.STAFF,
+        recipientType: RecipientType.STAFF,
+      },
+    );
 
-      if (!response.ok) {
-        throw new Error(`Resend API error: ${response.statusText}`);
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Failed to send staff invite email:', error);
-      return false;
-    }
+    return result.success;
   }
 }

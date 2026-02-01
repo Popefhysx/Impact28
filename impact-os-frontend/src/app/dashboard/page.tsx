@@ -66,9 +66,18 @@ const mockMissions = [
     { id: '2', title: 'First Client Outreach', difficulty: 'MEDIUM', reward: 150, progress: 30 },
 ];
 
+// History Item Type
+interface HistoryItem {
+    level: string;
+    previousLevel: string;
+    reason: string;
+    achievedAt: string;
+}
+
 export default function ParticipantDashboard() {
     const [data, setData] = useState<DashboardProgress | null>(null);
     const [missions, setMissions] = useState(mockMissions);
+    const [history, setHistory] = useState<HistoryItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -95,7 +104,22 @@ export default function ParticipantDashboard() {
             }
         };
 
+        const fetchHistory = async () => {
+            try {
+                const response = await fetch('/api/progress/history', {
+                    credentials: 'include',
+                });
+                if (response.ok) {
+                    const historyData = await response.json();
+                    setHistory(historyData);
+                }
+            } catch (err) {
+                console.error('Failed to fetch history:', err);
+            }
+        };
+
         fetchProgress();
+        fetchHistory();
     }, []);
 
     if (loading) {
@@ -197,6 +221,40 @@ export default function ParticipantDashboard() {
                                 <button className="btn btn-primary">Continue</button>
                             </div>
                         ))}
+                    </div>
+                </div>
+
+                {/* Identity History */}
+                <div className={`card ${styles.historyPanel}`}>
+                    <h2>Journey</h2>
+                    <div className={styles.timeline}>
+                        {history.length === 0 ? (
+                            <div className={styles.timelineItem}>
+                                <div className={styles.timelineDot} />
+                                <div className={styles.timelineContent}>
+                                    <span className={styles.timelineDate}>Just Started</span>
+                                    <h4>Profile Activated</h4>
+                                    <p>Welcome to Impact OS.</p>
+                                </div>
+                            </div>
+                        ) : (
+                            history.map((event, index) => (
+                                <div key={index} className={`${styles.timelineItem} ${index === history.length - 1 ? styles.active : ''}`}>
+                                    <div className={styles.timelineDot} />
+                                    <div className={styles.timelineContent}>
+                                        <span className={styles.timelineDate}>
+                                            {new Date(event.achievedAt).toLocaleDateString(undefined, {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                year: 'numeric'
+                                            })}
+                                        </span>
+                                        <h4>{event.level.replace(/_/g, ' ')}</h4>
+                                        <p>{event.reason || 'Level Up'}</p>
+                                    </div>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
             </div>

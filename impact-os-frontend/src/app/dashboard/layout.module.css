@@ -262,7 +262,7 @@
     width: 32px;
     height: 32px;
     background: var(--navy-deep);
-    color: #ffffff;
+    color: var(--text-inverse);
     border-radius: var(--radius-full);
     display: flex;
     align-items: center;

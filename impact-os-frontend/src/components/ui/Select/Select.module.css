@@ -1,12 +1,14 @@
 .container {
     position: relative;
-    width: 100%;
+    display: inline-block;
+    min-width: fit-content;
 }
 
 .trigger {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: var(--space-sm);
     width: 100%;
     padding: var(--space-sm) var(--space-md);
     background: var(--bg-primary);
@@ -18,6 +20,7 @@
     cursor: pointer;
     transition: all 0.15s ease;
     text-align: left;
+    white-space: nowrap;
 }
 
 .trigger:hover:not(.disabled) {
@@ -40,10 +43,14 @@
 
 .value {
     color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .placeholder {
     color: var(--text-muted);
+    white-space: nowrap;
 }
 
 .chevron {
@@ -60,7 +67,8 @@
     position: absolute;
     top: calc(100% + 4px);
     left: 0;
-    right: 0;
+    min-width: 100%;
+    width: max-content;
     background: var(--bg-primary);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-sm);

@@ -423,4 +423,146 @@ export class MissionService {
         this.logger.log(`Assigned ${assignmentCount} daily missions`);
         return assignmentCount;
     }
+
+    // ===== ADMIN: MISSION MANAGEMENT =====
+
+    /**
+     * Get all mission templates with optional filters
+     */
+    async getAllMissions(filters?: {
+        isActive?: boolean;
+        skillDomain?: SkillDomain;
+        difficulty?: Difficulty;
+    }) {
+        const where: any = {};
+
+        if (filters?.isActive !== undefined) {
+            where.isActive = filters.isActive;
+        }
+        if (filters?.skillDomain) {
+            where.skillDomain = filters.skillDomain;
+        }
+        if (filters?.difficulty) {
+            where.difficulty = filters.difficulty;
+        }
+
+        const missions = await this.prisma.mission.findMany({
+            where,
+            include: {
+                _count: {
+                    select: { assignments: true },
+                },
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        // Calculate completion rates for each mission
+        const missionsWithStats = await Promise.all(
+            missions.map(async (mission) => {
+                const assignments = await this.prisma.missionAssignment.groupBy({
+                    by: ['status'],
+                    where: { missionId: mission.id },
+                    _count: true,
+                });
+
+                const totalAssignments = assignments.reduce((sum, a) => sum + a._count, 0);
+                const completedCount = assignments.find(a => a.status === MissionStatus.VERIFIED)?._count || 0;
+                const activeCount = assignments
+                    .filter(a => ([MissionStatus.ASSIGNED, MissionStatus.IN_PROGRESS, MissionStatus.SUBMITTED] as MissionStatus[]).includes(a.status))
+                    .reduce((sum, a) => sum + a._count, 0);
+
+                return {
+                    ...mission,
+                    completionRate: totalAssignments > 0 ? Math.round((completedCount / totalAssignments) * 100) : 0,
+                    activeCount,
+                    totalAssignments,
+                };
+            })
+        );
+
+        return missionsWithStats;
+    }
+
+    /**
+     * Get aggregate mission statistics for admin dashboard
+     */
+    async getMissionStats() {
+        const [
+            totalMissions,
+            activeMissions,
+            totalAssignments,
+            statusCounts,
+        ] = await Promise.all([
+            this.prisma.mission.count(),
+            this.prisma.mission.count({ where: { isActive: true } }),
+            this.prisma.missionAssignment.count(),
+            this.prisma.missionAssignment.groupBy({
+                by: ['status'],
+                _count: true,
+            }),
+        ]);
+
+        const pendingReview = statusCounts.find(s => s.status === MissionStatus.SUBMITTED)?._count || 0;
+        const completed = statusCounts.find(s => s.status === MissionStatus.VERIFIED)?._count || 0;
+        const inProgress = statusCounts
+            .filter(s => ([MissionStatus.ASSIGNED, MissionStatus.IN_PROGRESS] as MissionStatus[]).includes(s.status))
+            .reduce((sum, s) => sum + s._count, 0);
+
+        return {
+            totalMissions,
+            activeMissions,
+            totalAssignments,
+            pendingReview,
+            completed,
+            inProgress,
+            avgCompletionRate: totalAssignments > 0 ? Math.round((completed / totalAssignments) * 100) : 0,
+        };
+    }
+
+    /**
+     * Update a mission template
+     */
+    async updateMission(missionId: string, data: Partial<CreateMissionDto>) {
+        const mission = await this.prisma.mission.findUnique({
+            where: { id: missionId },
+        });
+
+        if (!mission) {
+            throw new NotFoundException('Mission not found');
+        }
+
+        return this.prisma.mission.update({
+            where: { id: missionId },
+            data: {
+                ...(data.title && { title: data.title }),
+                ...(data.description && { description: data.description }),
+                ...(data.skillDomain && { skillDomain: data.skillDomain }),
+                ...(data.difficulty && { difficulty: data.difficulty }),
+                ...(data.momentum !== undefined && { momentum: data.momentum }),
+                ...(data.skillXp !== undefined && { skillXp: data.skillXp }),
+                ...(data.arenaPoints !== undefined && { arenaPoints: data.arenaPoints }),
+                ...(data.requiredLevel && { requiredLevel: data.requiredLevel }),
+                ...(data.isDaily !== undefined && { isDaily: data.isDaily }),
+                ...(data.isWeekly !== undefined && { isWeekly: data.isWeekly }),
+            },
+        });
+    }
+
+    /**
+     * Toggle mission active status
+     */
+    async updateMissionStatus(missionId: string, isActive: boolean) {
+        const mission = await this.prisma.mission.findUnique({
+            where: { id: missionId },
+        });
+
+        if (!mission) {
+            throw new NotFoundException('Mission not found');
+        }
+
+        return this.prisma.mission.update({
+            where: { id: missionId },
+            data: { isActive },
+        });
+    }
 }

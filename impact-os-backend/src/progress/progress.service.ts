@@ -52,6 +52,8 @@ export interface WeeklyStats {
     avgMomentum: number;
 }
 
+import { MissionEngineService } from '../mission/mission-engine.service';
+
 @Injectable()
 export class ProgressService {
     private readonly logger = new Logger(ProgressService.name);
@@ -61,7 +63,15 @@ export class ProgressService {
         private currencyService: CurrencyService,
         private missionService: MissionService,
         private stipendService: StipendService,
+        private missionEngine: MissionEngineService,
     ) { }
+
+    /**
+     * Get identity history for a user
+     */
+    async getIdentityHistory(userId: string) {
+        return this.missionEngine.getIdentityHistory(userId);
+    }
 
     /**
      * Get full dashboard progress for a user

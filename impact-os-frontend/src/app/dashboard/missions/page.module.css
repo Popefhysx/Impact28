@@ -230,3 +230,744 @@
     font-size: 14px;
     max-width: 300px;
 }
+
+/* Loading */
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    min-height: 400px;
+    color: var(--text-muted);
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Pending Badge */
+.pendingBadge {
+    background: var(--gold-warm);
+    color: var(--navy-deep);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: var(--space-xs);
+}
+
+/* Status Banner */
+.statusBanner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent-warning);
+}
+
+/* Modal */
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    padding: var(--space-lg);
+}
+
+.modal {
+    width: 100%;
+    max-width: 480px;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.modalHeader h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    margin: 0;
+}
+
+.modalHeader button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-xs);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.modalHeader button:hover {
+    color: var(--navy-deep);
+}
+
+.modalBody {
+    padding: var(--space-lg);
+}
+
+.modalMission {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--navy-deep);
+    margin: 0 0 var(--space-lg) 0;
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.formGroup {
+    margin-bottom: var(--space-md);
+}
+
+.formGroup label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xs);
+}
+
+.formGroup input,
+.formGroup textarea {
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    color: var(--text-primary);
+    font-family: inherit;
+    outline: none;
+}
+
+.formGroup input:focus,
+.formGroup textarea:focus {
+    border-color: var(--gold-warm);
+}
+
+.formGroup textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.modalFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    border-top: 1px solid var(--border-subtle);
+}
+
+.cancelBtn {
+    padding: var(--space-sm) var(--space-lg);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.cancelBtn:hover {
+    background: var(--border-subtle);
+}
+
+.submitBtn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-lg);
+    background: var(--gold-warm);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    cursor: pointer;
+}
+
+.submitBtn:hover:not(:disabled) {
+    background: var(--gold-dark);
+}
+
+.submitBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        padding: var(--space-md);
+    }
+
+    .header {
+        flex-direction: column;
+        gap: var(--space-md);
+    }
+
+    .stats {
+        width: 100%;
+        justify-content: space-around;
+    }
+
+    .missionGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .sectionTabs {
+        overflow-x: auto;
+    }
+}
+
+/* ==================== SECTION TABS ==================== */
+.sectionTabs {
+    display: flex;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-lg);
+    background: var(--bg-elevated);
+    padding: 4px;
+    border-radius: var(--radius-lg);
+}
+
+.sectionTab {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    flex: 1;
+    justify-content: center;
+    padding: var(--space-sm) var(--space-md);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: var(--font-sans);
+}
+
+.sectionTab:hover {
+    color: var(--text-primary);
+}
+
+.sectionTab.active {
+    background: var(--bg-card);
+    color: var(--navy-deep);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.sectionTab svg {
+    opacity: 0.7;
+}
+
+.sectionTab.active svg {
+    opacity: 1;
+    color: var(--gold-warm);
+}
+
+/* ==================== PROGRESS SECTION ==================== */
+.progressSection,
+.missionsSection,
+.arenaSection {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.sectionTitle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    margin-bottom: var(--space-md);
+}
+
+.sectionTitle svg {
+    color: var(--gold-warm);
+}
+
+/* Identity Track */
+.identitySection {
+    margin-bottom: var(--space-xl);
+}
+
+.identityTrack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+}
+
+.identityStep {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-md);
+    opacity: 0.5;
+}
+
+.identityStep.completed {
+    opacity: 1;
+    background: rgba(22, 163, 74, 0.1);
+}
+
+.identityStep.current {
+    opacity: 1;
+    background: var(--gold-pale);
+    border: 1px solid var(--gold-warm);
+}
+
+.levelBadge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    background: var(--navy-deep);
+    color: white;
+    border-radius: var(--radius-sm);
+}
+
+.identityStep.completed .levelBadge {
+    background: var(--accent-success);
+}
+
+.identityStep.current .levelBadge {
+    background: var(--gold-warm);
+    color: var(--navy-deep);
+}
+
+.stepInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.levelName {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.levelDesc {
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+.stepArrow {
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+/* Currencies */
+.currencySection {
+    margin-bottom: var(--space-xl);
+}
+
+.currencyGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+}
+
+.currencyCard {
+    padding: var(--space-md);
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+}
+
+.currencyCard.verified {
+    background: rgba(22, 163, 74, 0.05);
+    border-color: var(--accent-success);
+}
+
+.currencyCard.pending {
+    opacity: 0.7;
+}
+
+.currencyHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+}
+
+.currencyName {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.currencyValue {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--navy-deep);
+    margin-bottom: 4px;
+}
+
+.currencyMeta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 11px;
+}
+
+.currencyHint {
+    color: var(--text-muted);
+}
+
+.momentumIcon {
+    color: var(--gold-warm);
+}
+
+.skillIcon {
+    color: var(--navy-medium);
+}
+
+.arenaIcon {
+    color: var(--gold-warm);
+}
+
+.incomeIcon {
+    color: var(--accent-success);
+}
+
+.progressBar {
+    height: 6px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    margin-top: var(--space-sm);
+}
+
+/* Milestones */
+.milestonesSection {
+    margin-bottom: var(--space-xl);
+}
+
+.timeline {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    padding-left: var(--space-md);
+    border-left: 2px solid var(--border-subtle);
+}
+
+.timelineItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    position: relative;
+}
+
+.timelineDot {
+    position: absolute;
+    left: calc(-1 * var(--space-md) - 5px);
+    width: 10px;
+    height: 10px;
+    background: var(--gold-warm);
+    border-radius: 50%;
+}
+
+.timelineDot[data-type="level"] {
+    background: var(--accent-success);
+}
+
+.timelineDot[data-type="income"] {
+    background: var(--accent-success);
+}
+
+.timelineContent {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-md);
+}
+
+.milestoneTitle {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.milestoneDate {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* ==================== ARENA SECTION ==================== */
+.arenaStats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.arenaStat {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+}
+
+.arenaStat.highlight {
+    background: var(--gold-pale);
+    border-color: var(--gold-warm);
+}
+
+.arenaStat svg {
+    color: var(--text-secondary);
+}
+
+.arenaStat.highlight svg {
+    color: var(--gold-warm);
+}
+
+.arenaStatValue {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--navy-deep);
+    display: block;
+}
+
+.arenaStatLabel {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.weeklyCard {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-lg);
+    background: linear-gradient(135deg, var(--gold-pale) 0%, var(--bg-card) 100%);
+    border: 1px solid var(--gold-warm);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-lg);
+}
+
+.weeklyIcon {
+    color: var(--gold-warm);
+}
+
+.weeklyContent {
+    flex: 1;
+}
+
+.weeklyValue {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    display: block;
+}
+
+.weeklyHint {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.weeklyStreak {
+    display: flex;
+    gap: 6px;
+}
+
+.streakDot {
+    width: 12px;
+    height: 12px;
+    background: var(--border-subtle);
+    border-radius: 50%;
+}
+
+.streakDot.activeDot {
+    background: var(--gold-warm);
+}
+
+/* Outreach Log */
+.logSection {
+    margin-bottom: var(--space-lg);
+}
+
+.logHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+}
+
+.logButton {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--gold-warm);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    cursor: pointer;
+    font-family: var(--font-sans);
+}
+
+.logButton:hover {
+    background: var(--gold-dark);
+}
+
+.logList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.logEntry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md);
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+}
+
+.logInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.logTarget {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.logMeta {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: capitalize;
+}
+
+.logStatus {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.responseTag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.responseTag.rejected {
+    background: rgba(220, 38, 38, 0.1);
+    color: var(--accent-danger);
+}
+
+.responseTag.positive {
+    background: rgba(22, 163, 74, 0.1);
+    color: var(--accent-success);
+}
+
+.responseTag.no_response,
+.responseTag.pending {
+    background: rgba(217, 119, 6, 0.1);
+    color: var(--accent-warning);
+}
+
+.rejectedIcon {
+    color: var(--accent-danger);
+}
+
+.positiveIcon {
+    color: var(--accent-success);
+}
+
+.pendingIcon {
+    color: var(--accent-warning);
+}
+
+.pointsEarned {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gold-dark);
+}
+
+/* Encouragement Banner */
+.encouragementBanner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    padding: var(--space-lg);
+    background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy-medium) 100%);
+    border-radius: var(--radius-lg);
+    color: white;
+}
+
+.encouragementIcon {
+    color: var(--gold-warm);
+}
+
+.encouragementBanner h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+}
+
+.encouragementBanner p {
+    font-size: 13px;
+    margin: 0;
+    opacity: 0.8;
+}

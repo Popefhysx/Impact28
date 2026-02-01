@@ -412,7 +412,7 @@ export default function ApplicantDetailPage() {
 
                                 <div className={styles.psnDisclaimer}>
                                     <Info size={12} />
-                                    <span>PSN is a forecast estimate only. Support is request-based and behavior-gated.</span>
+                                    <span>PSN (Predicted Support Need) is a forecast estimate only. Support is request-based and behavior-gated.</span>
                                 </div>
                             </div>
                         </section>

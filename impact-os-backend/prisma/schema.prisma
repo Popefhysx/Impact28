@@ -154,6 +154,9 @@ model User {
   // Identity Level (L0-L5)
   identityLevel   IdentityLevel @default(L1_ACTIVATED)
   
+  // Program Phase (for phase-gating support)
+  currentPhase    ProgramPhase  @default(ONBOARDING)
+  
   // Onboarding
   applicantId     String?       @unique
   applicant       Applicant?    @relation(fields: [applicantId], references: [id])
@@ -167,6 +170,15 @@ model User {
   avatarUrl       String?
   bio             String?
   
+  // Social Handles (for The Wall)
+  instagramHandle String?
+  twitterHandle   String?
+  linkedinUrl     String?
+  
+  // Streak Tracking
+  currentStreak   Int           @default(0)
+  lastCheckIn     DateTime?
+  
   // Authentication
   otpCode         String?
   otpExpiresAt    DateTime?
@@ -177,19 +189,26 @@ model User {
   pausedAt        DateTime?
   pauseReason     String?
   
+  // Support Cooldown
+  supportCooldownUntil DateTime?  // When cooldown expires for next request
+  
   // Timestamps
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   
   // Relations
-  currencyLedger    CurrencyLedger[]
-  missions          MissionAssignment[]
-  incomeRecords     IncomeRecord[]
-  checkIns          CheckIn[]
-  failures          FailureRecord[]
-  supportWallet     SupportWallet?
-  supportRequests   SupportRequest[]
-  staff             Staff?
+  currencyLedger      CurrencyLedger[]
+  missions            MissionAssignment[]
+  incomeRecords       IncomeRecord[]
+  checkIns            CheckIn[]
+  failures            FailureRecord[]
+  supportWallet       SupportWallet?
+  supportRequests     SupportRequest[]
+  staff               Staff?
+  triadScore          SkillTriadScore?
+  behaviorLogs        BehaviorLog[]
+  wallPosts           WallPost[]
+  interventionAlerts  InterventionAlert[]
   
   @@index([email])
   @@index([identityLevel])
@@ -377,10 +396,16 @@ model SupportRequest {
   status          SupportRequestStatus @default(PENDING)
   approvalTier    ApprovalTier?
   approverId      String?             // Admin who approved (or "SYSTEM")
-  reasonCode      String?             // For denials
+  
+  // Denial handling (strict enforcement)
+  denialReasonCode SupportDenialReason?  // Required for DENIED status
+  reasonCode      String?                // Legacy: free-text reason (deprecated)
   
   // Internal amount (never shown to participant)
   amount          Float?
+  
+  // Expiration (72h after approval)
+  expiresAt       DateTime?
   
   disbursements   DisbursementLog[]
   
@@ -424,8 +449,10 @@ enum SupportType {
 enum SupportRequestStatus {
   PENDING
   APPROVED
+  APPROVED_PENDING_DISBURSE  // Approved but awaiting fund release
   DENIED
   COMPLETED
+  EXPIRED                     // Auto-expired after timeout
 }
 
 enum ApprovalTier {
@@ -446,6 +473,33 @@ enum DisbursementStatus {
   PROCESSING
   COMPLETED
   FAILED
+}
+
+// ============================================================================
+// SUPPORT DENIAL REASON CODES (Strict Enforcement)
+// ============================================================================
+
+enum SupportDenialReason {
+  INSUFFICIENT_MOMENTUM     // Momentum < 50
+  NO_ACTIVE_MISSION         // No mission in progress
+  PHASE_MISMATCH            // Request doesn't match program phase
+  COOLDOWN_ACTIVE           // Recent request still in cooldown
+  BEHAVIORAL_FLAG           // Inactivity or avoidance detected
+  BUDGET_EXHAUSTED          // Wallet budget depleted
+  DUPLICATE_REQUEST         // Similar request already pending
+  MANUAL_ADMIN_DECISION     // Admin discretionary denial
+}
+
+// ============================================================================
+// PROGRAM PHASE (Phase-Gating)
+// ============================================================================
+
+enum ProgramPhase {
+  ONBOARDING                // L1: Orientation
+  SKILL_BUILDING            // L2: Learning missions
+  MARKET_EXPOSURE           // L3: Outreach/Arena
+  INCOME_GENERATION         // L4: Earning focus
+  CATALYST                  // L5: Graduated
 }
 
 // ============================================================================
@@ -478,20 +532,26 @@ model Mission {
 }
 
 model MissionAssignment {
-  id            String              @id @default(cuid())
-  userId        String
-  user          User                @relation(fields: [userId], references: [id])
-  missionId     String
-  mission       Mission             @relation(fields: [missionId], references: [id])
+  id              String              @id @default(cuid())
+  userId          String
+  user            User                @relation(fields: [userId], references: [id])
+  missionId       String
+  mission         Mission             @relation(fields: [missionId], references: [id])
   
-  status        MissionStatus       @default(ASSIGNED)
-  proofUrl      String?
-  proofText     String?
+  status          MissionStatus       @default(ASSIGNED)
+  proofUrl        String?
+  proofText       String?             @db.VarChar(500)
+  reflectionText  String?             @db.VarChar(150)
   
-  assignedAt    DateTime            @default(now())
-  startedAt     DateTime?
-  completedAt   DateTime?
-  deadlineAt    DateTime?
+  // Timing
+  assignedAt      DateTime            @default(now())
+  startedAt       DateTime?
+  completedAt     DateTime?
+  deadlineAt      DateTime?
+  expiresAt       DateTime?           // Auto-expiry for enforcement
+  
+  // Behavioral signals
+  responseTimeMs  Int?                // Time from assigned to completed
   
   @@index([userId, status])
 }
@@ -566,6 +626,122 @@ model CheckIn {
   createdAt     DateTime      @default(now())
   
   @@index([userId, createdAt])
+}
+
+// ============================================================================
+// SKILL TRIAD SCORE
+// ============================================================================
+
+model SkillTriadScore {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  
+  technical   Int      @default(0)  // 0-100
+  soft        Int      @default(0)  // 0-100
+  commercial  Int      @default(0)  // 0-100
+  
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================================================
+// INTERVENTION ALERTS
+// ============================================================================
+
+model InterventionAlert {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  
+  type        AlertType
+  severity    AlertSeverity @default(MEDIUM)
+  message     String?       @db.VarChar(200)
+  
+  triggeredAt DateTime      @default(now())
+  resolvedAt  DateTime?
+  resolvedBy  String?
+  notes       String?       @db.VarChar(500)
+  
+  @@index([userId, type])
+  @@index([resolvedAt])
+}
+
+enum AlertType {
+  LOW_MOMENTUM
+  MISSED_MISSIONS
+  INACTIVE_7_DAYS
+  TRIAD_IMBALANCE
+  GRADUATION_BLOCK
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+// ============================================================================
+// BEHAVIOR LOG
+// ============================================================================
+
+model BehaviorLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  eventType   String   // CHECKIN, MISSION_COMPLETE, OUTREACH, etc.
+  eventData   Json?    // Flexible payload
+  
+  timestamp   DateTime @default(now())
+  
+  @@index([userId, eventType])
+  @@index([timestamp])
+}
+
+// ============================================================================
+// THE WALL (Public Story Feed)
+// ============================================================================
+
+model WallPost {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  
+  platform    Platform
+  caption     String      @db.VarChar(500)
+  postUrl     String?     @db.VarChar(200)
+  usedHashtag Boolean     @default(false)
+  
+  // Auto-publish (no approval needed)
+  status      WallPostStatus @default(PUBLISHED)
+  flaggedAt   DateTime?
+  flaggedBy   String?
+  
+  // Auto-calculated rank score
+  rankScore   Float       @default(0)
+  
+  // Consent
+  canFeature  Boolean     @default(true)
+  
+  submittedAt DateTime    @default(now())
+  
+  @@index([status, rankScore])
+}
+
+enum Platform {
+  WHATSAPP_STATUS
+  INSTAGRAM
+  FACEBOOK
+  TWITTER_X
+  LINKEDIN
+  TIKTOK
+  OTHER
+}
+
+enum WallPostStatus {
+  PUBLISHED   // Default - live immediately
+  REMOVED     // Admin flagged for removal
 }
 
 // ============================================================================
@@ -1256,4 +1432,106 @@ enum EscalationStatus {
   IN_PROGRESS   // Being worked on
   RESOLVED      // Closed with resolution
   DISMISSED     // Closed without action
+}
+
+// ============================================================================
+// COMMUNICATION LOG (Email Audit Trail)
+// ============================================================================
+
+model CommunicationLog {
+  id              String              @id @default(cuid())
+  
+  // Sender context
+  triggeredBy     String              // "SYSTEM" or staff userId
+  triggerSource   CommunicationSource // INTAKE, ADMISSION, AUTH, etc.
+  
+  // Template context
+  templateType    String              // "application_received", "offer_email", etc.
+  templateVersion Int                 @default(1)
+  
+  // Content snapshot (immutable)
+  subject         String
+  contentHash     String              // Hash of HTML for integrity
+  contentPreview  String              @db.VarChar(200)  // First 200 chars plaintext
+  
+  // Recipient
+  recipientEmail  String
+  recipientName   String?
+  recipientId     String?             // User/Applicant ID if known
+  recipientType   RecipientType       // USER, APPLICANT, PARTNER, STAFF, EXTERNAL
+  
+  // Linked entity (for audit correlation)
+  linkedEntityType String?            // "APPLICANT", "SUPPORT_REQUEST", "MISSION"
+  linkedEntityId   String?
+  
+  // Delivery tracking
+  status          DeliveryStatus      @default(QUEUED)
+  resendId        String?             // Provider message ID
+  sentAt          DateTime?
+  deliveredAt     DateTime?
+  failedAt        DateTime?
+  failureReason   String?
+  openedAt        DateTime?           // Future: webhook tracking
+  
+  createdAt       DateTime            @default(now())
+  
+  @@index([recipientEmail])
+  @@index([templateType])
+  @@index([triggerSource])
+  @@index([status])
+  @@index([linkedEntityType, linkedEntityId])
+  @@index([createdAt])
+}
+
+model CommunicationTemplate {
+  id          String              @id @default(cuid())
+  name        String              // Human-readable name "Welcome Email"
+  slug        String              @unique // URL-safe identifier "welcome_email"
+  category    CommunicationSource // INTAKE, ADMISSION, etc.
+  
+  // Template content
+  subject     String              // Subject with {{variable}} placeholders
+  htmlContent String              @db.Text // HTML content with {{variable}} placeholders
+  
+  // Variable definitions
+  variables   Json?               // Array of { name, description, required }
+  
+  // Status
+  isActive    Boolean             @default(true)
+  isSystem    Boolean             @default(false) // System templates can't be deleted
+  
+  // Audit
+  createdBy   String?             // Staff userId
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  
+  @@index([category])
+  @@index([isActive])
+}
+
+enum CommunicationSource {
+  INTAKE          // Application flow
+  ADMISSION       // Offers, decisions
+  AUTH            // OTP, login
+  STAFF           // Staff invites
+  SUPPORT         // Support request updates
+  MISSION         // Mission reminders
+  BROADCAST       // Manual broadcast
+  SYSTEM          // Automated system emails
+}
+
+enum RecipientType {
+  USER
+  APPLICANT
+  PARTNER
+  STAFF
+  EXTERNAL
+}
+
+enum DeliveryStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  BOUNCED
+  FAILED
 }

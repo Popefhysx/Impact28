@@ -279,15 +279,31 @@
         flex: 1;
     }
 
+    /* Hide table and toggle on mobile */
     .tableCard {
-        display: none;
-    }
-
-    .gridView {
-        grid-template-columns: 1fr;
+        display: none !important;
     }
 
     .viewToggle {
         display: none;
     }
+
+    /* Always show grid on mobile */
+    .gridView {
+        display: grid !important;
+        grid-template-columns: 1fr;
+    }
+
+    .hiddenDesktop {
+        display: grid !important;
+    }
+}
+
+/* Desktop visibility helpers */
+.hidden {
+    display: none;
+}
+
+.hiddenDesktop {
+    display: none;
 }
