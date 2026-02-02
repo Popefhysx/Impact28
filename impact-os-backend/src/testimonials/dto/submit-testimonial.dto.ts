@@ -23,7 +23,7 @@ export class SubmitTestimonialDto {
 
     @IsString()
     @MinLength(20)
-    @MaxLength(500)
+    @MaxLength(2000)
     quote: string;
 
     @IsOptional()
@@ -64,7 +64,7 @@ export class UpdateTestimonialDto {
     @IsOptional()
     @IsString()
     @MinLength(20)
-    @MaxLength(500)
+    @MaxLength(2000)
     quote?: string;
 
     @IsOptional()
