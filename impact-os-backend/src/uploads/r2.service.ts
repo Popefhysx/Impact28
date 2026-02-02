@@ -78,11 +78,11 @@ export class R2Service {
         // Generate unique key with prefix
         const key = `${PREFIX[type]}${randomUUID()}.${ext}`;
 
-        const bucket = process.env.R2_BUCKET_NAME;
+        const bucket = process.env.R2_BUCKET;
         const publicBase = process.env.R2_PUBLIC_URL;
 
         if (!bucket) {
-            throw new BadRequestException('R2_BUCKET_NAME not configured');
+            throw new BadRequestException('R2_BUCKET not configured');
         }
         if (!publicBase) {
             throw new BadRequestException('R2_PUBLIC_URL not configured');
