@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Search, Filter, Mail, AlertTriangle, Check, Clock, Loader2, RefreshCw, X, Send, PenSquare } from 'lucide-react';
 import Link from 'next/link';
 import { Select } from '@/components/ui/Select';
+import { PageHeader } from '@/components/ui/PageHeader';
 import styles from './page.module.css';
 
 // Types
@@ -241,35 +242,70 @@ export default function CommunicationsPage() {
 
     return (
         <div className={styles.container}>
-            <header className={styles.header}>
-                <div>
-                    <h1><Mail size={24} /> Communications</h1>
-                    <p className={styles.subtitle}>Email audit trail and delivery tracking</p>
-                </div>
-                <Link href="/admin/communications/compose" className={styles.composeBtn}>
-                    <PenSquare size={16} />
-                    Compose
-                </Link>
-            </header>
+            {/* Page Header with Section Tabs */}
+            <PageHeader
+                title="Communications"
+                subtitle="Manage email templates and track delivery"
+                tabs={[
+                    {
+                        key: 'templates',
+                        label: 'Email Templates',
+                        icon: <PenSquare size={18} />,
+                        href: '/admin/email-templates',
+                    },
+                    {
+                        key: 'log',
+                        label: 'Email Log',
+                        icon: <Mail size={18} />,
+                        active: true,
+                    },
+                ]}
+                actions={
+                    <Link href="/admin/communications/compose" className={styles.composeBtn}>
+                        <PenSquare size={16} />
+                        Compose
+                    </Link>
+                }
+            />
 
             {/* Stats Cards */}
             {stats && (
                 <div className={styles.statsGrid}>
                     <div className={styles.statCard}>
-                        <span className={styles.statValue}>{stats.total}</span>
-                        <span className={styles.statLabel}>Total Sent</span>
+                        <div className={`${styles.statIcon} ${styles.total}`}>
+                            <Send size={24} />
+                        </div>
+                        <div className={styles.statContent}>
+                            <span className={styles.statValue}>{stats.total}</span>
+                            <span className={styles.statLabel}>Total Sent</span>
+                        </div>
                     </div>
                     <div className={styles.statCard}>
-                        <span className={styles.statValue} style={{ color: 'var(--accent-success)' }}>{stats.delivered}</span>
-                        <span className={styles.statLabel}>Delivered</span>
+                        <div className={`${styles.statIcon} ${styles.delivered}`}>
+                            <Check size={24} />
+                        </div>
+                        <div className={styles.statContent}>
+                            <span className={styles.statValue}>{stats.delivered}</span>
+                            <span className={styles.statLabel}>Delivered</span>
+                        </div>
                     </div>
                     <div className={styles.statCard}>
-                        <span className={styles.statValue} style={{ color: 'var(--accent-danger)' }}>{stats.failed}</span>
-                        <span className={styles.statLabel}>Failed</span>
+                        <div className={`${styles.statIcon} ${styles.failed}`}>
+                            <AlertTriangle size={24} />
+                        </div>
+                        <div className={styles.statContent}>
+                            <span className={styles.statValue}>{stats.failed}</span>
+                            <span className={styles.statLabel}>Failed</span>
+                        </div>
                     </div>
                     <div className={styles.statCard}>
-                        <span className={styles.statValue} style={{ color: 'var(--text-secondary)' }}>{stats.pending}</span>
-                        <span className={styles.statLabel}>Pending</span>
+                        <div className={`${styles.statIcon} ${styles.pending}`}>
+                            <Clock size={24} />
+                        </div>
+                        <div className={styles.statContent}>
+                            <span className={styles.statValue}>{stats.pending}</span>
+                            <span className={styles.statLabel}>Pending</span>
+                        </div>
                     </div>
                 </div>
             )}

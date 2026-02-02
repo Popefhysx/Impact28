@@ -1,0 +1,112 @@
+.toolbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--border-subtle);
+    flex-wrap: wrap;
+}
+
+.toolbarLeft {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.toolbarRight {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+/* Section Tabs */
+.sectionTabs {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.sectionTab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: var(--space-sm) var(--space-md);
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.sectionTab:hover {
+    border-color: var(--gold-warm);
+    color: var(--gold-warm);
+}
+
+.sectionTabActive {
+    background: var(--gold-warm);
+    border-color: var(--gold-warm);
+    color: var(--navy-deep);
+}
+
+.sectionTabActive:hover {
+    color: var(--navy-deep);
+}
+
+/* Search Box */
+.searchBox {
+    position: relative;
+    min-width: 240px;
+}
+
+.searchIcon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.searchInput {
+    width: 100%;
+    padding: var(--space-sm) var(--space-sm) var(--space-sm) 40px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: var(--font-sans);
+}
+
+.searchInput:focus {
+    outline: none;
+    border-color: var(--gold-warm);
+}
+
+.searchInput::placeholder {
+    color: var(--text-muted);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .toolbarLeft,
+    .toolbarRight {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .searchBox {
+        min-width: 100%;
+    }
+}

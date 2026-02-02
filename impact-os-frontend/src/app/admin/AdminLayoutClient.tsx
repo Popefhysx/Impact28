@@ -4,19 +4,63 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, FileText, Users, DollarSign, Target, PanelLeftClose, Menu, X, Settings, LogOut, ChevronUp, UserCog, BookOpen, HeartHandshake, Trophy, Mail, MessageSquareQuote, ImageIcon } from 'lucide-react';
+import {
+    LayoutDashboard, FileText, Users, DollarSign, Target,
+    PanelLeftClose, Menu, X, Settings, LogOut, ChevronUp,
+    UserCog, BookOpen, HeartHandshake, Mail, MessageSquareQuote,
+    ImageIcon, Handshake, Trophy, Calendar, Layers, Sliders
+} from 'lucide-react';
 import styles from './layout.module.css';
 
-const navItems = [
-    { href: '/admin', label: 'Dashboard', Icon: LayoutDashboard },
-    { href: '/admin/applicants', label: 'Applicants', Icon: FileText },
-    { href: '/admin/participants', label: 'Participants', Icon: Users },
-    { href: '/admin/support', label: 'Support', Icon: HeartHandshake },
-    { href: '/admin/communications', label: 'Comms', Icon: Mail },
-    { href: '/admin/income', label: 'Income', Icon: DollarSign },
-    { href: '/admin/testimonials', label: 'Testimonials', Icon: MessageSquareQuote },
-    { href: '/admin/missions', label: 'Missions', Icon: Target },
-    { href: '/admin/staff', label: 'Staff', Icon: UserCog },
+// Grouped navigation structure
+const navGroups = [
+    {
+        label: null, // No label for dashboard
+        items: [
+            { href: '/admin', label: 'Dashboard', Icon: LayoutDashboard },
+        ]
+    },
+    {
+        label: 'People',
+        items: [
+            { href: '/admin/applicants', label: 'Applicants', Icon: FileText },
+            { href: '/admin/participants', label: 'Participants', Icon: Users },
+            { href: '/admin/staff', label: 'Staff', Icon: UserCog },
+        ]
+    },
+    {
+        label: 'Program',
+        items: [
+            { href: '/admin/missions', label: 'Missions', Icon: Target },
+            { href: '/admin/support', label: 'Support', Icon: HeartHandshake },
+            { href: '/admin/income', label: 'Income', Icon: DollarSign },
+        ]
+    },
+    {
+        label: 'Engagement',
+        items: [
+            { href: '/admin/communications', label: 'Communications', Icon: Mail },
+            { href: '/admin/partners', label: 'Partners', Icon: Handshake },
+            { href: '/admin/testimonials', label: 'Testimonials', Icon: MessageSquareQuote },
+        ]
+    },
+    {
+        label: 'Content',
+        items: [
+            { href: '/wall', label: 'The Wall', Icon: ImageIcon },
+            { href: '/arena', label: 'The Arena', Icon: Trophy },
+            { href: '/admin/resources', label: 'Resources', Icon: BookOpen },
+        ]
+    },
+    {
+        label: 'Settings',
+        items: [
+            { href: '/admin/settings/cohorts', label: 'Cohorts', Icon: Users },
+            { href: '/admin/settings/phases', label: 'Phases', Icon: Layers },
+            { href: '/admin/settings/calendar', label: 'Calendar', Icon: Calendar },
+            { href: '/admin/settings/config', label: 'Program Config', Icon: Sliders },
+        ]
+    },
 ];
 
 export default function AdminLayout({
@@ -52,6 +96,21 @@ export default function AdminLayout({
     useEffect(() => {
         setMobileOpen(false);
     }, [pathname]);
+
+    // Check if any item in a group is active
+    const isGroupActive = (items: { href: string }[]) => {
+        return items.some(item =>
+            pathname === item.href || pathname.startsWith(item.href + '/')
+        );
+    };
+
+    // Check if single item is active
+    const isItemActive = (href: string) => {
+        if (href === '/admin') {
+            return pathname === '/admin';
+        }
+        return pathname === href || pathname.startsWith(href + '/');
+    };
 
     return (
         <div className={styles.container}>
@@ -103,42 +162,28 @@ export default function AdminLayout({
                 <div className={styles.roleTag}>Admin</div>
 
                 <nav className={styles.nav}>
-                    {navItems.map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`${styles.navItem} ${pathname === item.href ? styles.active : ''}`}
-                        >
-                            <item.Icon size={18} />
-                            <span>{item.label}</span>
-                        </Link>
+                    {navGroups.map((group, groupIndex) => (
+                        <div key={groupIndex} className={styles.navGroup}>
+                            {group.label && !collapsed && (
+                                <div className={styles.navGroupLabel}>{group.label}</div>
+                            )}
+                            {group.label && collapsed && (
+                                <div className={styles.navGroupDivider} />
+                            )}
+                            {group.items.map((item) => (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className={`${styles.navItem} ${isItemActive(item.href) ? styles.active : ''}`}
+                                    title={collapsed ? item.label : undefined}
+                                >
+                                    <item.Icon size={18} />
+                                    {!collapsed && <span>{item.label}</span>}
+                                </Link>
+                            ))}
+                        </div>
                     ))}
                 </nav>
-
-                {/* Secondary Links */}
-                <div className={styles.secondaryNav}>
-                    <Link
-                        href="/wall"
-                        className={`${styles.secondaryItem} ${pathname === '/wall' ? styles.active : ''}`}
-                    >
-                        <ImageIcon size={18} />
-                        <span>The Wall</span>
-                    </Link>
-                    <Link
-                        href="/arena"
-                        className={`${styles.secondaryItem} ${pathname === '/arena' ? styles.active : ''}`}
-                    >
-                        <Trophy size={18} />
-                        <span>The Arena</span>
-                    </Link>
-                    <Link
-                        href="/admin/resources"
-                        className={`${styles.secondaryItem} ${pathname === '/admin/resources' ? styles.active : ''}`}
-                    >
-                        <BookOpen size={18} />
-                        <span>Resources</span>
-                    </Link>
-                </div>
 
                 <div className={styles.sidebarFooter} ref={userMenuRef}>
                     <div
@@ -160,7 +205,7 @@ export default function AdminLayout({
                     </div>
                     {userMenuOpen && (
                         <div className={styles.userMenu}>
-                            <Link href="/admin" className={styles.userMenuItem} onClick={() => setUserMenuOpen(false)}>
+                            <Link href="/admin/settings/config" className={styles.userMenuItem} onClick={() => setUserMenuOpen(false)}>
                                 <Settings size={16} />
                                 <span>Settings</span>
                             </Link>
@@ -179,4 +224,3 @@ export default function AdminLayout({
         </div>
     );
 }
-

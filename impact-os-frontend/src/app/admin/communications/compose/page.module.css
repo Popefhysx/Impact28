@@ -536,3 +536,93 @@
         min-width: 200px;
     }
 }
+
+/* Editor Wrapper */
+.editorWrapper {
+    margin-bottom: var(--space-md);
+}
+
+/* Save Template Modal */
+.saveModalContent {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.modalField {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.modalField label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.modalField input,
+.modalField textarea {
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+}
+
+.modalField input:focus,
+.modalField textarea:focus {
+    outline: none;
+    border-color: var(--gold-warm);
+}
+
+.modalField textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.hint {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* Detected Variables */
+.detectedVars {
+    padding: var(--space-md);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+}
+
+.detectedVars label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-sm);
+}
+
+.varsList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+}
+
+.varChip {
+    display: inline-flex;
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--navy-deep);
+    color: white;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-family: 'SF Mono', Monaco, monospace;
+}
+
+/* Modal Actions */
+.modalActions {
+    display: flex;
+    gap: var(--space-sm);
+    justify-content: flex-end;
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--border-subtle);
+}

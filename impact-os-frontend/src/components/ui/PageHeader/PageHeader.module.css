@@ -1,0 +1,103 @@
+.pageHeader {
+    margin-bottom: var(--space-lg);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-lg);
+}
+
+.header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    margin: 0 0 4px 0;
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin: 0;
+}
+
+/* Toolbar with tabs and actions */
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+/* Pill-style section tabs matching Mission Control design */
+.sectionTabs {
+    display: flex;
+    gap: var(--space-xs);
+    background: var(--bg-elevated);
+    padding: 4px;
+    border-radius: var(--radius-lg);
+}
+
+.sectionTab {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: var(--font-sans);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.sectionTab:hover {
+    color: var(--text-primary);
+}
+
+.sectionTab.active {
+    background: var(--bg-card);
+    color: var(--navy-deep);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.sectionTab svg {
+    opacity: 0.7;
+    flex-shrink: 0;
+}
+
+.sectionTab.active svg {
+    opacity: 1;
+    color: var(--gold-warm);
+}
+
+/* Actions section */
+.actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--space-md);
+    }
+
+    .sectionTabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .actions {
+        justify-content: flex-end;
+    }
+}

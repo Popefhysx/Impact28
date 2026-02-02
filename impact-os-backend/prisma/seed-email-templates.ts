@@ -1,26 +1,35 @@
-import { PrismaClient, CommunicationSource, TemplateStatus } from '@prisma/client';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
-const prisma = new PrismaClient();
+import { PrismaClient, CommunicationSource, TemplateStatus } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
+
+const connectionString = process.env.DATABASE_URL || 'postgresql://impact:impact123@localhost:5435/impact_os';
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+
+const prisma = new PrismaClient({ adapter });
 
 interface TemplateSeed {
-    slug: string;
-    name: string;
-    description: string;
-    category: CommunicationSource;
-    subject: string;
-    htmlContent: string;
-    variables: Array<{ name: string; description: string; required: boolean }>;
-    isSystem: boolean;
+  slug: string;
+  name: string;
+  description: string;
+  category: CommunicationSource;
+  subject: string;
+  htmlContent: string;
+  variables: Array<{ name: string; description: string; required: boolean }>;
+  isSystem: boolean;
 }
 
 const templates: TemplateSeed[] = [
-    {
-        slug: 'application_received',
-        name: 'Application Received',
-        description: 'Sent when a new application is submitted',
-        category: CommunicationSource.INTAKE,
-        subject: `We've received your application, {{firstName}}! 🎉`,
-        htmlContent: `
+  {
+    slug: 'application_received',
+    name: 'Application Received',
+    description: 'Sent when a new application is submitted',
+    category: CommunicationSource.INTAKE,
+    subject: `We've received your application, {{firstName}}! 🎉`,
+    htmlContent: `
 <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
   <h1 style="color: #02213D;">Application Received!</h1>
   
@@ -41,18 +50,18 @@ const templates: TemplateSeed[] = [
   
   <p style="color: #666;">— The Project 3:10 Team</p>
 </div>`,
-        variables: [
-            { name: 'firstName', description: 'Applicant first name', required: true },
-        ],
-        isSystem: true,
-    },
-    {
-        slug: 'application_reminder',
-        name: 'Application Reminder',
-        description: 'Sent to remind applicants to complete their application',
-        category: CommunicationSource.INTAKE,
-        subject: `Don't forget to complete your application, {{firstName}}!`,
-        htmlContent: `
+    variables: [
+      { name: 'firstName', description: 'Applicant first name', required: true },
+    ],
+    isSystem: true,
+  },
+  {
+    slug: 'application_reminder',
+    name: 'Application Reminder',
+    description: 'Sent to remind applicants to complete their application',
+    category: CommunicationSource.INTAKE,
+    subject: `Don't forget to complete your application, {{firstName}}!`,
+    htmlContent: `
 <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
   <h1 style="color: #02213D;">Your application is waiting ⏳</h1>
   
@@ -70,19 +79,19 @@ const templates: TemplateSeed[] = [
   
   <p style="color: #666;">— The Project 3:10 Team</p>
 </div>`,
-        variables: [
-            { name: 'firstName', description: 'Applicant first name', required: true },
-            { name: 'resumeLink', description: 'Link to continue application', required: true },
-        ],
-        isSystem: true,
-    },
-    {
-        slug: 'application_admitted',
-        name: 'Application Admitted',
-        description: 'Sent when an applicant is admitted to the program',
-        category: CommunicationSource.ADMISSION,
-        subject: `🎉 Congratulations {{firstName}}! You're in!`,
-        htmlContent: `
+    variables: [
+      { name: 'firstName', description: 'Applicant first name', required: true },
+      { name: 'resumeLink', description: 'Link to continue application', required: true },
+    ],
+    isSystem: true,
+  },
+  {
+    slug: 'application_admitted',
+    name: 'Application Admitted',
+    description: 'Sent when an applicant is admitted to the program',
+    category: CommunicationSource.ADMISSION,
+    subject: `🎉 Congratulations {{firstName}}! You're in!`,
+    htmlContent: `
 <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
   <h1 style="color: #02213D;">Welcome to Project 3:10! 🚀</h1>
   
@@ -111,21 +120,21 @@ const templates: TemplateSeed[] = [
   
   <p style="color: #666;">— The Project 3:10 Team</p>
 </div>`,
-        variables: [
-            { name: 'firstName', description: 'Applicant first name', required: true },
-            { name: 'dashboardLink', description: 'Link to participant dashboard', required: true },
-            { name: 'skillTrack', description: 'Assigned skill track', required: false },
-            { name: 'cohortName', description: 'Cohort name', required: false },
-        ],
-        isSystem: true,
-    },
-    {
-        slug: 'application_conditional',
-        name: 'Application Conditional Admission',
-        description: 'Sent when an applicant is conditionally admitted with pre-work',
-        category: CommunicationSource.ADMISSION,
-        subject: `Almost there, {{firstName}}! One more step...`,
-        htmlContent: `
+    variables: [
+      { name: 'firstName', description: 'Applicant first name', required: true },
+      { name: 'dashboardLink', description: 'Link to participant dashboard', required: true },
+      { name: 'skillTrack', description: 'Assigned skill track', required: false },
+      { name: 'cohortName', description: 'Cohort name', required: false },
+    ],
+    isSystem: true,
+  },
+  {
+    slug: 'application_conditional',
+    name: 'Application Conditional Admission',
+    description: 'Sent when an applicant is conditionally admitted with pre-work',
+    category: CommunicationSource.ADMISSION,
+    subject: `Almost there, {{firstName}}! One more step...`,
+    htmlContent: `
 <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
   <h1 style="color: #02213D;">You're almost in! 🎯</h1>
   
@@ -148,20 +157,20 @@ const templates: TemplateSeed[] = [
   
   <p style="color: #666;">— The Project 3:10 Team</p>
 </div>`,
-        variables: [
-            { name: 'firstName', description: 'Applicant first name', required: true },
-            { name: 'dashboardLink', description: 'Link to complete task', required: true },
-            { name: 'preWorkTask', description: 'Description of pre-work task', required: true },
-        ],
-        isSystem: true,
-    },
-    {
-        slug: 'application_rejected',
-        name: 'Application Rejected',
-        description: 'Sent when an application is rejected',
-        category: CommunicationSource.ADMISSION,
-        subject: `Update on your Project 3:10 application`,
-        htmlContent: `
+    variables: [
+      { name: 'firstName', description: 'Applicant first name', required: true },
+      { name: 'dashboardLink', description: 'Link to complete task', required: true },
+      { name: 'preWorkTask', description: 'Description of pre-work task', required: true },
+    ],
+    isSystem: true,
+  },
+  {
+    slug: 'application_rejected',
+    name: 'Application Rejected',
+    description: 'Sent when an application is rejected',
+    category: CommunicationSource.ADMISSION,
+    subject: `Update on your Project 3:10 application`,
+    htmlContent: `
 <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
   <h1 style="color: #02213D;">Thank you for applying</h1>
   
@@ -186,19 +195,19 @@ const templates: TemplateSeed[] = [
   
   <p style="color: #666;">— The Project 3:10 Team</p>
 </div>`,
-        variables: [
-            { name: 'firstName', description: 'Applicant first name', required: true },
-            { name: 'rejectionReason', description: 'Reason for rejection', required: false },
-        ],
-        isSystem: true,
-    },
-    {
-        slug: 'resume_link',
-        name: 'Resume Application Link',
-        description: 'Sent when applicant requests a link to continue their application',
-        category: CommunicationSource.INTAKE,
-        subject: `Continue your application, {{firstName}}`,
-        htmlContent: `
+    variables: [
+      { name: 'firstName', description: 'Applicant first name', required: true },
+      { name: 'rejectionReason', description: 'Reason for rejection', required: false },
+    ],
+    isSystem: true,
+  },
+  {
+    slug: 'resume_link',
+    name: 'Resume Application Link',
+    description: 'Sent when applicant requests a link to continue their application',
+    category: CommunicationSource.INTAKE,
+    subject: `Continue your application, {{firstName}}`,
+    htmlContent: `
 <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
   <h1 style="color: #02213D;">Here's your resume link 🔗</h1>
   
@@ -216,19 +225,19 @@ const templates: TemplateSeed[] = [
   
   <p style="color: #666;">— The Project 3:10 Team</p>
 </div>`,
-        variables: [
-            { name: 'firstName', description: 'Applicant first name', required: true },
-            { name: 'resumeLink', description: 'Link to continue application', required: true },
-        ],
-        isSystem: true,
-    },
-    {
-        slug: 'otp_verification',
-        name: 'OTP Verification',
-        description: 'Sent for login verification with OTP code',
-        category: CommunicationSource.AUTH,
-        subject: `{{otpCode}} — Your Project 3:10 Login Code`,
-        htmlContent: `
+    variables: [
+      { name: 'firstName', description: 'Applicant first name', required: true },
+      { name: 'resumeLink', description: 'Link to continue application', required: true },
+    ],
+    isSystem: true,
+  },
+  {
+    slug: 'otp_verification',
+    name: 'OTP Verification',
+    description: 'Sent for login verification with OTP code',
+    category: CommunicationSource.AUTH,
+    subject: `{{otpCode}} — Your Project 3:10 Login Code`,
+    htmlContent: `
 <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
   <div style="text-align: center; margin-bottom: 30px;">
     <h1 style="color: #02213D; margin: 0; font-size: 24px;">Project 3:10</h1>
@@ -256,20 +265,20 @@ const templates: TemplateSeed[] = [
     If you didn't request this code, you can safely ignore this email.
   </p>
 </div>`,
-        variables: [
-            { name: 'firstName', description: 'User first name', required: true },
-            { name: 'otpCode', description: 'One-time password code', required: true },
-            { name: 'expiryMinutes', description: 'Minutes until code expires', required: true },
-        ],
-        isSystem: true,
-    },
-    {
-        slug: 'staff_invite',
-        name: 'Staff Invite',
-        description: 'Sent when a new staff member is invited to the platform',
-        category: CommunicationSource.STAFF,
-        subject: `You're invited to join Project 3:10 as {{categoryLabel}}`,
-        htmlContent: `
+    variables: [
+      { name: 'firstName', description: 'User first name', required: true },
+      { name: 'otpCode', description: 'One-time password code', required: true },
+      { name: 'expiryMinutes', description: 'Minutes until code expires', required: true },
+    ],
+    isSystem: true,
+  },
+  {
+    slug: 'staff_invite',
+    name: 'Staff Invite',
+    description: 'Sent when a new staff member is invited to the platform',
+    category: CommunicationSource.STAFF,
+    subject: `You're invited to join Project 3:10 as {{categoryLabel}}`,
+    htmlContent: `
 <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background: #02213D; color: white; padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
     <h1 style="margin: 0; font-size: 24px;">You're Invited to Project 3:10</h1>
@@ -311,56 +320,56 @@ const templates: TemplateSeed[] = [
     — The Project 3:10 Team
   </p>
 </div>`,
-        variables: [
-            { name: 'inviterName', description: 'Name of person who sent invite', required: false },
-            { name: 'categoryLabel', description: 'Role label (Administrator, Staff, Observer)', required: true },
-            { name: 'categoryDescription', description: 'Description of role permissions', required: true },
-            { name: 'setupLink', description: 'Link to complete account setup', required: true },
-        ],
-        isSystem: true,
-    },
+    variables: [
+      { name: 'inviterName', description: 'Name of person who sent invite', required: false },
+      { name: 'categoryLabel', description: 'Role label (Administrator, Staff, Observer)', required: true },
+      { name: 'categoryDescription', description: 'Description of role permissions', required: true },
+      { name: 'setupLink', description: 'Link to complete account setup', required: true },
+    ],
+    isSystem: true,
+  },
 ];
 
 async function seedTemplates() {
-    console.log('🌱 Seeding email templates...');
+  console.log('🌱 Seeding email templates...');
 
-    for (const template of templates) {
-        const existing = await prisma.communicationTemplate.findUnique({
-            where: { slug: template.slug },
-        });
+  for (const template of templates) {
+    const existing = await prisma.communicationTemplate.findUnique({
+      where: { slug: template.slug },
+    });
 
-        if (existing) {
-            console.log(`  ↺ Skipping ${template.slug} (already exists)`);
-            continue;
-        }
-
-        await prisma.communicationTemplate.create({
-            data: {
-                slug: template.slug,
-                name: template.name,
-                description: template.description,
-                category: template.category,
-                subject: template.subject,
-                htmlContent: template.htmlContent,
-                variables: template.variables,
-                isSystem: template.isSystem,
-                status: TemplateStatus.APPROVED,
-                approvedAt: new Date(),
-                version: 1,
-            },
-        });
-
-        console.log(`  ✓ Created ${template.slug}`);
+    if (existing) {
+      console.log(`  ↺ Skipping ${template.slug} (already exists)`);
+      continue;
     }
 
-    console.log('✅ Email templates seeded successfully!');
+    await prisma.communicationTemplate.create({
+      data: {
+        slug: template.slug,
+        name: template.name,
+        description: template.description,
+        category: template.category,
+        subject: template.subject,
+        htmlContent: template.htmlContent,
+        variables: template.variables,
+        isSystem: template.isSystem,
+        status: TemplateStatus.APPROVED,
+        approvedAt: new Date(),
+        version: 1,
+      },
+    });
+
+    console.log(`  ✓ Created ${template.slug}`);
+  }
+
+  console.log('✅ Email templates seeded successfully!');
 }
 
 seedTemplates()
-    .catch((e) => {
-        console.error('Error seeding templates:', e);
-        process.exit(1);
-    })
-    .finally(async () => {
-        await prisma.$disconnect();
-    });
+  .catch((e) => {
+    console.error('Error seeding templates:', e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

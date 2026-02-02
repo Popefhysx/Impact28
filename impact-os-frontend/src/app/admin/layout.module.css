@@ -124,6 +124,33 @@
     overflow-y: auto;
 }
 
+/* Navigation Groups */
+.navGroup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.navGroup:not(:first-child) {
+    margin-top: var(--space-sm);
+}
+
+.navGroupLabel {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    padding: var(--space-xs) var(--space-md);
+    margin-bottom: var(--space-xs);
+}
+
+.navGroupDivider {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: var(--space-xs) var(--space-sm);
+}
+
 .navItem {
     display: flex;
     align-items: center;

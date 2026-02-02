@@ -368,3 +368,193 @@
     margin-bottom: 0.25rem;
     display: block;
 }
+
+/* Phase & Events Row */
+.phaseEventsRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-lg);
+}
+
+@media (max-width: 900px) {
+    .phaseEventsRow {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Phase Card */
+.phaseCard {
+    padding: var(--space-lg);
+}
+
+.phaseHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+    color: var(--navy-deep);
+}
+
+.phaseHeader h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.phaseInfo {
+    margin-bottom: var(--space-md);
+}
+
+.phaseName {
+    display: block;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    margin-bottom: var(--space-xs);
+}
+
+.phaseMeta {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.phaseProgress {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.phaseProgressTrack {
+    flex: 1;
+    height: 8px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.phaseProgressFill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-warm), var(--gold-light));
+    border-radius: var(--radius-full);
+    transition: width 0.4s ease;
+}
+
+.phaseProgressLabel {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gold-dark);
+    min-width: 40px;
+    text-align: right;
+}
+
+/* Events Card */
+.eventsCard {
+    padding: var(--space-lg);
+}
+
+.eventsHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+    color: var(--navy-deep);
+}
+
+.eventsHeader h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.eventsList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.eventItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+}
+
+.eventDate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 42px;
+    padding: var(--space-xs);
+    background: var(--navy-deep);
+    color: white;
+    border-radius: var(--radius-sm);
+}
+
+.eventDay {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.eventMonth {
+    font-size: 10px;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.eventDetails {
+    flex: 1;
+    min-width: 0;
+}
+
+.eventTitle {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.eventTime {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.eventType {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.eventSESSION {
+    background: rgba(33, 150, 243, 0.15);
+    color: #2196F3;
+}
+
+.eventDEADLINE {
+    background: rgba(244, 67, 54, 0.15);
+    color: #F44336;
+}
+
+.eventORIENTATION {
+    background: rgba(76, 175, 80, 0.15);
+    color: #4CAF50;
+}
+
+.eventMILESTONE {
+    background: rgba(156, 39, 176, 0.15);
+    color: #9C27B0;
+}
+
+.eventOTHER {
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+}

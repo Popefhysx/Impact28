@@ -17,3 +17,7 @@ export { FormGroup } from './FormGroup';
 export { Select } from './Select';
 export type { SelectOption } from './Select';
 
+export { PageHeader } from './PageHeader';
+
+export { RichTextEditor } from './RichTextEditor';
+export type { RichTextEditorProps, EditorVariable, EditorMode } from './RichTextEditor';

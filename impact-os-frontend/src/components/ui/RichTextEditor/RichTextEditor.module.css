@@ -1,0 +1,349 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* Variables Panel */
+.variablesPanel {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, rgba(2, 33, 61, 0.02) 0%, rgba(196, 160, 82, 0.02) 100%);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.variablesHeader {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.variablesHeader svg {
+    color: var(--gold-warm);
+}
+
+.variablesList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.variableChip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: white;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.variableChip:hover {
+    border-color: var(--navy-deep);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.variableChip code {
+    font-family: 'SF Mono', Monaco, monospace;
+    color: var(--navy-deep);
+    font-size: 11px;
+}
+
+.requiredDot {
+    width: 5px;
+    height: 5px;
+    background: var(--gold-warm);
+    border-radius: 50%;
+}
+
+.copyIcon {
+    display: flex;
+    align-items: center;
+    padding: 2px;
+    margin-left: 2px;
+    color: var(--text-tertiary);
+    border-radius: 3px;
+}
+
+.copyIcon:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+/* Mode Tabs */
+.modeTabs {
+    display: flex;
+    gap: 2px;
+    padding: 8px 12px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.modeTab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-tertiary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.modeTab:hover {
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.modeTabActive {
+    color: var(--navy-deep);
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Toolbar */
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    background: white;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.toolbarGroup {
+    display: flex;
+    gap: 2px;
+}
+
+.toolbarDivider {
+    width: 1px;
+    height: 24px;
+    background: var(--border-light);
+    margin: 0 8px;
+}
+
+.toolbarButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.toolbarButton:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.toolbarButtonActive {
+    background: var(--navy-deep);
+    color: white;
+}
+
+.toolbarButtonActive:hover {
+    background: var(--navy-deep);
+    color: white;
+}
+
+/* Editor Content */
+.editorContent {
+    display: grid;
+    flex: 1;
+}
+
+.editorContentCode {
+    grid-template-columns: 1fr;
+}
+
+.editorContentVisual {
+    grid-template-columns: 1fr;
+}
+
+.editorContentSplit {
+    grid-template-columns: 1fr 1fr;
+}
+
+/* Code Pane */
+.codePane {
+    display: flex;
+    flex-direction: column;
+    background: #1e1e2e;
+    overflow: hidden;
+}
+
+.codeEditor {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    padding: 16px;
+    background: transparent;
+    border: none;
+    color: #cdd6f4;
+    font-family: 'SF Mono', Monaco, 'Fira Code', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    resize: none;
+    outline: none;
+}
+
+.codeEditor::placeholder {
+    color: #6c7086;
+}
+
+/* Visual Pane */
+.visualPane {
+    display: flex;
+    flex-direction: column;
+    background: white;
+}
+
+.tiptapEditor {
+    flex: 1;
+    padding: 16px;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-primary);
+}
+
+.tiptapEditor:focus-within {
+    outline: none;
+}
+
+/* Tiptap Prose Styles */
+.tiptapEditor :global(.ProseMirror) {
+    outline: none;
+    min-height: 200px;
+}
+
+.tiptapEditor :global(.ProseMirror p.is-editor-empty:first-child::before) {
+    content: attr(data-placeholder);
+    color: var(--text-tertiary);
+    pointer-events: none;
+    float: left;
+    height: 0;
+}
+
+.tiptapEditor :global(.ProseMirror h1) {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 1em 0 0.5em;
+    color: var(--text-primary);
+}
+
+.tiptapEditor :global(.ProseMirror h2) {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 1em 0 0.5em;
+    color: var(--text-primary);
+}
+
+.tiptapEditor :global(.ProseMirror h3) {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 1em 0 0.5em;
+    color: var(--text-primary);
+}
+
+.tiptapEditor :global(.ProseMirror p) {
+    margin: 0.5em 0;
+}
+
+.tiptapEditor :global(.ProseMirror ul),
+.tiptapEditor :global(.ProseMirror ol) {
+    padding-left: 1.5em;
+    margin: 0.5em 0;
+}
+
+.tiptapEditor :global(.ProseMirror code) {
+    background: var(--bg-secondary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'SF Mono', Monaco, monospace;
+    font-size: 0.9em;
+    color: var(--navy-deep);
+}
+
+.link {
+    color: var(--navy-deep);
+    text-decoration: underline;
+}
+
+/* Preview Pane */
+.previewPane {
+    display: flex;
+    flex-direction: column;
+    background: #f5f5f5;
+    border-left: 1px solid var(--border-light);
+}
+
+.previewHeader {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, var(--navy-deep) 0%, #1e3a5f 100%);
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.previewContent {
+    flex: 1;
+    padding: 16px;
+    overflow: auto;
+}
+
+.previewIframe {
+    width: 100%;
+    height: 100%;
+    min-height: 350px;
+    border: none;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .editorContentSplit {
+        grid-template-columns: 1fr;
+    }
+
+    .previewPane {
+        border-left: none;
+        border-top: 1px solid var(--border-light);
+    }
+
+    .variablesPanel {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}

@@ -40,6 +40,20 @@ export interface DashboardProgress {
         weeklyArena: number;
         incomeTarget: number;
     } | null;
+    phase?: {
+        current: string;
+        name: string;
+        order: number;
+        daysRemaining: number;
+        progress: number;
+    };
+    upcomingEvents?: {
+        id: string;
+        title: string;
+        date: string;
+        time?: string;
+        type: string;
+    }[];
 }
 
 export interface WeeklyStats {
@@ -89,6 +103,12 @@ export class ProgressService {
                         kpiTargets: true,
                     },
                 },
+                cohort: {
+                    select: {
+                        id: true,
+                        startDate: true,
+                    },
+                },
             },
         });
 
@@ -112,6 +132,12 @@ export class ProgressService {
 
         // Calculate streak (consecutive days with activity)
         const streak = await this.calculateStreak(userId);
+
+        // Get phase information
+        const phaseInfo = await this.calculateCurrentPhase(daysInProgram);
+
+        // Get upcoming calendar events
+        const upcomingEvents = await this.getUpcomingEvents(user.cohortId);
 
         return {
             user: {
@@ -137,7 +163,79 @@ export class ProgressService {
                 commercial: user.applicant?.triadCommercial ?? 33,
             },
             kpiTargets: user.applicant?.kpiTargets as DashboardProgress['kpiTargets'] ?? null,
+            phase: phaseInfo,
+            upcomingEvents,
         };
+    }
+
+    /**
+     * Calculate current phase based on days in program
+     */
+    private async calculateCurrentPhase(daysInProgram: number): Promise<DashboardProgress['phase']> {
+        const phases = await this.prisma.phase.findMany({
+            where: { isActive: true },
+            orderBy: { order: 'asc' },
+        });
+
+        if (phases.length === 0) return undefined;
+
+        // Find current phase based on cumulative duration
+        let cumulativeDays = 0;
+        for (const phase of phases) {
+            cumulativeDays += phase.durationDays;
+            if (daysInProgram < cumulativeDays) {
+                const daysIntoPhase = daysInProgram - (cumulativeDays - phase.durationDays);
+                return {
+                    current: phase.slug,
+                    name: phase.name,
+                    order: phase.order,
+                    daysRemaining: phase.durationDays - daysIntoPhase,
+                    progress: Math.round((daysIntoPhase / phase.durationDays) * 100),
+                };
+            }
+        }
+
+        // If past all phases, return last phase as complete
+        const lastPhase = phases[phases.length - 1];
+        return {
+            current: lastPhase.slug,
+            name: lastPhase.name,
+            order: lastPhase.order,
+            daysRemaining: 0,
+            progress: 100,
+        };
+    }
+
+    /**
+     * Get upcoming calendar events for user's cohort
+     */
+    private async getUpcomingEvents(cohortId: string | null): Promise<DashboardProgress['upcomingEvents']> {
+        const now = new Date();
+        const nextMonth = new Date(now);
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+        const events = await this.prisma.calendarEvent.findMany({
+            where: {
+                date: {
+                    gte: now,
+                    lte: nextMonth,
+                },
+                OR: [
+                    { cohortId: null }, // Global events
+                    { cohortId: cohortId ?? undefined },
+                ],
+            },
+            orderBy: { date: 'asc' },
+            take: 5,
+        });
+
+        return events.map(e => ({
+            id: e.id,
+            title: e.title,
+            date: e.date.toISOString(),
+            time: e.time || undefined,
+            type: e.type,
+        }));
     }
 
     /**

@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Send, User, Users, Loader2, Bold, Italic, Link as LinkIcon, List, AlignLeft, Eye, Save, X, UsersRound, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Send, User, Users, Loader2, Eye, Save, X, UsersRound, CheckCircle, FileText } from 'lucide-react';
 import Link from 'next/link';
-import { Select } from '@/components/ui/Select';
+import { Select, RichTextEditor, Modal } from '@/components/ui';
 import styles from './page.module.css';
 
 interface Recipient {
@@ -38,6 +38,26 @@ const PHASES = [
     { value: 'GRADUATED', label: 'Graduated' },
 ];
 
+const CATEGORIES = [
+    { value: 'INTAKE', label: 'Application/Intake' },
+    { value: 'ADMISSION', label: 'Admission' },
+    { value: 'PARTICIPANT', label: 'Participant Communications' },
+    { value: 'MISSION', label: 'Mission Related' },
+    { value: 'AUTH', label: 'Authentication' },
+    { value: 'STAFF', label: 'Staff' },
+    { value: 'OTHER', label: 'Other' },
+];
+
+// Standard variables available in compose
+const COMPOSE_VARIABLES = [
+    { name: 'firstName', description: 'Participant first name', required: true },
+    { name: 'lastName', description: 'Participant last name', required: true },
+    { name: 'email', description: 'Participant email address', required: true },
+    { name: 'cohortName', description: 'Current cohort name', required: false },
+    { name: 'phase', description: 'Current program phase', required: false },
+    { name: 'dashboardLink', description: 'Link to participant dashboard', required: false },
+];
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export default function ComposePage() {
@@ -62,9 +82,16 @@ export default function ComposePage() {
     const [templates, setTemplates] = useState<Template[]>([]);
     const [selectedTemplate, setSelectedTemplate] = useState<string>('');
 
+    // Save as Template Modal
+    const [showSaveModal, setShowSaveModal] = useState(false);
+    const [templateName, setTemplateName] = useState('');
+    const [templateSlug, setTemplateSlug] = useState('');
+    const [templateCategory, setTemplateCategory] = useState('OTHER');
+    const [templateDescription, setTemplateDescription] = useState('');
+    const [savingTemplate, setSavingTemplate] = useState(false);
+
     // UI State
     const [sending, setSending] = useState(false);
-    const [previewMode, setPreviewMode] = useState(false);
     const [sendSuccess, setSendSuccess] = useState(false);
 
     // Load templates and cohorts
@@ -158,15 +185,68 @@ export default function ComposePage() {
         setRecipients(prev => prev.filter(r => r.email !== email));
     };
 
-    // Insert variable
-    const insertVariable = (variable: string) => {
-        const textarea = document.getElementById('email-content') as HTMLTextAreaElement;
-        if (textarea) {
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            const newContent = content.substring(0, start) + `{{${variable}}}` + content.substring(end);
-            setContent(newContent);
+    // Extract variables from content
+    const extractVariables = (html: string) => {
+        const matches = html.match(/\{\{(\w+)\}\}/g) || [];
+        const uniqueVars = [...new Set(matches.map(m => m.replace(/[{}]/g, '')))];
+        return uniqueVars.map(name => ({
+            name,
+            description: COMPOSE_VARIABLES.find(v => v.name === name)?.description || `Variable: ${name}`,
+            required: true,
+        }));
+    };
+
+    // Save as template
+    const handleSaveTemplate = async () => {
+        if (!templateName.trim() || !templateSlug.trim()) {
+            alert('Please enter a name and slug for the template');
+            return;
         }
+
+        setSavingTemplate(true);
+        try {
+            const variables = extractVariables(content);
+            const res = await fetch(`${API_BASE}/api/email-templates`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: templateName,
+                    slug: templateSlug,
+                    description: templateDescription,
+                    category: templateCategory,
+                    subject,
+                    htmlContent: content,
+                    variables,
+                }),
+            });
+
+            if (res.ok) {
+                setShowSaveModal(false);
+                setTemplateName('');
+                setTemplateSlug('');
+                setTemplateDescription('');
+                // Refresh templates
+                const updated = await fetch(`${API_BASE}/api/admin/communications/templates`).then(r => r.json());
+                setTemplates(Array.isArray(updated) ? updated : []);
+            } else {
+                const error = await res.json();
+                alert(error.message || 'Failed to save template');
+            }
+        } catch (error) {
+            console.error('Save template error:', error);
+            alert('Failed to save template');
+        } finally {
+            setSavingTemplate(false);
+        }
+    };
+
+    // Auto-generate slug from name
+    const handleTemplateNameChange = (name: string) => {
+        setTemplateName(name);
+        const slug = name.toLowerCase()
+            .replace(/[^a-z0-9]+/g, '_')
+            .replace(/^_|_$/g, '');
+        setTemplateSlug(slug);
     };
 
     // Send email
@@ -185,7 +265,6 @@ export default function ComposePage() {
                     setSending(false);
                     return;
                 }
-                // For individual, use custom segment with recipient IDs
                 const res = await fetch(`${API_BASE}/api/admin/communications/bulk-send`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -232,15 +311,6 @@ export default function ComposePage() {
         } finally {
             setSending(false);
         }
-    };
-
-    // Preview content
-    const getPreviewHtml = () => {
-        let html = content;
-        html = html.replace(/\{\{firstName\}\}/g, 'John');
-        html = html.replace(/\{\{lastName\}\}/g, 'Doe');
-        html = html.replace(/\{\{email\}\}/g, 'john@example.com');
-        return html;
     };
 
     const getRecipientCount = () => {
@@ -390,62 +460,27 @@ export default function ComposePage() {
                         />
                     </div>
 
-                    {/* Toolbar */}
-                    <div className={styles.toolbar}>
-                        <div className={styles.toolbarGroup}>
-                            <button title="Bold"><Bold size={16} /></button>
-                            <button title="Italic"><Italic size={16} /></button>
-                            <button title="Link"><LinkIcon size={16} /></button>
-                            <button title="List"><List size={16} /></button>
-                            <button title="Paragraph"><AlignLeft size={16} /></button>
-                        </div>
-                        <div className={styles.toolbarGroup}>
-                            <Select
-                                value=""
-                                onChange={(v) => { if (v) insertVariable(v); }}
-                                options={[
-                                    { value: '', label: 'Insert Variable...' },
-                                    { value: 'firstName', label: '{{firstName}}' },
-                                    { value: 'lastName', label: '{{lastName}}' },
-                                    { value: 'email', label: '{{email}}' },
-                                    { value: 'cohortName', label: '{{cohortName}}' },
-                                ]}
-                            />
-                        </div>
-                        <button
-                            className={`${styles.previewBtn} ${previewMode ? styles.active : ''}`}
-                            onClick={() => setPreviewMode(!previewMode)}
-                        >
-                            <Eye size={16} />
-                            {previewMode ? 'Edit' : 'Preview'}
-                        </button>
-                    </div>
-
-                    {/* Content Area */}
-                    {previewMode ? (
-                        <div className={styles.previewArea}>
-                            <div className={styles.previewLabel}>Preview</div>
-                            <div
-                                className={styles.previewContent}
-                                dangerouslySetInnerHTML={{ __html: getPreviewHtml() }}
-                            />
-                        </div>
-                    ) : (
-                        <textarea
-                            id="email-content"
-                            className={styles.contentArea}
+                    {/* Rich Text Editor */}
+                    <div className={styles.editorWrapper}>
+                        <RichTextEditor
                             value={content}
-                            onChange={(e) => setContent(e.target.value)}
+                            onChange={setContent}
+                            variables={COMPOSE_VARIABLES}
                             placeholder="Write your email content here..."
+                            minHeight={400}
                         />
-                    )}
+                    </div>
 
                     {/* Actions */}
                     <div className={styles.actions}>
                         <Link href="/admin/communications" className={styles.cancelBtn}>
                             Cancel
                         </Link>
-                        <button className={styles.saveBtn} disabled>
+                        <button
+                            className={styles.saveBtn}
+                            onClick={() => setShowSaveModal(true)}
+                            disabled={!content.trim() || !subject.trim()}
+                        >
                             <Save size={16} />
                             Save as Template
                         </button>
@@ -497,6 +532,87 @@ export default function ComposePage() {
                     </div>
                 </div>
             </div>
+
+            {/* Save as Template Modal */}
+            <Modal
+                isOpen={showSaveModal}
+                onClose={() => setShowSaveModal(false)}
+                title="Save as Template"
+            >
+                <div className={styles.saveModalContent}>
+                    <div className={styles.modalField}>
+                        <label>Template Name *</label>
+                        <input
+                            type="text"
+                            value={templateName}
+                            onChange={(e) => handleTemplateNameChange(e.target.value)}
+                            placeholder="e.g., Welcome Email"
+                        />
+                    </div>
+                    <div className={styles.modalField}>
+                        <label>Slug *</label>
+                        <input
+                            type="text"
+                            value={templateSlug}
+                            onChange={(e) => setTemplateSlug(e.target.value)}
+                            placeholder="e.g., welcome_email"
+                        />
+                        <span className={styles.hint}>Used to reference this template in code</span>
+                    </div>
+                    <div className={styles.modalField}>
+                        <label>Category</label>
+                        <Select
+                            value={templateCategory}
+                            onChange={setTemplateCategory}
+                            options={CATEGORIES}
+                        />
+                    </div>
+                    <div className={styles.modalField}>
+                        <label>Description</label>
+                        <textarea
+                            value={templateDescription}
+                            onChange={(e) => setTemplateDescription(e.target.value)}
+                            placeholder="Brief description of when this template is used..."
+                            rows={2}
+                        />
+                    </div>
+
+                    {/* Show detected variables */}
+                    {content && extractVariables(content).length > 0 && (
+                        <div className={styles.detectedVars}>
+                            <label>Detected Variables:</label>
+                            <div className={styles.varsList}>
+                                {extractVariables(content).map(v => (
+                                    <span key={v.name} className={styles.varChip}>
+                                        {`{{${v.name}}}`}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <div className={styles.modalActions}>
+                        <button
+                            className={styles.cancelBtn}
+                            onClick={() => setShowSaveModal(false)}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            className={styles.saveBtn}
+                            onClick={handleSaveTemplate}
+                            disabled={savingTemplate || !templateName.trim() || !templateSlug.trim()}
+                        >
+                            {savingTemplate ? (
+                                <Loader2 size={16} className={styles.spinner} />
+                            ) : (
+                                <FileText size={16} />
+                            )}
+                            Create Template
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }

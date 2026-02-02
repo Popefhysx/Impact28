@@ -25,6 +25,7 @@ import { ResourceModule } from './resource/resource.module';
 import { ScheduledTasksModule } from './scheduled-tasks';
 import { WallModule } from './wall';
 import { CommunicationsModule } from './communications';
+import { SettingsModule } from './settings';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { CommunicationsModule } from './communications';
     ScheduledTasksModule,
     WallModule,
     CommunicationsModule,
+    SettingsModule,
   ],
 })
 export class AppModule { }

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Users, Mail, Phone, MessageSquare, Clock, Check, X, Loader2, ExternalLink, Building2 } from 'lucide-react';
+import { Users, Mail, Phone, Clock, Check, X, Loader2, ExternalLink, Building2 } from 'lucide-react';
 import { Select } from '@/components/ui/Select';
+import { AdminToolbar } from '@/components/admin/AdminToolbar';
 import styles from './page.module.css';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
@@ -55,6 +56,74 @@ const INTEREST_TYPES: Record<string, string> = {
     OTHER: 'Other',
 };
 
+// Mock data for development
+const mockPartners: PartnerInquiry[] = [
+    {
+        id: 'p-001',
+        organizationName: 'TechNigeria Foundation',
+        contactName: 'Adaeze Okafor',
+        email: 'adaeze@technigeria.org',
+        phone: '+234 812 345 6789',
+        website: 'www.technigeria.org',
+        partnershipType: 'TRAINING_PARTNER',
+        description: 'We would like to partner with Project 3:10 to provide tech training resources and mentorship opportunities for participants.',
+        status: 'NEW',
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        type: 'partner',
+    },
+    {
+        id: 's-001',
+        name: 'GTBank PLC',
+        email: 'csr@gtbank.com',
+        phone: '+234 1 234 5678',
+        organizationType: 'Corporate',
+        interestType: 'FULL_PROGRAM',
+        amountInterest: '5000000',
+        message: 'We are interested in sponsoring the full program for 10 participants as part of our CSR initiative.',
+        status: 'CONTACTED',
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        type: 'sponsor',
+    },
+    {
+        id: 'p-002',
+        organizationName: 'Living Faith Church',
+        contactName: 'Pastor Emmanuel',
+        email: 'outreach@lfchurch.org',
+        phone: '+234 803 456 7890',
+        partnershipType: 'CHURCH_PARTNER',
+        description: 'Our church would like to refer young people from our community and potentially provide venue space.',
+        status: 'IN_PROGRESS',
+        createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+        type: 'partner',
+    },
+    {
+        id: 's-002',
+        name: 'Chisom Enterprises',
+        email: 'chisom@example.com',
+        phone: '+234 706 123 4567',
+        organizationType: 'Individual',
+        interestType: 'ONE_MONTH',
+        amountInterest: '150000',
+        message: 'I want to sponsor one month for a participant in honor of my late mother.',
+        status: 'CONVERTED',
+        followedUpAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+        type: 'sponsor',
+    },
+    {
+        id: 'p-003',
+        organizationName: 'Lagos Business School',
+        contactName: 'Dr. Funmi Adeyemi',
+        email: 'fadeyemi@lbs.edu',
+        website: 'www.lbs.edu.ng',
+        partnershipType: 'EMPLOYMENT_PARTNER',
+        description: 'We are looking to recruit graduates from Project 3:10 for entry-level positions.',
+        status: 'NEW',
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        type: 'partner',
+    },
+];
+
 export default function AdminPartnersPage() {
     const [partners, setPartners] = useState<PartnerInquiry[]>([]);
     const [loading, setLoading] = useState(true);
@@ -77,10 +146,16 @@ export default function AdminPartnersPage() {
                     const merged = [...sponsorList, ...partnerList].sort(
                         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
                     );
-                    setPartners(merged);
+                    // Use mock data if empty (dev mode)
+                    setPartners(merged.length > 0 ? merged : mockPartners);
+                } else if (process.env.NODE_ENV !== 'production') {
+                    setPartners(mockPartners);
                 }
             } catch (error) {
                 console.error('Failed to fetch inquiries:', error);
+                if (process.env.NODE_ENV !== 'production') {
+                    setPartners(mockPartners);
+                }
             } finally {
                 setLoading(false);
             }
@@ -158,18 +233,12 @@ export default function AdminPartnersPage() {
                 )}
             </div>
 
-            {/* Filters */}
-            <div className={styles.filters}>
-                <div className={styles.searchBox}>
-                    <Search size={18} className={styles.searchIcon} />
-                    <input
-                        type="text"
-                        placeholder="Search by name or email..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className={styles.searchInput}
-                    />
-                </div>
+            {/* Toolbar */}
+            <AdminToolbar
+                searchValue={searchQuery}
+                searchPlaceholder="Search by name or email..."
+                onSearchChange={setSearchQuery}
+            >
                 <Select
                     value={filter}
                     onChange={(value) => setFilter(value as typeof filter)}
@@ -182,7 +251,7 @@ export default function AdminPartnersPage() {
                         { value: 'DECLINED', label: 'Declined' },
                     ]}
                 />
-            </div>
+            </AdminToolbar>
 
             {/* Content */}
             <div className={styles.content}>
@@ -228,8 +297,7 @@ export default function AdminPartnersPage() {
                                 </div>
                                 {getMessage(partner) && (
                                     <p className={styles.cardMessage}>
-                                        <MessageSquare size={14} />
-                                        {getMessage(partner).slice(0, 100)}...
+                                        {getMessage(partner)}
                                     </p>
                                 )}
                                 <div className={styles.cardFooter}>

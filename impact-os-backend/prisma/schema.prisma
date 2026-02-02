@@ -257,8 +257,87 @@ model Cohort {
   config        CohortConfig?
   commitmentAllocations CommitmentAllocation[]
   psnForecast   CohortPsnForecast?
+  calendarEvents CalendarEvent[]
   
   createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+// ============================================================================
+// PHASE CONFIGURATION (Dynamic, Admin-Managed)
+// ============================================================================
+
+model Phase {
+  id            String   @id @default(cuid())
+  name          String   // e.g., "Week 1", "Onboarding"
+  slug          String   @unique // e.g., "WEEK_1", "ONBOARDING"
+  order         Int      // Display/progression order
+  durationDays  Int      @default(7)
+  description   String?
+  
+  isActive      Boolean  @default(true)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([order])
+}
+
+// ============================================================================
+// CALENDAR EVENTS (Program Schedule)
+// ============================================================================
+
+model CalendarEvent {
+  id          String            @id @default(cuid())
+  title       String
+  date        DateTime
+  time        String?           // e.g., "10:00"
+  type        CalendarEventType
+  description String?
+  
+  cohortId    String?
+  cohort      Cohort?           @relation(fields: [cohortId], references: [id])
+  
+  createdBy   String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  
+  @@index([date])
+  @@index([cohortId])
+}
+
+enum CalendarEventType {
+  ORIENTATION
+  DEADLINE
+  MILESTONE
+  SESSION
+  OTHER
+}
+
+// ============================================================================
+// PROGRAM CONFIGURATION (Singleton)
+// ============================================================================
+
+model ProgramConfig {
+  id                        String   @id @default("default")
+  programName               String   @default("Cycle 28")
+  organizationName          String   @default("Project 3:10")
+  supportEmail              String   @default("support@cycle28.org")
+  dashboardUrl              String?
+  
+  // Authentication
+  otpExpiryMinutes          Int      @default(10)
+  allowSelfSignup           Boolean  @default(false)
+  
+  // Program Rules
+  requireOrientation        Boolean  @default(true)
+  maxApplicationsPerCohort  Int      @default(50)
+  
+  // Support System
+  supportRequestTTLDays     Int      @default(30)
+  autoExpireSupportRequests Boolean  @default(true)
+  
+  updatedAt                 DateTime @updatedAt
 }
 
 // ============================================================================

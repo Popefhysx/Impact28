@@ -2,29 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Mail, Clock, Check, AlertTriangle, Archive, Loader2, Eye, PenSquare, CheckCircle2, XCircle } from 'lucide-react';
 import { Select } from '@/components/ui/Select';
+import { PageHeader } from '@/components/ui/PageHeader';
 import styles from './page.module.css';
+import { EmailTemplate } from './types';
+import { mockTemplates } from './mockTemplates';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
-
-// Types
-interface EmailTemplate {
-    id: string;
-    slug: string;
-    name: string;
-    description?: string;
-    category: string;
-    subject: string;
-    htmlContent: string;
-    status: 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'DEPRECATED';
-    version: number;
-    isSystem: boolean;
-    approvedAt?: string;
-    approvedBy?: string;
-    createdAt: string;
-    updatedAt: string;
-}
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof Check }> = {
     DRAFT: { label: 'Draft', color: 'var(--text-tertiary)', icon: Clock },
@@ -44,6 +30,7 @@ const CATEGORY_LABELS: Record<string, string> = {
     SYSTEM: 'System Emails',
 };
 
+
 export default function AdminEmailTemplatesPage() {
     const router = useRouter();
     const [templates, setTemplates] = useState<EmailTemplate[]>([]);
@@ -61,10 +48,16 @@ export default function AdminEmailTemplatesPage() {
                 const res = await fetch(`${API_BASE}/email-templates`);
                 if (res.ok) {
                     const data = await res.json();
-                    setTemplates(data);
+                    // Use mock data if API returns empty (dev mode)
+                    setTemplates(data.length > 0 ? data : mockTemplates);
+                } else if (process.env.NODE_ENV !== 'production') {
+                    setTemplates(mockTemplates);
                 }
             } catch (error) {
                 console.error('Failed to fetch templates:', error);
+                if (process.env.NODE_ENV !== 'production') {
+                    setTemplates(mockTemplates);
+                }
             } finally {
                 setLoading(false);
             }
@@ -154,24 +147,36 @@ export default function AdminEmailTemplatesPage() {
 
     return (
         <div className={styles.container}>
-            {/* Header */}
-            <div className={styles.header}>
-                <div className={styles.headerContent}>
-                    <h1 className={styles.title}>Email Templates</h1>
-                    <p className={styles.subtitle}>
-                        Manage system email templates with approval workflow
-                    </p>
-                </div>
-                {pendingCount > 0 && (
-                    <div className={styles.pendingAlert}>
-                        <AlertTriangle size={18} />
-                        {pendingCount} template{pendingCount > 1 ? 's' : ''} pending approval
-                    </div>
-                )}
-            </div>
+            {/* Page Header with Section Tabs */}
+            <PageHeader
+                title="Communications"
+                subtitle="Manage email templates and track delivery"
+                tabs={[
+                    {
+                        key: 'templates',
+                        label: 'Email Templates',
+                        icon: <PenSquare size={18} />,
+                        active: true,
+                    },
+                    {
+                        key: 'log',
+                        label: 'Email Log',
+                        icon: <Mail size={18} />,
+                        href: '/admin/communications',
+                    },
+                ]}
+                actions={
+                    pendingCount > 0 ? (
+                        <div className={styles.pendingAlert}>
+                            <AlertTriangle size={18} />
+                            {pendingCount} template{pendingCount > 1 ? 's' : ''} pending approval
+                        </div>
+                    ) : undefined
+                }
+            />
 
             {/* Filters */}
-            <div className={styles.filters}>
+            <div className={styles.filtersBar}>
                 <Select
                     value={categoryFilter}
                     onChange={(value) => setCategoryFilter(value)}

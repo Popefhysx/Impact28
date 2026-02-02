@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Zap, Star, Trophy, DollarSign, Flame, Loader2, AlertCircle } from 'lucide-react';
+import { Zap, Star, Trophy, DollarSign, Flame, Loader2, AlertCircle, Calendar, Layers } from 'lucide-react';
 import styles from './page.module.css';
 
 // Types from backend
@@ -31,6 +31,20 @@ interface DashboardProgress {
         completed: number;
         pending: number;
     };
+    phase?: {
+        current: string;
+        name: string;
+        order: number;
+        daysRemaining: number;
+        progress: number;
+    };
+    upcomingEvents?: {
+        id: string;
+        title: string;
+        date: string;
+        time?: string;
+        type: string;
+    }[];
 }
 
 // Mock data for fallback
@@ -59,6 +73,17 @@ const mockData: DashboardProgress = {
         completed: 12,
         pending: 1,
     },
+    phase: {
+        current: 'WEEK_3',
+        name: 'Week 3 - Skill Building',
+        order: 3,
+        daysRemaining: 4,
+        progress: 43,
+    },
+    upcomingEvents: [
+        { id: '1', title: 'Weekly Check-in', date: '2026-02-05T10:00:00Z', time: '10:00', type: 'SESSION' },
+        { id: '2', title: 'Portfolio Review Deadline', date: '2026-02-08T17:00:00Z', type: 'DEADLINE' },
+    ],
 };
 
 const mockMissions = [
@@ -210,6 +235,69 @@ export default function ParticipantDashboard() {
                         <span className={styles.currencyLabel}>Verified Income</span>
                     </div>
                 </div>
+            </div>
+
+            {/* Phase Tracker and Upcoming Events */}
+            <div className={styles.phaseEventsRow}>
+                {/* Phase Tracker */}
+                {data.phase && (
+                    <div className={`card ${styles.phaseCard}`}>
+                        <div className={styles.phaseHeader}>
+                            <Layers size={20} />
+                            <h3>Current Phase</h3>
+                        </div>
+                        <div className={styles.phaseInfo}>
+                            <span className={styles.phaseName}>{data.phase.name}</span>
+                            <span className={styles.phaseMeta}>
+                                {data.phase.daysRemaining > 0
+                                    ? `${data.phase.daysRemaining} days remaining`
+                                    : 'Complete'}
+                            </span>
+                        </div>
+                        <div className={styles.phaseProgress}>
+                            <div className={styles.phaseProgressTrack}>
+                                <div
+                                    className={styles.phaseProgressFill}
+                                    style={{ width: `${data.phase.progress}%` }}
+                                />
+                            </div>
+                            <span className={styles.phaseProgressLabel}>{data.phase.progress}%</span>
+                        </div>
+                    </div>
+                )}
+
+                {/* Upcoming Events */}
+                {data.upcomingEvents && data.upcomingEvents.length > 0 && (
+                    <div className={`card ${styles.eventsCard}`}>
+                        <div className={styles.eventsHeader}>
+                            <Calendar size={20} />
+                            <h3>Upcoming Events</h3>
+                        </div>
+                        <div className={styles.eventsList}>
+                            {data.upcomingEvents.slice(0, 3).map(event => (
+                                <div key={event.id} className={styles.eventItem}>
+                                    <div className={styles.eventDate}>
+                                        <span className={styles.eventDay}>
+                                            {new Date(event.date).getDate()}
+                                        </span>
+                                        <span className={styles.eventMonth}>
+                                            {new Date(event.date).toLocaleDateString('en', { month: 'short' })}
+                                        </span>
+                                    </div>
+                                    <div className={styles.eventDetails}>
+                                        <span className={styles.eventTitle}>{event.title}</span>
+                                        {event.time && (
+                                            <span className={styles.eventTime}>{event.time}</span>
+                                        )}
+                                    </div>
+                                    <span className={`${styles.eventType} ${styles[`event${event.type}`]}`}>
+                                        {event.type}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Main Content */}
