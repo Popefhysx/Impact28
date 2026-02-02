@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
     LayoutDashboard, FileText, Users, DollarSign, Target,
     PanelLeftClose, Menu, X, Settings, LogOut, ChevronUp,
-    UserCog, BookOpen, HeartHandshake, Mail, MessageSquareQuote,
+    UserCog, BookOpen, HeartHandshake, Send, MessageSquareQuote,
     ImageIcon, Handshake, Trophy, Calendar, Layers, Sliders
 } from 'lucide-react';
 import styles from './layout.module.css';
@@ -39,7 +39,7 @@ const navGroups = [
     {
         label: 'Engagement',
         items: [
-            { href: '/admin/communications', label: 'Communications', Icon: Mail },
+            { href: '/admin/communications', label: 'Communications', Icon: Send },
             { href: '/admin/partners', label: 'Partners', Icon: Handshake },
             { href: '/admin/testimonials', label: 'Testimonials', Icon: MessageSquareQuote },
         ]

@@ -161,6 +161,99 @@ export class AuthService {
     }
 
     /**
+     * Login with username + PIN (primary auth for participants)
+     */
+    async loginByUsernamePin(username: string, pin: string): Promise<{
+        success: boolean;
+        token?: string;
+        user?: { id: string; email: string; firstName: string; lastName: string; username: string };
+        message?: string;
+    }> {
+        const bcrypt = await import('bcrypt');
+        const normalizedUsername = username.toLowerCase().trim();
+
+        const user = await this.prisma.user.findUnique({
+            where: { username: normalizedUsername },
+        });
+
+        if (!user) {
+            throw new UnauthorizedException('Invalid username or PIN');
+        }
+
+        // Verify PIN using bcrypt compare (PIN is stored hashed)
+        if (!user.pin) {
+            throw new UnauthorizedException('Invalid username or PIN');
+        }
+
+        const isPinValid = await bcrypt.compare(pin, user.pin);
+        if (!isPinValid) {
+            throw new UnauthorizedException('Invalid username or PIN');
+        }
+
+        // Check if account is active
+        if (!user.isActive) {
+            throw new UnauthorizedException('Account is paused. Please contact support.');
+        }
+
+        // Update last login time
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: { lastLoginAt: new Date() },
+        });
+
+        // Generate JWT token
+        const token = this.generateToken(user.id, user.email);
+
+        this.logger.log(`User ${user.username} authenticated via PIN successfully`);
+
+        return {
+            success: true,
+            token,
+            user: {
+                id: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                username: user.username!,
+            },
+        };
+    }
+
+    /**
+     * Generate a unique username from firstName.lastName
+     */
+    async generateUniqueUsername(firstName: string, lastName: string): Promise<string> {
+        const base = `${firstName.toLowerCase()}.${lastName.toLowerCase()}`.replace(/[^a-z.]/g, '');
+
+        // Check if base username exists
+        const existing = await this.prisma.user.findUnique({
+            where: { username: base },
+        });
+
+        if (!existing) {
+            return base;
+        }
+
+        // Append number to make unique
+        let counter = 1;
+        let candidate = `${base}${counter}`;
+
+        while (await this.prisma.user.findUnique({ where: { username: candidate } })) {
+            counter++;
+            candidate = `${base}${counter}`;
+        }
+
+        return candidate;
+    }
+
+    /**
+     * Generate a random 4-digit PIN
+     */
+    generatePin(): string {
+        return Math.floor(1000 + Math.random() * 9000).toString();
+    }
+
+    /**
      * Get current user from token
      */
     async getCurrentUser(token: string) {

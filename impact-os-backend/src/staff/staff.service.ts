@@ -4,6 +4,7 @@ import { EmailService } from '../email';
 import { StaffCategory } from '@prisma/client';
 import { InviteStaffDto, UpdateStaffDto } from './dto';
 import { CAPABILITY_TEMPLATES, CAPABILITY_GROUPS, CapabilityTemplateId } from './capabilities';
+import * as crypto from 'crypto';
 
 /**
  * Staff Management Service
@@ -26,7 +27,7 @@ export class StaffService {
 
     /**
      * Invite a new staff member
-     * Creates a User record if needed, then creates Staff record
+     * Creates a User record if needed, then creates Staff record with invite token
      */
     async inviteStaff(dto: InviteStaffDto, invitedById: string) {
         // Check if email already has a staff record
@@ -50,8 +51,8 @@ export class StaffService {
             user = await this.prisma.user.create({
                 data: {
                     email: dto.email,
-                    firstName: 'Pending',
-                    lastName: 'Setup',
+                    firstName: dto.firstName || 'Pending',
+                    lastName: dto.lastName || 'Setup',
                 },
             });
         }
@@ -66,6 +67,10 @@ export class StaffService {
             capabilities = [...new Set([...capabilities, ...dto.capabilities])];
         }
 
+        // Generate secure invite token
+        const inviteToken = crypto.randomBytes(32).toString('hex');
+        const inviteTokenExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
         // Create staff record
         const staff = await this.prisma.staff.create({
             data: {
@@ -76,6 +81,9 @@ export class StaffService {
                 queueIds: [],
                 participantIds: [],
                 invitedBy: invitedById,
+                inviteToken,
+                inviteTokenExpiresAt,
+                setupCompleted: false,
             },
             include: {
                 user: true,
@@ -94,9 +102,9 @@ export class StaffService {
             inviterName = `${inviter.firstName} ${inviter.lastName}`.trim();
         }
 
-        // Generate setup link (in production, this would be a magic link or token-based URL)
+        // Generate setup link with secure token
         const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-        const setupLink = `${baseUrl}/staff/setup?token=${staff.id}`;
+        const setupLink = `${baseUrl}/admin/setup/${inviteToken}`;
 
         // Send invite email
         await this.emailService.sendStaffInvite(dto.email, {
@@ -365,4 +373,113 @@ export class StaffService {
 
         return staff.cohortIds.includes(cohortId);
     }
+
+    /**
+     * Validate an invite token (for frontend pre-check)
+     */
+    async validateInviteToken(token: string) {
+        const staff = await this.prisma.staff.findUnique({
+            where: { inviteToken: token },
+            include: {
+                user: {
+                    select: { email: true, firstName: true },
+                },
+            },
+        });
+
+        if (!staff) {
+            throw new NotFoundException('Invalid or expired invite token');
+        }
+
+        if (staff.setupCompleted) {
+            throw new BadRequestException('This invite has already been used');
+        }
+
+        if (staff.inviteTokenExpiresAt && new Date() > staff.inviteTokenExpiresAt) {
+            throw new BadRequestException('Invite has expired. Please contact an admin.');
+        }
+
+        return {
+            valid: true,
+            email: staff.user.email,
+            category: staff.category,
+            capabilities: staff.capabilities,
+        };
+    }
+
+    /**
+     * Accept an invite and set up credentials
+     */
+    async acceptInvite(token: string, firstName: string, lastName: string, username: string, pin: string) {
+        const bcrypt = await import('bcrypt');
+
+        const staff = await this.prisma.staff.findUnique({
+            where: { inviteToken: token },
+            include: { user: true },
+        });
+
+        if (!staff) {
+            throw new NotFoundException('Invalid or expired invite token');
+        }
+
+        if (staff.setupCompleted) {
+            throw new BadRequestException('This invite has already been used');
+        }
+
+        if (staff.inviteTokenExpiresAt && new Date() > staff.inviteTokenExpiresAt) {
+            throw new BadRequestException('Invite has expired. Please contact an admin.');
+        }
+
+        // Validate username format
+        const normalizedUsername = username.toLowerCase().trim();
+        if (!/^[a-z][a-z0-9._]{2,}$/.test(normalizedUsername)) {
+            throw new BadRequestException('Username must start with a letter and contain only lowercase letters, numbers, dots, and underscores (min 3 characters)');
+        }
+
+        // Check username uniqueness
+        const existingUser = await this.prisma.user.findUnique({
+            where: { username: normalizedUsername },
+        });
+
+        if (existingUser) {
+            throw new BadRequestException('Username is already taken. Please choose a different one.');
+        }
+
+        // Validate PIN format
+        if (!/^\d{4}$/.test(pin)) {
+            throw new BadRequestException('PIN must be exactly 4 digits');
+        }
+
+        // Hash the PIN
+        const hashedPin = await bcrypt.hash(pin, 10);
+
+        // Update user record with credentials
+        await this.prisma.user.update({
+            where: { id: staff.userId },
+            data: {
+                firstName: firstName.trim(),
+                lastName: lastName.trim(),
+                username: normalizedUsername,
+                pin: hashedPin,
+            },
+        });
+
+        // Mark invite as completed
+        await this.prisma.staff.update({
+            where: { id: staff.id },
+            data: {
+                setupCompleted: true,
+                inviteToken: null, // Clear the token
+            },
+        });
+
+        this.logger.log(`Staff member ${normalizedUsername} completed setup`);
+
+        return {
+            success: true,
+            message: 'Account setup complete. You can now log in.',
+            username: normalizedUsername,
+        };
+    }
 }
+

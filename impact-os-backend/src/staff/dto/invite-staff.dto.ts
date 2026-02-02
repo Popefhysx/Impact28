@@ -5,6 +5,14 @@ export class InviteStaffDto {
     @IsEmail()
     email: string;
 
+    @IsOptional()
+    @IsString()
+    firstName?: string;
+
+    @IsOptional()
+    @IsString()
+    lastName?: string;
+
     @IsEnum(StaffCategory)
     category: StaffCategory;
 

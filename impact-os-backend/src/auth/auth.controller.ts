@@ -33,6 +33,17 @@ export class AuthController {
     }
 
     /**
+     * Login with username + PIN (primary auth for participants)
+     */
+    @Post('login')
+    async login(
+        @Body('username') username: string,
+        @Body('pin') pin: string,
+    ) {
+        return this.authService.loginByUsernamePin(username, pin);
+    }
+
+    /**
      * Get current authenticated user
      */
     @Get('me')

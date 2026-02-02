@@ -15,6 +15,9 @@ This directory contains the canonical documentation for Impact OS.
 | [INFRASTRUCTURE.md](./INFRASTRUCTURE.md) | 10 | Stack, deployment, operations |
 | [STAFF_MANAGEMENT.md](./STAFF_MANAGEMENT.md) | — | Staff roles, capabilities, assignments |
 | [COMMUNICATIONS_CENTER.md](./COMMUNICATIONS_CENTER.md) | — | Messaging, notifications, audit |
+| [FEATURE_CHECKLIST.md](./FEATURE_CHECKLIST.md) | — | Feature build status (Admin & Participant) |
+| [TEST_CHECKLIST.md](./TEST_CHECKLIST.md) | — | Manual QA test cases |
+| [FEATURE_ROADMAP.md](./FEATURE_ROADMAP.md) | — | Planned features and timeline |
 
 ---
 
@@ -79,4 +82,4 @@ Documents link to each other. Look for:
 
 ---
 
-*Last updated: January 2026*
+*Last updated: February 2026*

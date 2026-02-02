@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { StaffService } from './staff.service';
-import { InviteStaffDto, UpdateStaffDto } from './dto';
+import { InviteStaffDto, UpdateStaffDto, AcceptStaffInviteDto } from './dto';
 import { StaffCategory } from '@prisma/client';
 
 /**
@@ -12,6 +12,33 @@ import { StaffCategory } from '@prisma/client';
 @Controller('staff')
 export class StaffController {
     constructor(private readonly staffService: StaffService) { }
+
+    /**
+     * GET /staff/validate-invite/:token
+     * Validate an invite token (public endpoint for setup page)
+     */
+    @Get('validate-invite/:token')
+    async validateInvite(@Param('token') token: string) {
+        return this.staffService.validateInviteToken(token);
+    }
+
+    /**
+     * POST /staff/accept-invite/:token
+     * Accept an invite and set up credentials (public endpoint)
+     */
+    @Post('accept-invite/:token')
+    async acceptInvite(
+        @Param('token') token: string,
+        @Body() dto: AcceptStaffInviteDto,
+    ) {
+        return this.staffService.acceptInvite(
+            token,
+            dto.firstName,
+            dto.lastName,
+            dto.username,
+            dto.pin,
+        );
+    }
 
     /**
      * POST /staff/invite

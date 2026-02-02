@@ -180,6 +180,8 @@ model User {
   lastCheckIn     DateTime?
   
   // Authentication
+  username        String?       @unique  // Generated from firstName.lastName
+  pin             String?       // 4-digit PIN set during offer acceptance
   otpCode         String?
   otpExpiresAt    DateTime?
   lastLoginAt     DateTime?
@@ -233,6 +235,11 @@ model Staff {
   queueIds        String[]        // Assigned queues (support, income, mentor)
   participantIds  String[]        // Assigned participants (for 1:1 mentors)
   
+  // Invite flow
+  inviteToken         String?     @unique
+  inviteTokenExpiresAt DateTime?
+  setupCompleted      Boolean     @default(false)
+  
   // Audit
   invitedBy       String
   invitedAt       DateTime        @default(now())
@@ -241,6 +248,7 @@ model Staff {
   
   @@index([category])
   @@index([userId])
+  @@index([inviteToken])
 }
 
 model Cohort {

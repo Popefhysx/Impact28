@@ -1,6 +1,6 @@
 import { Controller, Post, Put, Get, Body, Param, Query } from '@nestjs/common';
 import { IntakeService } from './intake.service';
-import { StartApplicationDto, Section2Dto, Section3Dto, Section4Dto, Section5Dto, Section6Dto } from './dto';
+import { StartApplicationDto, Section2Dto, Section3Dto, Section4Dto, Section5Dto, Section6Dto, AcceptOfferDto } from './dto';
 
 @Controller('intake')
 export class IntakeController {
@@ -60,10 +60,16 @@ export class IntakeController {
         return this.intakeService.findByEmail(email);
     }
 
+    // GET /intake/validate-offer/:token - Validate offer token (for frontend pre-check)
+    @Get('validate-offer/:token')
+    validateOffer(@Param('token') token: string) {
+        return this.intakeService.validateOfferToken(token);
+    }
+
     // POST /intake/accept/:token - Accept offer and create User
     @Post('accept/:token')
-    acceptOffer(@Param('token') token: string) {
-        return this.intakeService.acceptOffer(token);
+    acceptOffer(@Param('token') token: string, @Body() dto: AcceptOfferDto) {
+        return this.intakeService.acceptOffer(token, dto.username, dto.pin);
     }
 
     // POST /intake/decline/:token - Decline offer

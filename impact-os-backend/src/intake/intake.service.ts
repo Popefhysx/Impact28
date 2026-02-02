@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma';
 import { EmailService } from '../email';
 import { ScoringService } from '../scoring';
 import { ProgressService } from '../progress';
+import { AuthService } from '../auth';
 import { StartApplicationDto, Section2Dto, Section3Dto, Section4Dto, Section5Dto, Section6Dto } from './dto';
 import { ApplicantStatus } from '@prisma/client';
 import * as crypto from 'crypto';
@@ -16,6 +17,7 @@ export class IntakeService {
         private emailService: EmailService,
         private scoringService: ScoringService,
         private progressService: ProgressService,
+        private authService: AuthService,
     ) { }
 
     // Start a new application (Section 1)
@@ -276,8 +278,11 @@ export class IntakeService {
 
     /**
      * Accept offer - validate token and convert Applicant to User
+     * User provides their own username and PIN
      */
-    async acceptOffer(token: string) {
+    async acceptOffer(token: string, username: string, pin: string) {
+        const bcrypt = await import('bcrypt');
+
         const applicant = await this.prisma.applicant.findUnique({
             where: { offerToken: token },
         });
@@ -296,6 +301,29 @@ export class IntakeService {
             throw new BadRequestException('This application is not in ADMITTED status');
         }
 
+        // Validate username format
+        const normalizedUsername = username.toLowerCase().trim();
+        if (!/^[a-z][a-z0-9._]{2,}$/.test(normalizedUsername)) {
+            throw new BadRequestException('Username must start with a letter and contain only lowercase letters, numbers, dots, and underscores (min 3 characters)');
+        }
+
+        // Check username uniqueness
+        const existingUser = await this.prisma.user.findUnique({
+            where: { username: normalizedUsername },
+        });
+
+        if (existingUser) {
+            throw new BadRequestException('Username is already taken. Please choose a different one.');
+        }
+
+        // Validate PIN format
+        if (!/^\d{4}$/.test(pin)) {
+            throw new BadRequestException('PIN must be exactly 4 digits');
+        }
+
+        // Hash the PIN for secure storage
+        const hashedPin = await bcrypt.hash(pin, 10);
+
         // Create User from Applicant (convert) - link via relation
         const user = await this.prisma.user.create({
             data: {
@@ -306,6 +334,9 @@ export class IntakeService {
                 skillTrack: applicant.skillTrack,
                 // Link to original applicant record (assessment data lives there)
                 applicantId: applicant.id,
+                // User-chosen authentication credentials (PIN is hashed)
+                username: normalizedUsername,
+                pin: hashedPin,
             },
         });
 
@@ -322,12 +353,13 @@ export class IntakeService {
         // Initialize progress (momentum, missions) for new user
         await this.progressService.initializeProgress(user.id);
 
-        this.logger.log(`Applicant ${applicant.id} accepted offer and converted to user ${user.id}`);
+        this.logger.log(`Applicant ${applicant.id} accepted offer and converted to user ${user.id} (username: ${normalizedUsername})`);
 
         return {
             success: true,
             message: 'Welcome to Project 3:10! Your journey begins now.',
             userId: user.id,
+            username: normalizedUsername,
             dashboardUrl: `${process.env.FRONTEND_URL}/dashboard`,
         };
     }
@@ -359,6 +391,41 @@ export class IntakeService {
         return {
             success: true,
             message: 'We understand. We hope to see you in a future cohort.',
+        };
+    }
+
+    /**
+     * Validate offer token (for frontend pre-check)
+     */
+    async validateOfferToken(token: string) {
+        const applicant = await this.prisma.applicant.findUnique({
+            where: { offerToken: token },
+            select: {
+                firstName: true,
+                email: true,
+                status: true,
+                offerTokenExpiresAt: true,
+            },
+        });
+
+        if (!applicant) {
+            throw new NotFoundException('Invalid or expired offer token');
+        }
+
+        // Check token expiration
+        if (applicant.offerTokenExpiresAt && new Date() > applicant.offerTokenExpiresAt) {
+            throw new BadRequestException('Offer has expired. Please contact support.');
+        }
+
+        // Check status
+        if (applicant.status !== ApplicantStatus.ADMITTED) {
+            throw new BadRequestException('This offer is no longer valid');
+        }
+
+        return {
+            valid: true,
+            firstName: applicant.firstName,
+            email: applicant.email,
         };
     }
 
