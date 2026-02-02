@@ -79,13 +79,13 @@ export class R2Service {
         const key = `${PREFIX[type]}${randomUUID()}.${ext}`;
 
         const bucket = process.env.R2_BUCKET;
-        const publicBase = process.env.R2_PUBLIC_URL;
+        const publicBase = process.env.R2_PUBLIC_BASE_URL;
 
         if (!bucket) {
             throw new BadRequestException('R2_BUCKET not configured');
         }
         if (!publicBase) {
-            throw new BadRequestException('R2_PUBLIC_URL not configured');
+            throw new BadRequestException('R2_PUBLIC_BASE_URL not configured');
         }
 
         const cmd = new PutObjectCommand({
@@ -111,7 +111,7 @@ export class R2Service {
      */
     getPublicUrl(key: string): string | null {
         if (!key) return null;
-        const publicBase = process.env.R2_PUBLIC_URL;
+        const publicBase = process.env.R2_PUBLIC_BASE_URL;
         if (!publicBase) return null;
         return `${publicBase.replace(/\/$/, '')}/${key}`;
     }
