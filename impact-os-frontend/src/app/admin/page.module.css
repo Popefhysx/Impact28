@@ -146,4 +146,68 @@
 .actionButtons button {
     width: 100%;
     justify-content: flex-start;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.actionButtons button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Clickable stat cards */
+.statCard:hover {
+    border-color: var(--gold-warm);
+    box-shadow: var(--shadow-md);
+    transition: all 0.2s ease;
+}
+
+/* Loading State */
+.loadingState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    padding: var(--space-3xl);
+    color: var(--text-secondary);
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Error State */
+.errorState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    padding: var(--space-3xl);
+    color: var(--accent-danger);
+    text-align: center;
+}
+
+.errorState p {
+    color: var(--text-secondary);
+}
+
+/* Empty Activity */
+.emptyActivity {
+    color: var(--text-muted);
+    font-style: italic;
+    padding: var(--space-lg);
+    text-align: center;
 }
