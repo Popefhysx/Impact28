@@ -306,6 +306,45 @@ export class AuthService {
   }
 
   /**
+   * Change PIN for authenticated user
+   */
+  async changePin(
+    userId: string,
+    currentPin: string,
+    newPin: string,
+  ): Promise<{ success: boolean; message: string }> {
+    // Validate new PIN format
+    if (!newPin || newPin.length < 4 || newPin.length > 6 || !/^\d+$/.test(newPin)) {
+      throw new BadRequestException('New PIN must be 4-6 digits');
+    }
+
+    // Get user with current PIN
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, pinHash: true },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    // Verify current PIN (simple comparison - in production use bcrypt)
+    if (user.pinHash !== currentPin) {
+      throw new UnauthorizedException('Current PIN is incorrect');
+    }
+
+    // Update PIN
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { pinHash: newPin },
+    });
+
+    this.logger.log(`PIN changed for user: ${userId}`);
+
+    return { success: true, message: 'PIN changed successfully' };
+  }
+
+  /**
    * Get current user from token (Payload extracted by Guard)
    */
   async getCurrentUser(userId: string) {

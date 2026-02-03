@@ -92,7 +92,6 @@ export class StaffService {
         userId: user.id,
         category: dto.category,
         capabilities,
-        notificationPrefs: dto.notificationPrefs || [],
         cohortIds: dto.cohortIds || [],
         queueIds: [],
         participantIds: [],
@@ -261,7 +260,6 @@ export class StaffService {
       data: {
         ...(dto.category && { category: dto.category }),
         ...(dto.capabilities && { capabilities: dto.capabilities }),
-        ...(dto.notificationPrefs && { notificationPrefs: dto.notificationPrefs }),
         ...(dto.cohortIds && { cohortIds: dto.cohortIds }),
         ...(dto.queueIds && { queueIds: dto.queueIds }),
         ...(dto.participantIds && { participantIds: dto.participantIds }),

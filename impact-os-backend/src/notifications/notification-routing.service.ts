@@ -17,28 +17,13 @@ export class NotificationRoutingService {
 
     /**
      * Get email addresses of staff who should receive a specific notification type
-     * Falls back to super admins if no one is subscribed
+     * Currently routes all notifications to super admins
+     * TODO: Implement notification preferences once the column is added to the schema
      */
     async getRecipients(type: NotificationType): Promise<string[]> {
-        // Find staff with this notification preference
-        const staff = await this.prisma.staff.findMany({
-            where: {
-                isActive: true,
-                notificationPrefs: { has: type },
-            },
-            include: {
-                user: { select: { email: true } },
-            },
-        });
-
-        if (staff.length > 0) {
-            const emails = staff.map((s) => s.user.email);
-            this.logger.log(`Found ${emails.length} recipient(s) for ${type} notifications`);
-            return emails;
-        }
-
-        // Fallback to super admins
-        this.logger.log(`No subscribers for ${type}, falling back to super admins`);
+        // For now, all notifications go to super admins
+        // Future: Check staff.notificationPrefs once the column exists
+        this.logger.log(`Getting recipients for ${type} notifications`);
         return this.getSuperAdminEmails();
     }
 
@@ -56,23 +41,24 @@ export class NotificationRoutingService {
             },
         });
 
-        return superAdmins.map((s) => s.user.email);
+        const emails = superAdmins.map((s) => s.user.email);
+        this.logger.log(`Found ${emails.length} super admin(s) for notifications`);
+        return emails;
     }
 
     /**
      * Check if a specific staff member should receive a notification
+     * Currently returns true for super admins only
      */
     async shouldReceive(staffId: string, type: NotificationType): Promise<boolean> {
         const staff = await this.prisma.staff.findUnique({
             where: { id: staffId },
-            select: { notificationPrefs: true, isSuperAdmin: true },
+            select: { isSuperAdmin: true },
         });
 
         if (!staff) return false;
 
-        // Super admins always receive critical notifications
-        if (type === 'critical' && staff.isSuperAdmin) return true;
-
-        return staff.notificationPrefs.includes(type);
+        // Super admins receive all notifications
+        return staff.isSuperAdmin;
     }
 }

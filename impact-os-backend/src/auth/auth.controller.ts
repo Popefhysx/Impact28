@@ -63,4 +63,17 @@ export class AuthController {
     // With JWT, logout is handled client-side by removing the token
     return { success: true, message: 'Logged out successfully' };
   }
+
+  /**
+   * Change PIN for authenticated user
+   */
+  @Post('change-pin')
+  @UseGuards(AuthGuard('jwt'))
+  async changePin(
+    @Req() req: any,
+    @Body('currentPin') currentPin: string,
+    @Body('newPin') newPin: string,
+  ) {
+    return this.authService.changePin(req.user.id, currentPin, newPin);
+  }
 }

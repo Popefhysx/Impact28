@@ -8,7 +8,7 @@ import {
     LayoutDashboard, FileText, Users, DollarSign, Target,
     PanelLeftClose, Menu, X, Settings, LogOut, ChevronUp,
     UserCog, BookOpen, HeartHandshake, Send, MessageSquareQuote,
-    ImageIcon, Handshake, Trophy, Calendar, Layers, Sliders
+    ImageIcon, Handshake, Trophy, Calendar, Layers, Sliders, UserCircle, KeyRound
 } from 'lucide-react';
 import { NotificationHeader } from '@/components/ui';
 import styles from './layout.module.css';
@@ -206,6 +206,14 @@ export default function AdminLayout({
                     </div>
                     {userMenuOpen && (
                         <div className={styles.userMenu}>
+                            <Link href="/admin/settings/profile" className={styles.userMenuItem} onClick={() => setUserMenuOpen(false)}>
+                                <UserCircle size={16} />
+                                <span>Profile</span>
+                            </Link>
+                            <Link href="/admin/settings/change-pin" className={styles.userMenuItem} onClick={() => setUserMenuOpen(false)}>
+                                <KeyRound size={16} />
+                                <span>Change PIN</span>
+                            </Link>
                             <Link href="/admin/settings/config" className={styles.userMenuItem} onClick={() => setUserMenuOpen(false)}>
                                 <Settings size={16} />
                                 <span>Settings</span>
