@@ -3,10 +3,18 @@
  * Run with: npx ts-node prisma/seed-admin.ts
  */
 
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
 
-const prisma = new PrismaClient();
+const connectionString =
+    process.env.DATABASE_URL ||
+    'postgresql://impact:impact123@localhost:5435/impact_os';
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function seedSuperAdmin() {
     const adminEmail = 'c28@diranx.com';
@@ -89,4 +97,5 @@ seedSuperAdmin()
     })
     .finally(async () => {
         await prisma.$disconnect();
+        await pool.end();
     });
