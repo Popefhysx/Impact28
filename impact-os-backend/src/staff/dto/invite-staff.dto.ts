@@ -35,4 +35,9 @@ export class InviteStaffDto {
   @IsArray()
   @IsString({ each: true })
   cohortIds?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  notificationPrefs?: string[]; // testimonials, partners, applications, income, support, critical
 }

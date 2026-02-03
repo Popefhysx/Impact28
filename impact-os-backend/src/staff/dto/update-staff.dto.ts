@@ -35,4 +35,9 @@ export class UpdateStaffDto {
   @IsOptional()
   @IsBoolean()
   isSuperAdmin?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  notificationPrefs?: string[];
 }

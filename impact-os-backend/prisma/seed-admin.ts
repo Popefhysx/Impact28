@@ -63,6 +63,7 @@ async function seedSuperAdmin() {
                 'manage_settings',
                 'manage_communications',
             ],
+            notificationPrefs: ['testimonials', 'partners', 'applications', 'income', 'support', 'critical'],
         },
         create: {
             userId: user.id,
@@ -80,6 +81,7 @@ async function seedSuperAdmin() {
                 'manage_settings',
                 'manage_communications',
             ],
+            notificationPrefs: ['testimonials', 'partners', 'applications', 'income', 'support', 'critical'],
         },
     });
 

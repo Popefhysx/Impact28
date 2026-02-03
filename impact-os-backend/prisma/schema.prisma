@@ -229,6 +229,7 @@ model Staff {
   isSuperAdmin    Boolean         @default(false)
   
   capabilities    String[]        // Array of capability keys
+  notificationPrefs String[]      // Which notifications to receive: testimonials, partners, applications, income, support, critical
   
   // Scope assignments
   cohortIds       String[]        // Assigned cohorts
