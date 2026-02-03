@@ -4,10 +4,9 @@ import { CurrencyController } from './currency.controller';
 import { PrismaModule } from '../prisma';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [CurrencyController],
-    providers: [CurrencyService],
-    exports: [CurrencyService],
+  imports: [PrismaModule],
+  controllers: [CurrencyController],
+  providers: [CurrencyService],
+  exports: [CurrencyService],
 })
-export class CurrencyModule { }
-
+export class CurrencyModule {}

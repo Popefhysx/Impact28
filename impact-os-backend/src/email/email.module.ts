@@ -3,8 +3,8 @@ import { EmailService } from './email.service';
 import { PrismaModule } from '../prisma';
 
 @Module({
-    imports: [PrismaModule],
-    providers: [EmailService],
-    exports: [EmailService],
+  imports: [PrismaModule],
+  providers: [EmailService],
+  exports: [EmailService],
 })
-export class EmailModule { }
+export class EmailModule {}

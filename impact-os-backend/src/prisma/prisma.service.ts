@@ -4,11 +4,16 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+export class PrismaService
+  extends PrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
   private pool: Pool;
 
   constructor() {
-    const connectionString = process.env.DATABASE_URL || 'postgresql://impact:impact123@localhost:5435/impact_os';
+    const connectionString =
+      process.env.DATABASE_URL ||
+      'postgresql://impact:impact123@localhost:5435/impact_os';
     const pool = new Pool({ connectionString });
     const adapter = new PrismaPg(pool);
 
@@ -25,7 +30,3 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     await this.pool.end();
   }
 }
-
-
-
-

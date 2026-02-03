@@ -7,14 +7,9 @@ import { MissionModule } from '../mission';
 import { StipendModule } from '../stipend';
 
 @Module({
-    imports: [
-        PrismaModule,
-        CurrencyModule,
-        MissionModule,
-        StipendModule,
-    ],
-    controllers: [ProgressController],
-    providers: [ProgressService],
-    exports: [ProgressService],
+  imports: [PrismaModule, CurrencyModule, MissionModule, StipendModule],
+  controllers: [ProgressController],
+  providers: [ProgressService],
+  exports: [ProgressService],
 })
-export class ProgressModule { }
+export class ProgressModule {}

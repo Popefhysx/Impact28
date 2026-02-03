@@ -7,9 +7,14 @@ import { ProgressModule } from '../progress';
 import { AuthModule } from '../auth';
 
 @Module({
-    imports: [EmailModule, ScoringModule, ProgressModule, forwardRef(() => AuthModule)],
-    controllers: [IntakeController],
-    providers: [IntakeService],
-    exports: [IntakeService],
+  imports: [
+    EmailModule,
+    ScoringModule,
+    ProgressModule,
+    forwardRef(() => AuthModule),
+  ],
+  controllers: [IntakeController],
+  providers: [IntakeService],
+  exports: [IntakeService],
 })
-export class IntakeModule { }
+export class IntakeModule {}

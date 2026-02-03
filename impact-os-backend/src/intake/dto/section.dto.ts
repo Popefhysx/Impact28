@@ -1,86 +1,107 @@
-import { IsEnum, IsString, IsOptional, MaxLength, IsBoolean } from 'class-validator';
-import { CurrentStatus, EducationLevel, InternetAccess, WeeklyHours, DeviceType, SkillTrack, IncomeRange, IntakeIncomeSource } from '@prisma/client';
+import {
+  IsEnum,
+  IsString,
+  IsOptional,
+  MaxLength,
+  IsBoolean,
+} from 'class-validator';
+import {
+  CurrentStatus,
+  EducationLevel,
+  InternetAccess,
+  WeeklyHours,
+  DeviceType,
+  SkillTrack,
+  IncomeRange,
+  IntakeIncomeSource,
+} from '@prisma/client';
 
 // Section 2: Current Situation
 export class Section2Dto {
-    @IsEnum(CurrentStatus)
-    currentStatus: CurrentStatus;
+  @IsOptional()
+  // @IsEnum(CurrentStatus) - Removed to allow loose input
+  currentStatus?: string | CurrentStatus;
 
-    @IsEnum(EducationLevel)
-    educationLevel: EducationLevel;
+  @IsOptional()
+  // @IsEnum(EducationLevel) - Removed to allow loose input
+  educationLevel?: string | EducationLevel;
 
-    @IsString()
-    @MaxLength(150)
-    biggestChallenge: string;
+  @IsString()
+  @MaxLength(150)
+  biggestChallenge: string;
 
-    @IsOptional()
-    @IsEnum(IncomeRange)
-    incomeRange?: IncomeRange; // Dropdown: ZERO / LOW / MEDIUM / HIGH
+  @IsOptional()
+  @IsEnum(IncomeRange)
+  incomeRange?: IncomeRange;
 
-    @IsOptional()
-    @IsEnum(IntakeIncomeSource)
-    intakeIncomeSource?: IntakeIncomeSource; // Dropdown: NONE / FREELANCE / EMPLOYMENT / etc.
+  @IsOptional()
+  @IsEnum(IntakeIncomeSource)
+  intakeIncomeSource?: IntakeIncomeSource;
+
+  @IsOptional()
+  @IsString()
+  incomeSource?: string; // Capture frontend field
 }
 
 // Section 3: Resource Check
 export class Section3Dto {
-    @IsEnum(InternetAccess)
-    hasInternet: InternetAccess;
+  @IsEnum(InternetAccess)
+  hasInternet: InternetAccess;
 
-    @IsEnum(WeeklyHours)
-    weeklyHours: WeeklyHours;
+  @IsEnum(WeeklyHours)
+  weeklyHours: WeeklyHours;
 
-    @IsEnum(DeviceType)
-    primaryDevice: DeviceType;
+  @IsEnum(DeviceType)
+  primaryDevice: DeviceType;
 }
 
 // Section 4: Skill Interest
 export class Section4Dto {
-    @IsEnum(SkillTrack)
-    skillTrack: SkillTrack;
+  @IsEnum(SkillTrack)
+  skillTrack: SkillTrack;
 
-    @IsBoolean()
-    triedOnlineEarning: boolean;
+  @IsBoolean()
+  triedOnlineEarning: boolean;
 
-    @IsOptional()
-    @IsString()
-    @MaxLength(200)
-    onlineEarningOutcome?: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  onlineEarningOutcome?: string;
 
-    @IsBoolean()
-    triedLearningSkill: boolean;
+  @IsBoolean()
+  triedLearningSkill: boolean;
 }
 
 // Section 5: Diagnostic Probes
 export class Section5Dto {
-    @IsString()
-    @MaxLength(300)
-    technicalProbe: string;
+  @IsString()
+  @MaxLength(300)
+  technicalProbe: string;
 
-    @IsString()
-    @MaxLength(300)
-    commercialProbe: string;
+  @IsString()
+  @MaxLength(300)
+  commercialProbe: string;
 
-    @IsString()
-    @MaxLength(300)
-    exposureProbe: string;
+  @IsString()
+  @MaxLength(300)
+  exposureProbe: string;
 
-    @IsString()
-    @MaxLength(300)
-    commitmentProbe: string;
+  @IsString()
+  @MaxLength(300)
+  commitmentProbe: string;
 }
 
 // Section 6: Consent
 export class Section6Dto {
-    @IsBoolean()
-    consentDailyAction: boolean;
+  @IsBoolean()
+  consentDailyAction: boolean;
 
-    @IsBoolean()
-    consentWeeklyCheckin: boolean;
+  @IsBoolean()
+  consentWeeklyCheckin: boolean;
 
-    @IsBoolean()
-    consentFailure: boolean;
+  @IsBoolean()
+  consentFailure: boolean;
 
-    @IsBoolean()
-    consentData: boolean;
+  @IsBoolean()
+  consentData: boolean;
 }

@@ -7,14 +7,9 @@ import { AssessmentModule } from '../assessment';
 import { MissionModule } from '../mission';
 
 @Module({
-    imports: [
-        PrismaModule,
-        AdmissionModule,
-        AssessmentModule,
-        MissionModule,
-    ],
-    controllers: [AdminController],
-    providers: [AdminService],
-    exports: [AdminService],
+  imports: [PrismaModule, AdmissionModule, AssessmentModule, MissionModule],
+  controllers: [AdminController],
+  providers: [AdminService],
+  exports: [AdminService],
 })
-export class AdminModule { }
+export class AdminModule {}

@@ -4,9 +4,8 @@ import { PrismaModule } from '../prisma';
 import { AdmissionModule } from '../admission';
 
 @Module({
-    imports: [PrismaModule, forwardRef(() => AdmissionModule)],
-    providers: [ScoringService],
-    exports: [ScoringService],
+  imports: [PrismaModule, forwardRef(() => AdmissionModule)],
+  providers: [ScoringService],
+  exports: [ScoringService],
 })
-export class ScoringModule { }
-
+export class ScoringModule {}

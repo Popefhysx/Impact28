@@ -6,10 +6,9 @@ import { PrismaModule } from '../prisma';
 import { CurrencyModule } from '../currency';
 
 @Module({
-    imports: [PrismaModule, CurrencyModule],
-    controllers: [MissionController],
-    providers: [MissionService, MissionEngineService],
-    exports: [MissionService, MissionEngineService],
+  imports: [PrismaModule, CurrencyModule],
+  controllers: [MissionController],
+  providers: [MissionService, MissionEngineService],
+  exports: [MissionService, MissionEngineService],
 })
-export class MissionModule { }
-
+export class MissionModule {}

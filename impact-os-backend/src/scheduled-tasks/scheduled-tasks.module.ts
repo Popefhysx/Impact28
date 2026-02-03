@@ -7,19 +7,13 @@ import { MissionModule } from '../mission';
 
 /**
  * Scheduled Tasks Module
- * 
+ *
  * Contains all cron jobs and scheduled tasks.
  * Import this module in AppModule to enable scheduling.
  */
 @Module({
-    imports: [
-        ScheduleModule.forRoot(),
-        PsnModule,
-        PrismaModule,
-        MissionModule,
-    ],
-    providers: [ScheduledTasksService],
-    exports: [ScheduledTasksService],
+  imports: [ScheduleModule.forRoot(), PsnModule, PrismaModule, MissionModule],
+  providers: [ScheduledTasksService],
+  exports: [ScheduledTasksService],
 })
-export class ScheduledTasksModule { }
-
+export class ScheduledTasksModule {}

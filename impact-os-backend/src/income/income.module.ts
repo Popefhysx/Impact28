@@ -6,9 +6,9 @@ import { CurrencyModule } from '../currency';
 import { MissionModule } from '../mission';
 
 @Module({
-    imports: [PrismaModule, CurrencyModule, MissionModule],
-    controllers: [IncomeController],
-    providers: [IncomeService],
-    exports: [IncomeService],
+  imports: [PrismaModule, CurrencyModule, MissionModule],
+  controllers: [IncomeController],
+  providers: [IncomeService],
+  exports: [IncomeService],
 })
-export class IncomeModule { }
+export class IncomeModule {}

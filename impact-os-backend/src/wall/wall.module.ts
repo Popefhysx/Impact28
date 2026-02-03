@@ -6,9 +6,9 @@ import { MissionModule } from '../mission';
 import { AuthModule } from '../auth';
 
 @Module({
-    imports: [PrismaModule, MissionModule, AuthModule],
-    controllers: [WallController],
-    providers: [WallService],
-    exports: [WallService],
+  imports: [PrismaModule, MissionModule, AuthModule],
+  controllers: [WallController],
+  providers: [WallService],
+  exports: [WallService],
 })
-export class WallModule { }
+export class WallModule {}

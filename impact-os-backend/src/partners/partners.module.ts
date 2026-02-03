@@ -4,9 +4,9 @@ import { PartnersService } from './partners.service';
 import { EmailModule } from '../email';
 
 @Module({
-    imports: [EmailModule],
-    controllers: [PartnersController],
-    providers: [PartnersService],
-    exports: [PartnersService],
+  imports: [EmailModule],
+  controllers: [PartnersController],
+  providers: [PartnersService],
+  exports: [PartnersService],
 })
-export class PartnersModule { }
+export class PartnersModule {}

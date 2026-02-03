@@ -5,9 +5,9 @@ import { PrismaModule } from '../prisma';
 
 /**
  * PSN Module
- * 
+ *
  * Predicted Support Need - Internal forecasting and operational planning.
- * 
+ *
  * Features:
  * - PSN calculation for admitted applicants
  * - Cohort-level forecast generation
@@ -15,9 +15,9 @@ import { PrismaModule } from '../prisma';
  * - Admin queue prioritization
  */
 @Module({
-    imports: [PrismaModule],
-    providers: [PsnService],
-    controllers: [PsnController],
-    exports: [PsnService],
+  imports: [PrismaModule],
+  providers: [PsnService],
+  controllers: [PsnController],
+  exports: [PsnService],
 })
-export class PsnModule { }
+export class PsnModule {}

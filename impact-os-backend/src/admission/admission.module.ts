@@ -5,9 +5,9 @@ import { PrismaModule } from '../prisma';
 import { EmailModule } from '../email';
 
 @Module({
-    imports: [PrismaModule, EmailModule],
-    controllers: [AdmissionController],
-    providers: [AdmissionService],
-    exports: [AdmissionService],
+  imports: [PrismaModule, EmailModule],
+  controllers: [AdmissionController],
+  providers: [AdmissionService],
+  exports: [AdmissionService],
 })
-export class AdmissionModule { }
+export class AdmissionModule {}

@@ -6,10 +6,9 @@ import { PrismaModule } from '../prisma';
 import { EmailModule } from '../email';
 
 @Module({
-    imports: [PrismaModule, EmailModule],
-    controllers: [AuthController],
-    providers: [AuthService, AuthGuard],
-    exports: [AuthService, AuthGuard],
+  imports: [PrismaModule, EmailModule],
+  controllers: [AuthController],
+  providers: [AuthService, AuthGuard],
+  exports: [AuthService, AuthGuard],
 })
-export class AuthModule { }
-
+export class AuthModule {}

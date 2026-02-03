@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Search, Filter, Check, X, Clock, Star, Loader2, MessageSquareQuote, LayoutGrid, LayoutList, MapPin, Briefcase, Eye, PenSquare } from 'lucide-react';
+import Image from 'next/image';
 import { Select } from '@/components/ui/Select';
 import styles from './page.module.css';
 
@@ -107,6 +108,7 @@ export default function AdminTestimonialsPage() {
     const [processing, setProcessing] = useState(false);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [editForm, setEditForm] = useState<Partial<Testimonial>>({});
+    const [skillsInput, setSkillsInput] = useState('');
 
     // Fetch testimonials from API
     useEffect(() => {
@@ -221,18 +223,29 @@ export default function AdminTestimonialsPage() {
             quote: testimonial.quote,
             skills: testimonial.skills,
         });
+        setSkillsInput(testimonial.skills.join(', '));
         setActionModal('edit');
     };
 
     const handleSaveEdit = async () => {
         if (!selectedTestimonial) return;
+
+        // Validation: Ensure at least one of Company or Location is provided
+        if (!editForm.company?.trim() && !editForm.location?.trim()) {
+            alert('Please provide either a Company or a Location.');
+            return;
+        }
+
         setProcessing(true);
+
+        const skillsArray = skillsInput.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        const payload = { ...editForm, skills: skillsArray };
 
         try {
             const res = await fetch(`${API_BASE}/testimonials/admin/${selectedTestimonial.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(editForm),
+                body: JSON.stringify(payload),
             });
 
             if (res.ok) {
@@ -360,7 +373,7 @@ export default function AdminTestimonialsPage() {
                                 <div className={styles.cardHeader}>
                                     <div className={styles.personInfo}>
                                         {testimonial.imageUrl ? (
-                                            <img src={testimonial.imageUrl} alt={testimonial.name} className={styles.avatar} />
+                                            <Image src={testimonial.imageUrl} alt={testimonial.name} className={styles.avatar} width={40} height={40} />
                                         ) : (
                                             <div className={styles.avatarPlaceholder}>
                                                 {testimonial.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
@@ -389,7 +402,7 @@ export default function AdminTestimonialsPage() {
 
                                 <div className={styles.quoteSection}>
                                     <blockquote className={styles.quote}>
-                                        "{truncateQuote(testimonial.quote)}"
+                                        &quot;{truncateQuote(testimonial.quote)}&quot;
                                     </blockquote>
                                     {testimonial.skills.length > 0 && (
                                         <div className={styles.skillTags}>
@@ -477,7 +490,7 @@ export default function AdminTestimonialsPage() {
                         <div className={styles.modalContent}>
                             <div className={styles.personDetail}>
                                 {selectedTestimonial.imageUrl ? (
-                                    <img src={selectedTestimonial.imageUrl} alt={selectedTestimonial.name} className={styles.modalAvatar} />
+                                    <Image src={selectedTestimonial.imageUrl} alt={selectedTestimonial.name} className={styles.modalAvatar} width={80} height={80} />
                                 ) : (
                                     <div className={styles.modalAvatarPlaceholder}>
                                         {selectedTestimonial.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
@@ -491,7 +504,7 @@ export default function AdminTestimonialsPage() {
                             </div>
 
                             <div className={styles.quoteBlock}>
-                                <blockquote>"{selectedTestimonial.quote}"</blockquote>
+                                <blockquote>&quot;{selectedTestimonial.quote}&quot;</blockquote>
                             </div>
 
                             {selectedTestimonial.skills.length > 0 && (
@@ -547,7 +560,7 @@ export default function AdminTestimonialsPage() {
                         </p>
 
                         <div className={styles.previewQuote}>
-                            "{truncateQuote(selectedTestimonial.quote, 200)}"
+                            &quot;{truncateQuote(selectedTestimonial.quote, 200)}&quot;
                         </div>
 
                         <div className={styles.modalActions}>
@@ -577,7 +590,7 @@ export default function AdminTestimonialsPage() {
                         </p>
 
                         <div className={styles.previewQuote}>
-                            "{truncateQuote(selectedTestimonial.quote, 200)}"
+                            &quot;{truncateQuote(selectedTestimonial.quote, 200)}&quot;
                         </div>
 
                         <div className={styles.modalActions}>
@@ -620,7 +633,7 @@ export default function AdminTestimonialsPage() {
 
                             <div className={styles.formRow}>
                                 <div className={styles.formGroup}>
-                                    <label>Role</label>
+                                    <label>Role / Title</label>
                                     <input
                                         type="text"
                                         value={editForm.role || ''}
@@ -647,7 +660,17 @@ export default function AdminTestimonialsPage() {
                             </div>
 
                             <div className={styles.formGroup}>
-                                <label>Quote</label>
+                                <label>Skills (comma separated)</label>
+                                <input
+                                    type="text"
+                                    value={skillsInput}
+                                    onChange={(e) => setSkillsInput(e.target.value)}
+                                    placeholder="e.g. React, Design, Marketing"
+                                />
+                            </div>
+
+                            <div className={styles.formGroup}>
+                                <label>Your Story</label>
                                 <textarea
                                     rows={5}
                                     value={editForm.quote || ''}

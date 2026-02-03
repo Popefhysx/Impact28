@@ -60,5 +60,4 @@ import { SettingsModule } from './settings';
     SettingsModule,
   ],
 })
-export class AppModule { }
-
+export class AppModule {}

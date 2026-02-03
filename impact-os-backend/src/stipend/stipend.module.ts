@@ -5,10 +5,9 @@ import { PrismaModule } from '../prisma';
 import { CurrencyModule } from '../currency';
 
 @Module({
-    imports: [PrismaModule, CurrencyModule],
-    controllers: [StipendController],
-    providers: [StipendService],
-    exports: [StipendService],
+  imports: [PrismaModule, CurrencyModule],
+  controllers: [StipendController],
+  providers: [StipendService],
+  exports: [StipendService],
 })
-export class StipendModule { }
-
+export class StipendModule {}

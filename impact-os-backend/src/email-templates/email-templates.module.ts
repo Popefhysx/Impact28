@@ -4,8 +4,8 @@ import { EmailTemplatesService } from './email-templates.service';
 
 @Global()
 @Module({
-    controllers: [EmailTemplatesController],
-    providers: [EmailTemplatesService],
-    exports: [EmailTemplatesService],
+  controllers: [EmailTemplatesController],
+  providers: [EmailTemplatesService],
+  exports: [EmailTemplatesService],
 })
-export class EmailTemplatesModule { }
+export class EmailTemplatesModule {}

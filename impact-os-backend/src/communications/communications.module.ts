@@ -4,9 +4,9 @@ import { CommunicationsController } from './communications.controller';
 import { PrismaModule } from '../prisma';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [CommunicationsController],
-    providers: [CommunicationsService],
-    exports: [CommunicationsService],
+  imports: [PrismaModule],
+  controllers: [CommunicationsController],
+  providers: [CommunicationsService],
+  exports: [CommunicationsService],
 })
-export class CommunicationsModule { }
+export class CommunicationsModule {}

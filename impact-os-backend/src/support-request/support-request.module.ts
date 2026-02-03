@@ -5,14 +5,14 @@ import { PrismaModule } from '../prisma';
 
 /**
  * Support Request Module
- * 
+ *
  * Participant-facing support request flow.
  * Support is request-based and behavior-gated per documentation.
  */
 @Module({
-    imports: [PrismaModule],
-    providers: [SupportRequestService],
-    controllers: [SupportRequestController],
-    exports: [SupportRequestService],
+  imports: [PrismaModule],
+  providers: [SupportRequestService],
+  controllers: [SupportRequestController],
+  exports: [SupportRequestService],
 })
-export class SupportRequestModule { }
+export class SupportRequestModule {}

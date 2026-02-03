@@ -1,7 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma';
-import { CommunicationSource, RecipientType, DeliveryStatus } from '@prisma/client';
+import {
+  CommunicationSource,
+  RecipientType,
+  DeliveryStatus,
+} from '@prisma/client';
 import { createHash } from 'crypto';
 
 // Email template types
@@ -45,12 +49,12 @@ export interface OfferEmailData {
 
 // Email logging context - used to track who/what triggered the email
 export interface EmailLogContext {
-  triggeredBy?: string;             // Staff userId or 'SYSTEM'
+  triggeredBy?: string; // Staff userId or 'SYSTEM'
   triggerSource: CommunicationSource;
-  recipientId?: string;             // User/Applicant/Partner ID
+  recipientId?: string; // User/Applicant/Partner ID
   recipientType: RecipientType;
   recipientName?: string;
-  linkedEntityType?: string;        // 'APPLICANT', 'SUPPORT_REQUEST', etc.
+  linkedEntityType?: string; // 'APPLICANT', 'SUPPORT_REQUEST', etc.
   linkedEntityId?: string;
 }
 
@@ -69,7 +73,10 @@ export class EmailService {
 
   // ===== UTILITY METHODS =====
   private stripHtml(html: string): string {
-    return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    return html
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   private createContentHash(html: string): string {
@@ -82,7 +89,7 @@ export class EmailService {
    */
   private async getTemplateFromDb(
     slug: string,
-    data: Record<string, string>
+    data: Record<string, string>,
   ): Promise<EmailTemplate | null> {
     try {
       const template = await this.prisma.communicationTemplate.findFirst({
@@ -118,7 +125,9 @@ export class EmailService {
 
       return { subject, html };
     } catch (error) {
-      this.logger.warn(`Failed to fetch template ${slug} from DB, using fallback: ${error}`);
+      this.logger.warn(
+        `Failed to fetch template ${slug} from DB, using fallback: ${error}`,
+      );
       return null;
     }
   }
@@ -126,8 +135,10 @@ export class EmailService {
   // ===== EMAIL TEMPLATES =====
   // These can later be moved to database for CMS editing
 
-  private templates: Record<EmailTemplateType, (data: TemplateData) => EmailTemplate> = {
-
+  private templates: Record<
+    EmailTemplateType,
+    (data: TemplateData) => EmailTemplate
+  > = {
     application_received: (data) => ({
       subject: `We've received your application, ${data.firstName}! 🎉`,
       html: `
@@ -151,7 +162,7 @@ export class EmailService {
           
           <p style="color: #666;">— The Project 3:10 Team</p>
         </div>
-      `
+      `,
     }),
 
     application_reminder: (data) => ({
@@ -174,7 +185,7 @@ export class EmailService {
           
           <p style="color: #666;">— The Project 3:10 Team</p>
         </div>
-      `
+      `,
     }),
 
     application_admitted: (data) => ({
@@ -208,7 +219,7 @@ export class EmailService {
           
           <p style="color: #666;">— The Project 3:10 Team</p>
         </div>
-      `
+      `,
     }),
 
     application_conditional: (data) => ({
@@ -236,7 +247,7 @@ export class EmailService {
           
           <p style="color: #666;">— The Project 3:10 Team</p>
         </div>
-      `
+      `,
     }),
 
     application_rejected: (data) => ({
@@ -249,11 +260,15 @@ export class EmailService {
           
           <p>After careful review, we're unable to offer you a spot in Project 3:10 at this time.</p>
           
-          ${data.rejectionReason ? `
+          ${
+            data.rejectionReason
+              ? `
           <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <p style="margin: 0;"><strong>Reason:</strong> ${data.rejectionReason}</p>
           </div>
-          ` : ''}
+          `
+              : ''
+          }
           
           <p>This doesn't mean you can't succeed. Here are some free resources to help you get started:</p>
           
@@ -266,7 +281,7 @@ export class EmailService {
           
           <p style="color: #666;">— The Project 3:10 Team</p>
         </div>
-      `
+      `,
     }),
 
     resume_link: (data) => ({
@@ -289,7 +304,7 @@ export class EmailService {
           
           <p style="color: #666;">— The Project 3:10 Team</p>
         </div>
-      `
+      `,
     }),
   };
 
@@ -330,7 +345,9 @@ export class EmailService {
 
     // If no API key, log to console (dev mode) but still record
     if (!this.resendApiKey) {
-      this.logger.log(`📧 [DEV] Email logged (${log.id}): ${templateType} → ${to}`);
+      this.logger.log(
+        `📧 [DEV] Email logged (${log.id}): ${templateType} → ${to}`,
+      );
       await this.prisma.communicationLog.update({
         where: { id: log.id },
         data: { status: DeliveryStatus.SENT, sentAt: new Date() },
@@ -342,7 +359,7 @@ export class EmailService {
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.resendApiKey}`,
+          Authorization: `Bearer ${this.resendApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -381,7 +398,8 @@ export class EmailService {
       this.logger.log(`📧 Email sent (${log.id}): ${templateType} → ${to}`);
       return { success: true, logId: log.id };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Email send error (${log.id}): ${errorMessage}`);
       await this.prisma.communicationLog.update({
         where: { id: log.id },
@@ -399,7 +417,11 @@ export class EmailService {
    * Legacy sendEmail method - wraps sendEmailWithContext with default SYSTEM context.
    * Now tries database templates first, falling back to hardcoded templates.
    */
-  async sendEmail(to: string, templateType: EmailTemplateType, data: TemplateData): Promise<boolean> {
+  async sendEmail(
+    to: string,
+    templateType: EmailTemplateType,
+    data: TemplateData,
+  ): Promise<boolean> {
     // Convert TemplateData to Record<string, string> for DB lookup
     const dataRecord: Record<string, string> = {};
     for (const [key, value] of Object.entries(data)) {
@@ -413,18 +435,20 @@ export class EmailService {
 
     // Fallback to hardcoded template if DB template not found
     if (!template) {
-      this.logger.debug(`Using hardcoded template for ${templateType} (no approved DB template found)`);
+      this.logger.debug(
+        `Using hardcoded template for ${templateType} (no approved DB template found)`,
+      );
       template = this.templates[templateType](data);
     }
 
     // Map template types to trigger sources
     const sourceMap: Record<EmailTemplateType, CommunicationSource> = {
-      'application_received': CommunicationSource.INTAKE,
-      'application_reminder': CommunicationSource.INTAKE,
-      'application_admitted': CommunicationSource.ADMISSION,
-      'application_conditional': CommunicationSource.ADMISSION,
-      'application_rejected': CommunicationSource.ADMISSION,
-      'resume_link': CommunicationSource.INTAKE,
+      application_received: CommunicationSource.INTAKE,
+      application_reminder: CommunicationSource.INTAKE,
+      application_admitted: CommunicationSource.ADMISSION,
+      application_conditional: CommunicationSource.ADMISSION,
+      application_rejected: CommunicationSource.ADMISSION,
+      resume_link: CommunicationSource.INTAKE,
     };
 
     const result = await this.sendEmailWithContext(
@@ -447,20 +471,54 @@ export class EmailService {
     return this.sendEmail(email, 'application_received', { firstName });
   }
 
-  async sendApplicationReminder(email: string, firstName: string, resumeLink: string) {
-    return this.sendEmail(email, 'application_reminder', { firstName, resumeLink });
+  async sendApplicationReminder(
+    email: string,
+    firstName: string,
+    resumeLink: string,
+  ) {
+    return this.sendEmail(email, 'application_reminder', {
+      firstName,
+      resumeLink,
+    });
   }
 
-  async sendAdmissionEmail(email: string, firstName: string, dashboardLink: string, skillTrack?: string, cohortName?: string) {
-    return this.sendEmail(email, 'application_admitted', { firstName, dashboardLink, skillTrack, cohortName });
+  async sendAdmissionEmail(
+    email: string,
+    firstName: string,
+    dashboardLink: string,
+    skillTrack?: string,
+    cohortName?: string,
+  ) {
+    return this.sendEmail(email, 'application_admitted', {
+      firstName,
+      dashboardLink,
+      skillTrack,
+      cohortName,
+    });
   }
 
-  async sendConditionalEmail(email: string, firstName: string, dashboardLink: string, preWorkTask: string) {
-    return this.sendEmail(email, 'application_conditional', { firstName, dashboardLink, preWorkTask });
+  async sendConditionalEmail(
+    email: string,
+    firstName: string,
+    dashboardLink: string,
+    preWorkTask: string,
+  ) {
+    return this.sendEmail(email, 'application_conditional', {
+      firstName,
+      dashboardLink,
+      preWorkTask,
+    });
   }
 
-  async sendRejectionEmail(email: string, firstName: string, rejectionReason?: string) {
-    return this.sendEmail(email, 'application_rejected', { firstName, rejectionReason });
+  async sendRejectionEmail(
+    email: string,
+    firstName: string,
+    rejectionReason?: string,
+  ) {
+    return this.sendEmail(email, 'application_rejected', {
+      firstName,
+      rejectionReason,
+    });
   }
 
   /**
@@ -474,12 +532,23 @@ export class EmailService {
       primaryGap?: string; // e.g., "technical skills", "commitment"
       isCapacityRejection?: boolean;
       customMessage?: string;
-    }
+    },
   ): Promise<boolean> {
-    const { firstName, readinessScore, primaryGap, isCapacityRejection, customMessage } = data;
+    const {
+      firstName,
+      readinessScore,
+      primaryGap,
+      isCapacityRejection,
+      customMessage,
+    } = data;
 
     // Determine tier and messaging based on readiness score
-    type RejectionTier = { subject: string; headline: string; message: string; reapplyText: string };
+    type RejectionTier = {
+      subject: string;
+      headline: string;
+      message: string;
+      reapplyText: string;
+    };
     let tier: RejectionTier;
 
     if (isCapacityRejection) {
@@ -487,35 +556,35 @@ export class EmailService {
         subject: `Cohort is full — but you're on our radar`,
         headline: `You Qualified, But We're At Capacity`,
         message: `Your application was strong, but we've reached our cohort capacity. This is not a reflection of your potential — it's simply about timing.`,
-        reapplyText: `You'll be <strong>first in line</strong> for our next cohort. We'll email you when applications reopen.`
+        reapplyText: `You'll be <strong>first in line</strong> for our next cohort. We'll email you when applications reopen.`,
       };
     } else if (readinessScore >= 70) {
       tier = {
         subject: `Close, but not quite this time`,
         headline: `You're Almost There`,
         message: `You showed real promise, but we need to see a bit more readiness. ${primaryGap ? `Your ${primaryGap} could use some strengthening.` : ''}`,
-        reapplyText: `We encourage you to <strong>reapply in 2-3 months</strong> after building more experience.`
+        reapplyText: `We encourage you to <strong>reapply in 2-3 months</strong> after building more experience.`,
       };
     } else if (readinessScore >= 50) {
       tier = {
         subject: `Update on your Project 3:10 application`,
         headline: `Not Quite Ready — Yet`,
         message: `We appreciate your interest, but based on our assessment, you need more preparation before joining an intensive program like ours. ${primaryGap ? `Focus on developing your ${primaryGap}.` : ''}`,
-        reapplyText: `Consider reapplying after <strong>3-6 months</strong> of self-directed learning.`
+        reapplyText: `Consider reapplying after <strong>3-6 months</strong> of self-directed learning.`,
       };
     } else if (readinessScore >= 30) {
       tier = {
         subject: `Update on your Project 3:10 application`,
         headline: `Some Foundational Gaps`,
         message: `We're unable to offer you a spot right now. Our program moves quickly and requires a baseline of readiness that we didn't see in your application.`,
-        reapplyText: `We recommend building foundational skills before considering reapplication.`
+        reapplyText: `We recommend building foundational skills before considering reapplication.`,
       };
     } else {
       tier = {
         subject: `Update on your Project 3:10 application`,
         headline: `Not a Fit Right Now`,
         message: `After reviewing your application, we've determined that Project 3:10 isn't the right fit for you at this time.`,
-        reapplyText: `We wish you the best in your journey.`
+        reapplyText: `We wish you the best in your journey.`,
       };
     }
 
@@ -527,12 +596,16 @@ export class EmailService {
         
         <p>${tier.message}</p>
         
-        ${customMessage ? `
+        ${
+          customMessage
+            ? `
         <div style="background: #f0f4f8; border-left: 4px solid #02213D; padding: 15px; margin: 20px 0;">
           <p style="margin: 0; font-style: italic;">"${customMessage}"</p>
           <p style="margin: 10px 0 0 0; font-size: 12px; color: #666;">— From our review team</p>
         </div>
-        ` : ''}
+        `
+            : ''
+        }
         
         <p>${tier.reapplyText}</p>
         
@@ -573,23 +646,26 @@ export class EmailService {
    */
   async sendOfferEmail(email: string, data: OfferEmailData): Promise<boolean> {
     const offerLabels: Record<string, string> = {
-      'FULL_SUPPORT': 'Full Support Track',
-      'SKILLS_ONLY': 'Skills Development Track',
-      'ACCELERATOR': 'Accelerator Track',
-      'CATALYST_TRACK': 'Catalyst Track',
+      FULL_SUPPORT: 'Full Support Track',
+      SKILLS_ONLY: 'Skills Development Track',
+      ACCELERATOR: 'Accelerator Track',
+      CATALYST_TRACK: 'Catalyst Track',
     };
 
     const offerDescriptions: Record<string, string> = {
-      'FULL_SUPPORT': 'Our comprehensive program with intensive training and dedicated support to help you succeed.',
-      'SKILLS_ONLY': 'Focus on skill development with our comprehensive training program.',
-      'ACCELERATOR': 'Fast-track your journey with market-focused missions and client work.',
-      'CATALYST_TRACK': 'Lead the way — build your income and mentor others.',
+      FULL_SUPPORT:
+        'Our comprehensive program with intensive training and dedicated support to help you succeed.',
+      SKILLS_ONLY:
+        'Focus on skill development with our comprehensive training program.',
+      ACCELERATOR:
+        'Fast-track your journey with market-focused missions and client work.',
+      CATALYST_TRACK: 'Lead the way — build your income and mentor others.',
     };
 
     const focusLabels: Record<string, string> = {
-      'TECHNICAL': 'Technical Skills',
-      'SOFT': 'Soft Skills',
-      'COMMERCIAL': 'Commercial Awareness',
+      TECHNICAL: 'Technical Skills',
+      SOFT: 'Soft Skills',
+      COMMERCIAL: 'Commercial Awareness',
     };
 
     const offerLabel = offerLabels[data.offerType] || data.offerType;
@@ -703,7 +779,7 @@ export class EmailService {
    */
   async sendOtpEmail(
     email: string,
-    data: { firstName: string; otpCode: string; expiryMinutes: number }
+    data: { firstName: string; otpCode: string; expiryMinutes: number },
   ): Promise<boolean> {
     const html = `
       <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
@@ -762,16 +838,21 @@ export class EmailService {
       category: 'ADMIN' | 'STAFF' | 'OBSERVER';
       inviterName?: string;
       setupLink: string;
-    }
+    },
   ): Promise<boolean> {
-    const categoryLabels: Record<string, { label: string; description: string }> = {
+    const categoryLabels: Record<
+      string,
+      { label: string; description: string }
+    > = {
       ADMIN: {
         label: 'Administrator',
-        description: 'Full access to manage the platform, staff, and system settings.',
+        description:
+          'Full access to manage the platform, staff, and system settings.',
       },
       STAFF: {
         label: 'Staff Member',
-        description: 'Execute assigned work including mentoring, reviewing, and managing participants.',
+        description:
+          'Execute assigned work including mentoring, reviewing, and managing participants.',
       },
       OBSERVER: {
         label: 'Observer',
@@ -779,7 +860,10 @@ export class EmailService {
       },
     };
 
-    const catInfo = categoryLabels[data.category] || { label: data.category, description: '' };
+    const catInfo = categoryLabels[data.category] || {
+      label: data.category,
+      description: '',
+    };
 
     const html = `
       <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

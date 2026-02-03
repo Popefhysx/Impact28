@@ -4,9 +4,9 @@ import { ResourceController } from './resource.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [ResourceController],
-    providers: [ResourceService],
-    exports: [ResourceService],
+  imports: [PrismaModule],
+  controllers: [ResourceController],
+  providers: [ResourceService],
+  exports: [ResourceService],
 })
-export class ResourceModule { }
+export class ResourceModule {}

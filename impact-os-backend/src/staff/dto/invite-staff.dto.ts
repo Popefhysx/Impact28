@@ -1,32 +1,38 @@
-import { IsEmail, IsEnum, IsOptional, IsString, IsArray } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsArray,
+} from 'class-validator';
 import { StaffCategory } from '@prisma/client';
 
 export class InviteStaffDto {
-    @IsEmail()
-    email: string;
+  @IsEmail()
+  email: string;
 
-    @IsOptional()
-    @IsString()
-    firstName?: string;
+  @IsOptional()
+  @IsString()
+  firstName?: string;
 
-    @IsOptional()
-    @IsString()
-    lastName?: string;
+  @IsOptional()
+  @IsString()
+  lastName?: string;
 
-    @IsEnum(StaffCategory)
-    category: StaffCategory;
+  @IsEnum(StaffCategory)
+  category: StaffCategory;
 
-    @IsOptional()
-    @IsString()
-    templateId?: string;
+  @IsOptional()
+  @IsString()
+  templateId?: string;
 
-    @IsOptional()
-    @IsArray()
-    @IsString({ each: true })
-    capabilities?: string[];
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  capabilities?: string[];
 
-    @IsOptional()
-    @IsArray()
-    @IsString({ each: true })
-    cohortIds?: string[];
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  cohortIds?: string[];
 }
