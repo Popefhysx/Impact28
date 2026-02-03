@@ -21,3 +21,5 @@ export { PageHeader } from './PageHeader';
 
 export { RichTextEditor } from './RichTextEditor';
 export type { RichTextEditorProps, EditorVariable, EditorMode } from './RichTextEditor';
+
+export { NotificationHeader } from './NotificationHeader';

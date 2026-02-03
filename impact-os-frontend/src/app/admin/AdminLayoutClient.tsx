@@ -10,6 +10,7 @@ import {
     UserCog, BookOpen, HeartHandshake, Send, MessageSquareQuote,
     ImageIcon, Handshake, Trophy, Calendar, Layers, Sliders
 } from 'lucide-react';
+import { NotificationHeader } from '@/components/ui';
 import styles from './layout.module.css';
 
 // Grouped navigation structure
@@ -219,6 +220,11 @@ export default function AdminLayout({
             </aside>
 
             <main className={`${styles.main} ${collapsed ? styles.mainCollapsed : ''}`}>
+                <div className={styles.topBar}>
+                    <div className={styles.topBarRight}>
+                        <NotificationHeader variant="admin" />
+                    </div>
+                </div>
                 {children}
             </main>
         </div>

@@ -369,6 +369,20 @@
     transition: margin-left 0.2s ease;
 }
 
+.topBar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-sm);
+}
+
+.topBarRight {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
 .mainCollapsed {
     margin-left: var(--sidebar-collapsed);
 }

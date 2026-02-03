@@ -933,7 +933,7 @@ export class EmailService {
     return (
       this.configService.get<string>('ADMIN_NOTIFICATION_EMAIL') ||
       this.configService.get<string>('FOUNDER_EMAIL') ||
-      'admin@cycle28.org'
+      'c28@diranx.com'
     );
   }
 
