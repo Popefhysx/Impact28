@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FileText, Users, DollarSign, Target, MessageSquareQuote, Loader2, AlertCircle } from 'lucide-react';
+import { FileText, Users, DollarSign, Target, MessageSquareQuote, Loader2, AlertCircle, Handshake } from 'lucide-react';
 import styles from './page.module.css';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
@@ -50,16 +50,18 @@ export default function AdminDashboard() {
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [activity, setActivity] = useState<RecentActivity[]>([]);
     const [pendingTestimonials, setPendingTestimonials] = useState(0);
+    const [pendingPartners, setPendingPartners] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         async function fetchDashboardData() {
             try {
-                const [statsRes, activityRes, testimonialsRes] = await Promise.all([
+                const [statsRes, activityRes, testimonialsRes, partnersRes] = await Promise.all([
                     fetch(`${API_BASE}/admin/dashboard`),
                     fetch(`${API_BASE}/admin/activity?limit=10`),
                     fetch(`${API_BASE}/testimonials/admin/all`),
+                    fetch(`${API_BASE}/partners`),
                 ]);
 
                 if (statsRes.ok) {
@@ -77,6 +79,11 @@ export default function AdminDashboard() {
                 if (testimonialsRes.ok) {
                     const testimonials = await testimonialsRes.json();
                     setPendingTestimonials(testimonials.filter((t: { status: string }) => t.status === 'PENDING').length);
+                }
+
+                if (partnersRes.ok) {
+                    const partners = await partnersRes.json();
+                    setPendingPartners(partners.filter((p: { status: string }) => p.status === 'PENDING').length);
                 }
             } catch (err) {
                 console.error('Dashboard fetch error:', err);
@@ -229,6 +236,13 @@ export default function AdminDashboard() {
                             disabled={pendingTestimonials === 0}
                         >
                             <MessageSquareQuote size={16} /> Review Testimonials ({pendingTestimonials})
+                        </button>
+                        <button
+                            className="btn btn-secondary"
+                            onClick={() => router.push('/admin/partners')}
+                            disabled={pendingPartners === 0}
+                        >
+                            <Handshake size={16} /> Review Partners ({pendingPartners})
                         </button>
                     </div>
                 </div>
