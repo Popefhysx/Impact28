@@ -282,7 +282,7 @@ export default function AdminTestimonialsPage() {
         return date.toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
-    const truncateQuote = (quote: string, maxLength = 120) => {
+    const truncateQuote = (quote: string, maxLength = 80) => {
         if (quote.length <= maxLength) return quote;
         return quote.substring(0, maxLength).trim() + '...';
     };
@@ -381,23 +381,12 @@ export default function AdminTestimonialsPage() {
                                         )}
                                         <div>
                                             <span className={styles.personName}>{testimonial.name}</span>
-                                            <div className={styles.personMeta}>
-                                                <span><Briefcase size={12} /> {testimonial.role}</span>
-                                                {testimonial.company && <span>@ {testimonial.company}</span>}
-                                            </div>
-                                            <span className={styles.location}>
-                                                <MapPin size={12} /> {testimonial.location}
+                                            <span className={styles.personRole}>
+                                                {testimonial.role}{testimonial.company && ` @ ${testimonial.company}`}
                                             </span>
                                         </div>
                                     </div>
-                                    <div className={styles.cardMeta}>
-                                        <span className={styles.dateTag}>{formatDate(testimonial.submittedAt)}</span>
-                                        {testimonial.isFeatured && (
-                                            <span className={styles.featuredBadge}>
-                                                <Star size={12} /> Featured
-                                            </span>
-                                        )}
-                                    </div>
+                                    <span className={styles.dateTag}>{formatDate(testimonial.submittedAt)}</span>
                                 </div>
 
                                 <div className={styles.quoteSection}>
@@ -406,11 +395,11 @@ export default function AdminTestimonialsPage() {
                                     </blockquote>
                                     {testimonial.skills.length > 0 && (
                                         <div className={styles.skillTags}>
-                                            {testimonial.skills.slice(0, 3).map((skill, idx) => (
+                                            {testimonial.skills.slice(0, 2).map((skill, idx) => (
                                                 <span key={idx} className={styles.skillTag}>{skill}</span>
                                             ))}
-                                            {testimonial.skills.length > 3 && (
-                                                <span className={styles.moreSkills}>+{testimonial.skills.length - 3}</span>
+                                            {testimonial.skills.length > 2 && (
+                                                <span className={styles.moreSkills}>+{testimonial.skills.length - 2}</span>
                                             )}
                                         </div>
                                     )}

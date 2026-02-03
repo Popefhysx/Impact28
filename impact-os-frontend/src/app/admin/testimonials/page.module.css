@@ -208,6 +208,14 @@
     font-weight: 600;
     color: var(--text-primary);
     display: block;
+    line-height: 1.2;
+}
+
+.personRole {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
 }
 
 .personMeta {
