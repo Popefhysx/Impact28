@@ -385,7 +385,7 @@ export class CommunicationsService {
    * Get recipients by segment criteria
    */
   async getRecipientsBySegment(segment: {
-    type: 'all' | 'cohort' | 'phase' | 'custom' | 'staff';
+    type: 'all' | 'cohort' | 'phase' | 'custom' | 'staff' | 'partners';
     cohortId?: string;
     phase?: string;
     customIds?: string[];
@@ -419,6 +419,20 @@ export class CommunicationsService {
       }));
     }
 
+    // Handle partners segment
+    if (segment.type === 'partners') {
+      const partners = await this.prisma.partner.findMany({
+        where: { status: 'APPROVED' },
+        select: { id: true, contactName: true, email: true },
+      });
+
+      return partners.map((p) => ({
+        id: p.id,
+        name: p.contactName,
+        email: p.email,
+      }));
+    }
+
     const users = await this.prisma.user.findMany({
       where,
       select: { id: true, firstName: true, lastName: true, email: true },
@@ -436,7 +450,7 @@ export class CommunicationsService {
    * Get segment count preview without fetching all recipients
    */
   async getSegmentCount(segment: {
-    type: 'all' | 'cohort' | 'phase' | 'custom' | 'staff';
+    type: 'all' | 'cohort' | 'phase' | 'custom' | 'staff' | 'partners';
     cohortId?: string;
     phase?: string;
     customIds?: string[];
@@ -456,6 +470,11 @@ export class CommunicationsService {
       return this.prisma.staff.count({ where: { isActive: true } });
     }
 
+    // Handle partners segment
+    if (segment.type === 'partners') {
+      return this.prisma.partner.count({ where: { status: 'APPROVED' } });
+    }
+
     return this.prisma.user.count({ where });
   }
 
@@ -471,7 +490,7 @@ export class CommunicationsService {
     subject: string;
     htmlContent: string;
     segment: {
-      type: 'all' | 'cohort' | 'phase' | 'custom' | 'staff';
+      type: 'all' | 'cohort' | 'phase' | 'custom' | 'staff' | 'partners';
       cohortId?: string;
       phase?: string;
       customIds?: string[];
