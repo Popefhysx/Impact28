@@ -37,7 +37,7 @@ export interface PaginatedResponse<T> {
 export class CommunicationsService {
   private readonly logger = new Logger(CommunicationsService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   /**
    * Get communication statistics
@@ -385,7 +385,7 @@ export class CommunicationsService {
    * Get recipients by segment criteria
    */
   async getRecipientsBySegment(segment: {
-    type: 'all' | 'cohort' | 'phase' | 'custom';
+    type: 'all' | 'cohort' | 'phase' | 'custom' | 'staff';
     cohortId?: string;
     phase?: string;
     customIds?: string[];
@@ -400,6 +400,24 @@ export class CommunicationsService {
       where.id = { in: segment.customIds };
     }
     // 'all' uses just isActive: true
+
+    // Handle staff segment separately
+    if (segment.type === 'staff') {
+      const staffMembers = await this.prisma.staff.findMany({
+        where: { isActive: true },
+        include: {
+          user: {
+            select: { id: true, firstName: true, lastName: true, email: true },
+          },
+        },
+      });
+
+      return staffMembers.map((s) => ({
+        id: s.user.id,
+        name: `${s.user.firstName} ${s.user.lastName}`,
+        email: s.user.email,
+      }));
+    }
 
     const users = await this.prisma.user.findMany({
       where,
@@ -418,7 +436,7 @@ export class CommunicationsService {
    * Get segment count preview without fetching all recipients
    */
   async getSegmentCount(segment: {
-    type: 'all' | 'cohort' | 'phase' | 'custom';
+    type: 'all' | 'cohort' | 'phase' | 'custom' | 'staff';
     cohortId?: string;
     phase?: string;
     customIds?: string[];
@@ -431,6 +449,11 @@ export class CommunicationsService {
       where.currentPhase = segment.phase;
     } else if (segment.type === 'custom' && segment.customIds?.length) {
       where.id = { in: segment.customIds };
+    }
+
+    // Handle staff segment separately
+    if (segment.type === 'staff') {
+      return this.prisma.staff.count({ where: { isActive: true } });
     }
 
     return this.prisma.user.count({ where });
@@ -448,7 +471,7 @@ export class CommunicationsService {
     subject: string;
     htmlContent: string;
     segment: {
-      type: 'all' | 'cohort' | 'phase' | 'custom';
+      type: 'all' | 'cohort' | 'phase' | 'custom' | 'staff';
       cohortId?: string;
       phase?: string;
       customIds?: string[];

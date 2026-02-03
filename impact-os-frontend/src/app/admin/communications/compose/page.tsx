@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Send, User, Users, Loader2, Eye, Save, X, UsersRound, CheckCircle, FileText } from 'lucide-react';
+import { ArrowLeft, Send, User, Users, Loader2, Eye, Save, X, UsersRound, CheckCircle, FileText, Briefcase } from 'lucide-react';
 import Link from 'next/link';
 import { Select, RichTextEditor, Modal } from '@/components/ui';
 import styles from './page.module.css';
@@ -27,7 +27,7 @@ interface Cohort {
     name: string;
 }
 
-type SegmentType = 'individual' | 'all' | 'cohort' | 'phase';
+type SegmentType = 'individual' | 'all' | 'cohort' | 'phase' | 'staff';
 
 const PHASES = [
     { value: 'ONBOARDING', label: 'Onboarding' },
@@ -156,6 +156,8 @@ export default function ComposePage() {
     const getSegmentPayload = () => {
         if (segmentType === 'all') {
             return { type: 'all' };
+        } else if (segmentType === 'staff') {
+            return { type: 'staff' };
         } else if (segmentType === 'cohort' && selectedCohort) {
             return { type: 'cohort', cohortId: selectedCohort };
         } else if (segmentType === 'phase' && selectedPhase) {
@@ -361,6 +363,13 @@ export default function ComposePage() {
                             <Users size={16} />
                             By Phase
                         </button>
+                        <button
+                            className={`${styles.segmentBtn} ${segmentType === 'staff' ? styles.active : ''}`}
+                            onClick={() => setSegmentType('staff')}
+                        >
+                            <Briefcase size={16} />
+                            All Staff
+                        </button>
                     </div>
 
                     {/* Recipients / Segment */}
@@ -432,6 +441,18 @@ export default function ComposePage() {
                                         {segmentCount} participant{segmentCount !== 1 ? 's' : ''}
                                     </span>
                                 )}
+                            </div>
+                        ) : segmentType === 'staff' ? (
+                            <div className={styles.segmentPicker}>
+                                <span className={styles.allParticipantsBadge}>
+                                    <Briefcase size={16} />
+                                    All active staff members
+                                    {segmentCount !== null && (
+                                        <span className={styles.segmentCountBadge}>
+                                            {segmentCount}
+                                        </span>
+                                    )}
+                                </span>
                             </div>
                         ) : (
                             <div className={styles.segmentPicker}>
