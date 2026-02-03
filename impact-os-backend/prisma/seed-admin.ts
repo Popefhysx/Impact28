@@ -21,14 +21,14 @@ async function seedSuperAdmin() {
         update: {
             firstName: 'Super',
             lastName: 'Admin',
-            username: 'super.admin',
+            username: 'xbuk',
             pin: hashedPin,
         },
         create: {
             email: adminEmail,
             firstName: 'Super',
             lastName: 'Admin',
-            username: 'super.admin',
+            username: 'xbuk',
             pin: hashedPin,
             identityLevel: 'L5_CATALYST',
             currentPhase: 'CATALYST',
@@ -78,7 +78,7 @@ async function seedSuperAdmin() {
     console.log(`✅ Staff record created/updated: ${staff.id} (super admin)`);
     console.log(`\n🎉 Super admin ready!`);
     console.log(`   Email: ${adminEmail}`);
-    console.log(`   Username: super.admin`);
+    console.log(`   Username: xbuk`);
     console.log(`   PIN: ${adminPin} (change this after first login!)`);
 }
 
