@@ -27,7 +27,7 @@ export class AuthService {
     private emailService: EmailService,
     private configService: ConfigService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   /**
    * Check if email exists in our system
@@ -195,6 +195,7 @@ export class AuthService {
       firstName: string;
       lastName: string;
       username: string;
+      role: 'ADMIN' | 'STAFF' | 'PARTICIPANT';
     };
     message?: string;
   }> {
@@ -203,6 +204,11 @@ export class AuthService {
 
     const user = await this.prisma.user.findUnique({
       where: { username: normalizedUsername },
+      include: {
+        staff: {
+          select: { category: true, isSuperAdmin: true },
+        },
+      },
     });
 
     if (!user) {
@@ -235,7 +241,13 @@ export class AuthService {
     // Generate JWT token
     const token = this.generateToken(user.id, user.email);
 
-    this.logger.log(`User ${user.username} authenticated via PIN successfully`);
+    // Determine role
+    let role: 'ADMIN' | 'STAFF' | 'PARTICIPANT' = 'PARTICIPANT';
+    if (user.staff) {
+      role = user.staff.category === 'ADMIN' || user.staff.isSuperAdmin ? 'ADMIN' : 'STAFF';
+    }
+
+    this.logger.log(`User ${user.username} authenticated via PIN successfully (role: ${role})`);
 
     return {
       success: true,
@@ -246,6 +258,7 @@ export class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
         username: user.username!,
+        role,
       },
     };
   }
