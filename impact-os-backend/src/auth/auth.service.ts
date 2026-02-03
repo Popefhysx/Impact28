@@ -7,31 +7,27 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma';
 import { EmailService } from '../email';
-import * as crypto from 'crypto';
+// import * as crypto from 'crypto'; // Removed manual crypto
+
+import { JwtService } from '@nestjs/jwt';
 
 // Simple JWT-like token (for demo — use @nestjs/jwt in production)
 interface TokenPayload {
   userId: string;
   email: string;
-  exp: number;
 }
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
-  private readonly jwtSecret: string;
   private readonly otpExpiryMinutes = 10;
-  private readonly tokenExpiryDays = 30;
 
   constructor(
     private prisma: PrismaService,
     private emailService: EmailService,
     private configService: ConfigService,
-  ) {
-    this.jwtSecret =
-      this.configService.get('JWT_SECRET') ||
-      'impact-os-dev-secret-change-in-prod';
-  }
+    private jwtService: JwtService,
+  ) {}
 
   /**
    * Check if email exists in our system
@@ -297,17 +293,11 @@ export class AuthService {
   }
 
   /**
-   * Get current user from token
+   * Get current user from token (Payload extracted by Guard)
    */
-  async getCurrentUser(token: string) {
-    const payload = this.verifyToken(token);
-
-    if (!payload) {
-      throw new UnauthorizedException('Invalid or expired token');
-    }
-
+  async getCurrentUser(userId: string) {
     const user = await this.prisma.user.findUnique({
-      where: { id: payload.userId },
+      where: { id: userId },
       select: {
         id: true,
         email: true,
@@ -349,51 +339,10 @@ export class AuthService {
   }
 
   /**
-   * Generate JWT-like token (simplified)
+   * Generate JWT token
    */
   private generateToken(userId: string, email: string): string {
-    const payload: TokenPayload = {
-      userId,
-      email,
-      exp: Date.now() + this.tokenExpiryDays * 24 * 60 * 60 * 1000,
-    };
-
-    const data = Buffer.from(JSON.stringify(payload)).toString('base64');
-    const signature = crypto
-      .createHmac('sha256', this.jwtSecret)
-      .update(data)
-      .digest('base64url');
-
-    return `${data}.${signature}`;
-  }
-
-  /**
-   * Verify and decode token
-   */
-  verifyToken(token: string): TokenPayload | null {
-    try {
-      const [data, signature] = token.split('.');
-
-      const expectedSignature = crypto
-        .createHmac('sha256', this.jwtSecret)
-        .update(data)
-        .digest('base64url');
-
-      if (signature !== expectedSignature) {
-        return null;
-      }
-
-      const payload: TokenPayload = JSON.parse(
-        Buffer.from(data, 'base64').toString(),
-      );
-
-      if (payload.exp < Date.now()) {
-        return null;
-      }
-
-      return payload;
-    } catch {
-      return null;
-    }
+    const payload: TokenPayload = { userId, email };
+    return this.jwtService.sign(payload);
   }
 }

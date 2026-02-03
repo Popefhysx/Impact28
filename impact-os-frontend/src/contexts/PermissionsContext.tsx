@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useMemo, ReactNode } from 'react';
+import { useAuth } from './AuthContext';
 
 /**
  * Staff Category (mirrors backend)
@@ -63,16 +64,33 @@ interface PermissionsProviderProps {
  * Provider for permissions state
  * In production, this would fetch from /api/auth/me or similar
  */
-export function PermissionsProvider({ children, initialState }: PermissionsProviderProps) {
-    // Default state - in production this would be loaded from session
-    const state: PermissionsState = {
-        isAuthenticated: initialState?.isAuthenticated ?? false,
-        isStaff: initialState?.isStaff ?? false,
-        category: initialState?.category ?? null,
-        capabilities: initialState?.capabilities ?? [],
-        isSuperAdmin: initialState?.isSuperAdmin ?? false,
-        cohortIds: initialState?.cohortIds ?? [],
-    };
+export function PermissionsProvider({ children }: PermissionsProviderProps) {
+    const { user, isAuthenticated } = useAuth();
+
+    const state: PermissionsState = useMemo(() => {
+        if (!user || !isAuthenticated) {
+            return {
+                isAuthenticated: false,
+                isStaff: false,
+                category: null,
+                capabilities: [],
+                isSuperAdmin: false,
+                cohortIds: [],
+            };
+        }
+
+        // Map backend user to permissions state
+        // Note: In a real app, strict typing would match, assuming user object has these fields
+        // based on the AuthContext user interface we defined
+        return {
+            isAuthenticated: true,
+            isStaff: !!user.identityLevel, // Simplified check, refine as needed
+            category: (user as any).category || (user as any).role || null, // Adapt to actual user object structure
+            capabilities: user.permissions || [],
+            isSuperAdmin: user.isAdmin || false,
+            cohortIds: [], // TODO: Add cohort IDs to user object if needed
+        };
+    }, [user, isAuthenticated]);
 
     const value: PermissionsContextValue = useMemo(() => ({
         ...state,

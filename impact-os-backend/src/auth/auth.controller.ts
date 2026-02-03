@@ -3,14 +3,14 @@ import {
   Post,
   Get,
   Body,
-  Headers,
-  UnauthorizedException,
-} from '@nestjs/common';
+  UseGuards,
+  Req,
+import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   /**
    * Check if email exists (for login vs registration flow)
@@ -48,13 +48,10 @@ export class AuthController {
    * Get current authenticated user
    */
   @Get('me')
-  async getCurrentUser(@Headers('authorization') authHeader: string) {
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedException('No token provided');
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    return this.authService.getCurrentUser(token);
+  @UseGuards(AuthGuard('jwt'))
+  async getCurrentUser(@Req() req: any) {
+    // req.user is populated by JwtStrategy
+    return this.authService.getCurrentUser(req.user.id);
   }
 
   /**

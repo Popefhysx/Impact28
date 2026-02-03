@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { PermissionsProvider } from "@/contexts/PermissionsContext";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://impact28.vercel.app"),
@@ -52,7 +54,13 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
-      <body>{children}</body>
+      <body>
+        <AuthProvider>
+          <PermissionsProvider>
+            {children}
+          </PermissionsProvider>
+        </AuthProvider>
+      </body>
     </html>
   );
 }
