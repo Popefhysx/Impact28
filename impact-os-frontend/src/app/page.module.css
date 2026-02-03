@@ -122,6 +122,11 @@
     text-align: center;
 }
 
+.spacer {
+    /* Matches the height of the hint section with two link buttons */
+    height: 72px;
+}
+
 .hint p {
     margin: var(--space-xs) 0;
     font-size: 13px;
@@ -198,4 +203,6 @@
 .applyLink:hover {
     color: var(--navy-deep);
     text-decoration: underline;
-}/* Cache bust 1770145416 */
+}
+
+/* Cache bust 1770145416 */

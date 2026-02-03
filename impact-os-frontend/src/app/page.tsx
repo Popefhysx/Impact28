@@ -192,6 +192,8 @@ export default function LoginPage() {
                 Continue
               </button>
             </form>
+            {/* Spacer to match PIN step height */}
+            <div className={styles.spacer} aria-hidden="true" />
           </>
         )}
 
