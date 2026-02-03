@@ -321,7 +321,7 @@ export class AuthService {
     // Get user with current PIN
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, pinHash: true },
+      select: { id: true, pin: true },
     });
 
     if (!user) {
@@ -329,14 +329,14 @@ export class AuthService {
     }
 
     // Verify current PIN (simple comparison - in production use bcrypt)
-    if (user.pinHash !== currentPin) {
+    if (user.pin !== currentPin) {
       throw new UnauthorizedException('Current PIN is incorrect');
     }
 
     // Update PIN
     await this.prisma.user.update({
       where: { id: userId },
-      data: { pinHash: newPin },
+      data: { pin: newPin },
     });
 
     this.logger.log(`PIN changed for user: ${userId}`);

@@ -423,13 +423,13 @@ export class CommunicationsService {
     if (segment.type === 'partners') {
       const partners = await this.prisma.partner.findMany({
         where: { status: 'APPROVED' },
-        select: { id: true, contactName: true, email: true },
+        select: { id: true, name: true, primaryEmail: true },
       });
 
       return partners.map((p) => ({
         id: p.id,
-        name: p.contactName,
-        email: p.email,
+        name: p.name,
+        email: p.primaryEmail,
       }));
     }
 
