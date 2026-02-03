@@ -36,7 +36,7 @@ export class IntakeService {
     private scoringService: ScoringService,
     private progressService: ProgressService,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   // Start a new application (Section 1)
   async startApplication(dto: StartApplicationDto) {
@@ -130,9 +130,9 @@ export class IntakeService {
       where: { id },
       data: {
         ...dto,
-        // Override with normalized values
-        currentStatus: currentStatus,
-        educationLevel: educationLevel,
+        // Override with normalized values (cast to enum types)
+        currentStatus: currentStatus as CurrentStatus | undefined,
+        educationLevel: educationLevel as EducationLevel | undefined,
         intakeIncomeSource: intakeIncomeSource,
         status: ApplicantStatus.PARTIAL,
         completedSections: Math.max(applicant.completedSections, 2),

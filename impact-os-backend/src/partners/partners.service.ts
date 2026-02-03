@@ -8,7 +8,7 @@ export class PartnersService {
   constructor(
     private prisma: PrismaService,
     private emailService: EmailService,
-  ) {}
+  ) { }
 
   // Submit new partner/sponsor inquiry
   async submitInquiry(dto: SubmitPartnerInquiryDto) {
@@ -32,8 +32,15 @@ export class PartnersService {
         },
       });
 
-      // Log for notification (email to team would go here)
-      console.log(`📧 New sponsor inquiry from: ${dto.name} (${dto.email})`);
+      // Notify admin of new sponsor inquiry
+      this.emailService.sendNewPartnerNotification({
+        name: dto.name,
+        email: dto.email,
+        organizationName: dto.organizationName,
+        interestType: dto.interestType,
+        phone: dto.phone,
+        message: dto.message,
+      }).catch(err => console.warn(`Failed to send admin notification: ${err.message}`));
 
       return {
         id: inquiry.id,
@@ -54,9 +61,15 @@ export class PartnersService {
         },
       });
 
-      console.log(
-        `📧 New partner inquiry from: ${dto.organizationName || dto.name} (${dto.email})`,
-      );
+      // Notify admin of new partner inquiry
+      this.emailService.sendNewPartnerNotification({
+        name: dto.name,
+        email: dto.email,
+        organizationName: dto.organizationName,
+        interestType: dto.interestType,
+        phone: dto.phone,
+        message: dto.message,
+      }).catch(err => console.warn(`Failed to send admin notification: ${err.message}`));
 
       return {
         id: inquiry.id,

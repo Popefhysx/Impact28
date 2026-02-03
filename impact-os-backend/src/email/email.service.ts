@@ -139,9 +139,9 @@ export class EmailService {
     EmailTemplateType,
     (data: TemplateData) => EmailTemplate
   > = {
-    application_received: (data) => ({
-      subject: `We've received your application, ${data.firstName}! 🎉`,
-      html: `
+      application_received: (data) => ({
+        subject: `We've received your application, ${data.firstName}! 🎉`,
+        html: `
         <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h1 style="color: #02213D;">Application Received!</h1>
           
@@ -163,11 +163,11 @@ export class EmailService {
           <p style="color: #666;">— The Project 3:10 Team</p>
         </div>
       `,
-    }),
+      }),
 
-    application_reminder: (data) => ({
-      subject: `Don't forget to complete your application, ${data.firstName}!`,
-      html: `
+      application_reminder: (data) => ({
+        subject: `Don't forget to complete your application, ${data.firstName}!`,
+        html: `
         <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h1 style="color: #02213D;">Your application is waiting ⏳</h1>
           
@@ -186,11 +186,11 @@ export class EmailService {
           <p style="color: #666;">— The Project 3:10 Team</p>
         </div>
       `,
-    }),
+      }),
 
-    application_admitted: (data) => ({
-      subject: `🎉 Congratulations ${data.firstName}! You're in!`,
-      html: `
+      application_admitted: (data) => ({
+        subject: `🎉 Congratulations ${data.firstName}! You're in!`,
+        html: `
         <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h1 style="color: #02213D;">Welcome to Project 3:10! 🚀</h1>
           
@@ -220,11 +220,11 @@ export class EmailService {
           <p style="color: #666;">— The Project 3:10 Team</p>
         </div>
       `,
-    }),
+      }),
 
-    application_conditional: (data) => ({
-      subject: `Almost there, ${data.firstName}! One more step...`,
-      html: `
+      application_conditional: (data) => ({
+        subject: `Almost there, ${data.firstName}! One more step...`,
+        html: `
         <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h1 style="color: #02213D;">You're almost in! 🎯</h1>
           
@@ -248,11 +248,11 @@ export class EmailService {
           <p style="color: #666;">— The Project 3:10 Team</p>
         </div>
       `,
-    }),
+      }),
 
-    application_rejected: (data) => ({
-      subject: `Update on your Project 3:10 application`,
-      html: `
+      application_rejected: (data) => ({
+        subject: `Update on your Project 3:10 application`,
+        html: `
         <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h1 style="color: #02213D;">Thank you for applying</h1>
           
@@ -260,14 +260,13 @@ export class EmailService {
           
           <p>After careful review, we're unable to offer you a spot in Project 3:10 at this time.</p>
           
-          ${
-            data.rejectionReason
-              ? `
+          ${data.rejectionReason
+            ? `
           <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <p style="margin: 0;"><strong>Reason:</strong> ${data.rejectionReason}</p>
           </div>
           `
-              : ''
+            : ''
           }
           
           <p>This doesn't mean you can't succeed. Here are some free resources to help you get started:</p>
@@ -282,11 +281,11 @@ export class EmailService {
           <p style="color: #666;">— The Project 3:10 Team</p>
         </div>
       `,
-    }),
+      }),
 
-    resume_link: (data) => ({
-      subject: `Continue your application, ${data.firstName}`,
-      html: `
+      resume_link: (data) => ({
+        subject: `Continue your application, ${data.firstName}`,
+        html: `
         <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h1 style="color: #02213D;">Here's your resume link 🔗</h1>
           
@@ -305,8 +304,8 @@ export class EmailService {
           <p style="color: #666;">— The Project 3:10 Team</p>
         </div>
       `,
-    }),
-  };
+      }),
+    };
 
   // ===== SEND EMAIL WITH LOGGING =====
 
@@ -596,16 +595,15 @@ export class EmailService {
         
         <p>${tier.message}</p>
         
-        ${
-          customMessage
-            ? `
+        ${customMessage
+        ? `
         <div style="background: #f0f4f8; border-left: 4px solid #02213D; padding: 15px; margin: 20px 0;">
           <p style="margin: 0; font-style: italic;">"${customMessage}"</p>
           <p style="margin: 10px 0 0 0; font-size: 12px; color: #666;">— From our review team</p>
         </div>
         `
-            : ''
-        }
+        : ''
+      }
         
         <p>${tier.reapplyText}</p>
         
@@ -923,6 +921,207 @@ export class EmailService {
       },
     );
 
+    return result.success;
+  }
+
+  // ===== ADMIN NOTIFICATION METHODS =====
+
+  /**
+   * Get admin email address from config or fallback
+   */
+  private getAdminEmail(): string {
+    return (
+      this.configService.get<string>('ADMIN_NOTIFICATION_EMAIL') ||
+      this.configService.get<string>('FOUNDER_EMAIL') ||
+      'admin@cycle28.org'
+    );
+  }
+
+  /**
+   * Send notification to admin when a new testimonial is submitted
+   */
+  async sendNewTestimonialNotification(data: {
+    name: string;
+    quote: string;
+    role?: string;
+    company?: string;
+    location?: string;
+  }): Promise<boolean> {
+    const adminEmail = this.getAdminEmail();
+
+    const html = `
+      <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: #10B981; color: white; padding: 20px; border-radius: 12px 12px 0 0; text-align: center;">
+          <h1 style="margin: 0; font-size: 20px;">📝 New Testimonial Submitted</h1>
+        </div>
+
+        <div style="background: white; padding: 25px; border-radius: 0 0 12px 12px; border: 1px solid #e5e5e5; border-top: none;">
+          <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <p style="margin: 0; font-style: italic; color: #333; font-size: 16px; line-height: 1.6;">
+              "${data.quote}"
+            </p>
+          </div>
+          
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 8px 0; color: #666;"><strong>Name:</strong></td>
+              <td style="padding: 8px 0; color: #333;">${data.name}</td>
+            </tr>
+            ${data.role ? `
+            <tr>
+              <td style="padding: 8px 0; color: #666;"><strong>Role:</strong></td>
+              <td style="padding: 8px 0; color: #333;">${data.role}</td>
+            </tr>
+            ` : ''}
+            ${data.company ? `
+            <tr>
+              <td style="padding: 8px 0; color: #666;"><strong>Company:</strong></td>
+              <td style="padding: 8px 0; color: #333;">${data.company}</td>
+            </tr>
+            ` : ''}
+            ${data.location ? `
+            <tr>
+              <td style="padding: 8px 0; color: #666;"><strong>Location:</strong></td>
+              <td style="padding: 8px 0; color: #333;">${data.location}</td>
+            </tr>
+            ` : ''}
+          </table>
+          
+          <div style="text-align: center; margin-top: 25px;">
+            <a href="${this.configService.get<string>('ADMIN_DASHBOARD_URL') || 'https://impact.cycle28.org'}/admin/testimonials" 
+               style="background: #C4A052; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+              Review in Dashboard →
+            </a>
+          </div>
+        </div>
+        
+        <p style="color: #999; text-align: center; margin-top: 15px; font-size: 12px;">
+          This is an automated notification from Impact OS
+        </p>
+      </div>
+    `;
+
+    const subject = `📝 New Testimonial: ${data.name}`;
+
+    const result = await this.sendEmailWithContext(
+      adminEmail,
+      subject,
+      html,
+      'admin_new_testimonial',
+      {
+        triggerSource: CommunicationSource.SYSTEM,
+        recipientType: RecipientType.STAFF,
+        recipientName: 'Admin',
+      },
+    );
+
+    this.logger.log(`Admin notified of new testimonial from ${data.name}`);
+    return result.success;
+  }
+
+  /**
+   * Send notification to admin when a new partner/sponsor inquiry is submitted
+   */
+  async sendNewPartnerNotification(data: {
+    name: string;
+    email: string;
+    organizationName?: string;
+    interestType: string;
+    phone?: string;
+    message?: string;
+  }): Promise<boolean> {
+    const adminEmail = this.getAdminEmail();
+
+    // Format interest type for display
+    const typeLabels: Record<string, string> = {
+      SPONSOR_INDIVIDUAL: '💰 Individual Sponsor',
+      SPONSOR_SME: '💰 SME Sponsor',
+      SPONSOR_CORPORATE: '💰 Corporate Sponsor',
+      TRAINING_PARTNER: '📚 Training Partner',
+      EMPLOYMENT_PARTNER: '💼 Employment Partner',
+      VENUE_PARTNER: '🏢 Venue Partner',
+      CONTENT_PARTNER: '📝 Content Partner',
+      MEDIA_PARTNER: '📺 Media Partner',
+      CHURCH_PARTNER: '⛪ Church Partner',
+      SCHOOL_PARTNER: '🏫 School Partner',
+      OTHER: '🤝 Other Partnership',
+    };
+
+    const typeLabel = typeLabels[data.interestType] || data.interestType;
+    const isSponsor = data.interestType.startsWith('SPONSOR_');
+
+    const html = `
+      <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: ${isSponsor ? '#C4A052' : '#3B82F6'}; color: white; padding: 20px; border-radius: 12px 12px 0 0; text-align: center;">
+          <h1 style="margin: 0; font-size: 20px;">${isSponsor ? '💰 New Sponsor Inquiry' : '🤝 New Partner Inquiry'}</h1>
+        </div>
+
+        <div style="background: white; padding: 25px; border-radius: 0 0 12px 12px; border: 1px solid #e5e5e5; border-top: none;">
+          <div style="background: linear-gradient(135deg, #02213D 0%, #1a3a5c 100%); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+            <span style="font-size: 18px;">${typeLabel}</span>
+          </div>
+          
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 8px 0; color: #666; width: 120px;"><strong>Name:</strong></td>
+              <td style="padding: 8px 0; color: #333;">${data.name}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #666;"><strong>Email:</strong></td>
+              <td style="padding: 8px 0;"><a href="mailto:${data.email}" style="color: #3B82F6;">${data.email}</a></td>
+            </tr>
+            ${data.phone ? `
+            <tr>
+              <td style="padding: 8px 0; color: #666;"><strong>Phone:</strong></td>
+              <td style="padding: 8px 0; color: #333;">${data.phone}</td>
+            </tr>
+            ` : ''}
+            ${data.organizationName ? `
+            <tr>
+              <td style="padding: 8px 0; color: #666;"><strong>Organization:</strong></td>
+              <td style="padding: 8px 0; color: #333;">${data.organizationName}</td>
+            </tr>
+            ` : ''}
+          </table>
+          
+          ${data.message ? `
+          <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-top: 20px;">
+            <p style="margin: 0 0 8px 0; color: #666; font-size: 12px; text-transform: uppercase;"><strong>Message:</strong></p>
+            <p style="margin: 0; color: #333; line-height: 1.6;">${data.message}</p>
+          </div>
+          ` : ''}
+          
+          <div style="text-align: center; margin-top: 25px;">
+            <a href="${this.configService.get<string>('ADMIN_DASHBOARD_URL') || 'https://impact.cycle28.org'}/admin/partners" 
+               style="background: #C4A052; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+              View in Dashboard →
+            </a>
+          </div>
+        </div>
+        
+        <p style="color: #999; text-align: center; margin-top: 15px; font-size: 12px;">
+          This is an automated notification from Impact OS
+        </p>
+      </div>
+    `;
+
+    const subject = isSponsor
+      ? `💰 New Sponsor Inquiry: ${data.name}${data.organizationName ? ` (${data.organizationName})` : ''}`
+      : `🤝 New Partner Inquiry: ${data.name}${data.organizationName ? ` (${data.organizationName})` : ''}`;
+
+    const result = await this.sendEmailWithContext(
+      adminEmail,
+      subject,
+      html,
+      'admin_new_partner',
+      {
+        triggerSource: CommunicationSource.SYSTEM,
+        recipientType: RecipientType.STAFF,
+        recipientName: 'Admin',
+      },
+    );
+
+    this.logger.log(`Admin notified of new ${isSponsor ? 'sponsor' : 'partner'} inquiry from ${data.name}`);
     return result.success;
   }
 }

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma';
 import { R2Service } from '../uploads';
+import { EmailService } from '../email';
 import { SubmitTestimonialDto, UpdateTestimonialDto } from './dto';
 import { TestimonialStatus } from '@prisma/client';
 
@@ -11,7 +12,8 @@ export class TestimonialsService {
   constructor(
     private prisma: PrismaService,
     private r2: R2Service,
-  ) {}
+    private emailService: EmailService,
+  ) { }
 
   // Get all approved testimonials (for public display)
   async getApproved() {
@@ -59,6 +61,15 @@ export class TestimonialsService {
     });
 
     this.logger.log(`New testimonial submitted: ${testimonial.id}`);
+
+    // Notify admin of new submission
+    this.emailService.sendNewTestimonialNotification({
+      name: dto.name,
+      quote: dto.quote,
+      role: dto.role,
+      company: dto.company,
+      location: dto.location,
+    }).catch(err => this.logger.warn(`Failed to send admin notification: ${err.message}`));
 
     return {
       id: testimonial.id,
