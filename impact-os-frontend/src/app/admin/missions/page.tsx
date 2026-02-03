@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Select } from '@/components/ui/Select/Select';
 import styles from './page.module.css';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 // Mock data for development
 const MOCK_MISSIONS: Mission[] = [

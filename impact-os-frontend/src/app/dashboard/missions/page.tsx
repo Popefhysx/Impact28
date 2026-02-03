@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import styles from './page.module.css';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const MOCK_USER_ID = 'dev-user-123';
 
 // ==================== TYPES ====================

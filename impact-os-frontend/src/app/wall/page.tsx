@@ -110,7 +110,7 @@ export default function PublicWallPage() {
     const [posts, setPosts] = useState<WallPost[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
     useEffect(() => {
         const fetchWall = async () => {

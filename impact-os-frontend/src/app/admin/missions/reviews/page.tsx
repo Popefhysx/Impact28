@@ -5,7 +5,7 @@ import { ArrowLeft, Check, X, Clock, User, FileText, ExternalLink, Loader2 } fro
 import Link from 'next/link';
 import styles from './page.module.css';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 interface PendingReview {
     id: string;

@@ -112,7 +112,7 @@ export default function ParticipantsPage() {
     const [statusFilter, setStatusFilter] = useState('');
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
 
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
     useEffect(() => {
         const fetchParticipants = async () => {

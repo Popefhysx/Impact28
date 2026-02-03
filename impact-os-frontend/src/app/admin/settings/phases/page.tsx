@@ -5,7 +5,7 @@ import { Layers, Plus, Pencil, Trash2, ArrowUp, ArrowDown, Loader2 } from 'lucid
 import { PageHeader, Modal } from '@/components/ui';
 import styles from '../settings.module.css';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 interface Phase {
     id: string;

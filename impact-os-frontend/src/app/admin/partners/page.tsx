@@ -6,7 +6,7 @@ import { Select } from '@/components/ui/Select';
 import { AdminToolbar } from '@/components/admin/AdminToolbar';
 import styles from './page.module.css';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 // Types - unified partner inquiry
 interface PartnerInquiry {

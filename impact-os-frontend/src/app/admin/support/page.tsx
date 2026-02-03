@@ -118,7 +118,7 @@ export default function AdminSupportQueuePage() {
     useEffect(() => {
         const fetchRequests = async () => {
             try {
-                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
                 const token = localStorage.getItem('auth_token');
                 const response = await fetch(`${API_URL}/support-request/admin/all`, {
                     headers: {

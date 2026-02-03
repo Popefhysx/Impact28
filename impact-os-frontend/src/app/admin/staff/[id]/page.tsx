@@ -71,7 +71,7 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['program']));
     const [hasChanges, setHasChanges] = useState(false);
 
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
     // Mock data for demonstration
     const mockStaff: StaffDetail = {

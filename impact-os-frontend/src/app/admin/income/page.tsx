@@ -85,7 +85,7 @@ export default function IncomeVerificationPage() {
     const [loading, setLoading] = useState(true);
     const [selectedIncome, setSelectedIncome] = useState<string | null>(null);
 
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
     useEffect(() => {
         const fetchIncomes = async () => {

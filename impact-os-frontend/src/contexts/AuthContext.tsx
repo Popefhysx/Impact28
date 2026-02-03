@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const fetchUser = async (authToken: string) => {
         try {
-            const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+            const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
             const res = await fetch(`${API_BASE}/auth/me`, {
                 headers: { Authorization: `Bearer ${authToken}` }
             });

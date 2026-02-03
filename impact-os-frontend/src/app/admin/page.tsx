@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FileText, Users, DollarSign, Target, MessageSquareQuote, Loader2, AlertCircle, Handshake } from 'lucide-react';
 import styles from './page.module.css';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 interface DashboardStats {
     applicants: { total: number; pending: number; admitted: number; conditional: number; rejected: number; scoring: number };
