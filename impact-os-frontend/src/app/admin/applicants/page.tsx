@@ -178,7 +178,9 @@ export default function ApplicantsPage() {
 
                 if (applicantsRes.ok) {
                     const data = await applicantsRes.json();
-                    setApplicants(data?.length > 0 ? data : (process.env.NODE_ENV !== 'production' ? mockApplicants : []));
+                    // Backend returns { applicants: [], total, limit, offset }
+                    const applicantsList = data?.applicants || data;
+                    setApplicants(applicantsList?.length > 0 ? applicantsList : (process.env.NODE_ENV !== 'production' ? mockApplicants : []));
                 } else if (process.env.NODE_ENV !== 'production') {
                     setApplicants(mockApplicants);
                 } else {
