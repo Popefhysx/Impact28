@@ -15,7 +15,7 @@ interface DashboardStats {
 }
 
 interface RecentActivity {
-    type: 'application' | 'income' | 'mission';
+    type: 'application' | 'income' | 'mission' | 'testimonial';
     description: string;
     timestamp: string;
     applicantId?: string;
@@ -27,6 +27,7 @@ const getActivityIcon = (type: string) => {
         case 'application': return <FileText size={16} />;
         case 'income': return <DollarSign size={16} />;
         case 'mission': return <Target size={16} />;
+        case 'testimonial': return <MessageSquareQuote size={16} />;
         default: return <FileText size={16} />;
     }
 };

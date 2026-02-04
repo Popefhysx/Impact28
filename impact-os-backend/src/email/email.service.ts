@@ -1,6 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma';
+import { NotificationRoutingService } from '../notifications';
 import {
   CommunicationSource,
   RecipientType,
@@ -67,6 +68,8 @@ export class EmailService {
   constructor(
     private configService: ConfigService,
     private prisma: PrismaService,
+    @Inject(forwardRef(() => NotificationRoutingService))
+    private notificationRouting: NotificationRoutingService,
   ) {
     this.resendApiKey = this.configService.get<string>('RESEND_API_KEY') || '';
   }
@@ -947,55 +950,68 @@ export class EmailService {
     company?: string;
     location?: string;
   }): Promise<boolean> {
-    const adminEmail = this.getAdminEmail();
+    // Get all super admin emails via routing service
+    const adminEmails = await this.notificationRouting.getRecipients('testimonials');
+
+    // Fallback to config email if no super admins found
+    if (adminEmails.length === 0) {
+      adminEmails.push(this.getAdminEmail());
+    }
 
     const html = `
-      <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: #10B981; color: white; padding: 20px; border-radius: 12px 12px 0 0; text-align: center;">
-          <h1 style="margin: 0; font-size: 20px;">📝 New Testimonial Submitted</h1>
+      <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f8f9fa;">
+        <!-- Header with Navy gradient -->
+        <div style="background: linear-gradient(135deg, #02213D 0%, #1a3a5c 100%); color: white; padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+          <div style="font-size: 32px; margin-bottom: 8px;">💬</div>
+          <h1 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.3px;">New Testimonial Submitted</h1>
         </div>
 
-        <div style="background: white; padding: 25px; border-radius: 0 0 12px 12px; border: 1px solid #e5e5e5; border-top: none;">
-          <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-            <p style="margin: 0; font-style: italic; color: #333; font-size: 16px; line-height: 1.6;">
+        <!-- Content Card -->
+        <div style="background: white; padding: 28px; border-radius: 0 0 12px 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+          <!-- Quote Block with gold accent border -->
+          <div style="border-left: 4px solid #C4A052; background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%); padding: 20px 24px; border-radius: 0 8px 8px 0; margin-bottom: 24px;">
+            <p style="margin: 0; font-style: italic; color: #1a1a1a; font-size: 16px; line-height: 1.7;">
               "${data.quote}"
             </p>
           </div>
           
-          <table style="width: 100%; border-collapse: collapse;">
+          <!-- Details Table -->
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
             <tr>
-              <td style="padding: 8px 0; color: #666;"><strong>Name:</strong></td>
-              <td style="padding: 8px 0; color: #333;">${data.name}</td>
+              <td style="padding: 10px 0; color: #666; width: 100px; font-size: 14px;"><strong>Name:</strong></td>
+              <td style="padding: 10px 0; color: #1a1a1a; font-size: 14px; font-weight: 500;">${data.name}</td>
             </tr>
             ${data.role ? `
             <tr>
-              <td style="padding: 8px 0; color: #666;"><strong>Role:</strong></td>
-              <td style="padding: 8px 0; color: #333;">${data.role}</td>
+              <td style="padding: 10px 0; color: #666; font-size: 14px;"><strong>Role:</strong></td>
+              <td style="padding: 10px 0; color: #1a1a1a; font-size: 14px;">${data.role}</td>
             </tr>
             ` : ''}
             ${data.company ? `
             <tr>
-              <td style="padding: 8px 0; color: #666;"><strong>Company:</strong></td>
-              <td style="padding: 8px 0; color: #333;">${data.company}</td>
+              <td style="padding: 10px 0; color: #666; font-size: 14px;"><strong>Company:</strong></td>
+              <td style="padding: 10px 0; color: #1a1a1a; font-size: 14px;">${data.company}</td>
             </tr>
             ` : ''}
             ${data.location ? `
             <tr>
-              <td style="padding: 8px 0; color: #666;"><strong>Location:</strong></td>
-              <td style="padding: 8px 0; color: #333;">${data.location}</td>
+              <td style="padding: 10px 0; color: #666; font-size: 14px;"><strong>Location:</strong></td>
+              <td style="padding: 10px 0; color: #1a1a1a; font-size: 14px;">${data.location}</td>
             </tr>
             ` : ''}
           </table>
           
-          <div style="text-align: center; margin-top: 25px;">
+          <!-- CTA Button with gold color -->
+          <div style="text-align: center;">
             <a href="${this.configService.get<string>('ADMIN_DASHBOARD_URL') || 'https://impact.cycle28.org'}/admin/testimonials" 
-               style="background: #C4A052; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+               style="background: linear-gradient(135deg, #C4A052 0%, #d4b062 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block; font-size: 14px; letter-spacing: 0.3px; box-shadow: 0 2px 8px rgba(196, 160, 82, 0.3);">
               Review in Dashboard →
             </a>
           </div>
         </div>
         
-        <p style="color: #999; text-align: center; margin-top: 15px; font-size: 12px;">
+        <!-- Footer -->
+        <p style="color: #888; text-align: center; margin-top: 20px; font-size: 12px;">
           This is an automated notification from Impact OS
         </p>
       </div>
@@ -1003,20 +1019,28 @@ export class EmailService {
 
     const subject = `📝 New Testimonial: ${data.name}`;
 
-    const result = await this.sendEmailWithContext(
-      adminEmail,
-      subject,
-      html,
-      'admin_new_testimonial',
-      {
-        triggerSource: CommunicationSource.SYSTEM,
-        recipientType: RecipientType.STAFF,
-        recipientName: 'Admin',
-      },
+    // Send to all super admins
+    const results = await Promise.all(
+      adminEmails.map((email) =>
+        this.sendEmailWithContext(
+          email,
+          subject,
+          html,
+          'admin_new_testimonial',
+          {
+            triggerSource: CommunicationSource.SYSTEM,
+            recipientType: RecipientType.STAFF,
+            recipientName: 'Admin',
+          },
+        ),
+      ),
     );
 
-    this.logger.log(`Admin notified of new testimonial from ${data.name}`);
-    return result.success;
+    const successCount = results.filter((r) => r.success).length;
+    this.logger.log(
+      `Admin notification sent for testimonial from ${data.name}: ${successCount}/${adminEmails.length} emails sent`,
+    );
+    return successCount > 0;
   }
 
   /**

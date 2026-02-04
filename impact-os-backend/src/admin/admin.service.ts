@@ -14,6 +14,7 @@ import {
   MissionStatus,
   SupportRequestStatus,
   SupportDenialReason,
+  TestimonialStatus,
 } from '@prisma/client';
 
 /**
@@ -50,7 +51,7 @@ export interface DashboardStats {
 }
 
 export interface RecentActivity {
-  type: 'application' | 'income' | 'mission' | 'level_up';
+  type: 'application' | 'income' | 'mission' | 'level_up' | 'testimonial';
   userId?: string;
   applicantId?: string;
   description: string;
@@ -68,7 +69,7 @@ export class AdminService {
     private admissionService: AdmissionService,
     private assessmentService: AssessmentService,
     private missionEngine: MissionEngineService,
-  ) {}
+  ) { }
 
   /**
    * Get dashboard statistics
@@ -227,6 +228,21 @@ export class AdminService {
         userId: income.userId,
         description: `${income.user.firstName} income verified: $${Number(income.amountUSD || 0).toFixed(2)}`,
         timestamp: income.verifiedAt || new Date(),
+      });
+    }
+
+    // Get pending testimonials
+    const pendingTestimonials = await this.prisma.testimonial.findMany({
+      where: { status: TestimonialStatus.PENDING },
+      orderBy: { submittedAt: 'desc' },
+      take: 5,
+    });
+
+    for (const testimonial of pendingTestimonials) {
+      activities.push({
+        type: 'testimonial',
+        description: `New testimonial from ${testimonial.name}`,
+        timestamp: testimonial.submittedAt,
       });
     }
 
@@ -726,8 +742,8 @@ export class AdminService {
       if (!options.denialReasonCode) {
         throw new BadRequestException(
           'Denial reason code is required when denying a support request. ' +
-            'Valid codes: INSUFFICIENT_MOMENTUM, NO_ACTIVE_MISSION, PHASE_MISMATCH, ' +
-            'COOLDOWN_ACTIVE, BEHAVIORAL_FLAG, BUDGET_EXHAUSTED, DUPLICATE_REQUEST, MANUAL_ADMIN_DECISION',
+          'Valid codes: INSUFFICIENT_MOMENTUM, NO_ACTIVE_MISSION, PHASE_MISMATCH, ' +
+          'COOLDOWN_ACTIVE, BEHAVIORAL_FLAG, BUDGET_EXHAUSTED, DUPLICATE_REQUEST, MANUAL_ADMIN_DECISION',
         );
       }
     }
@@ -761,12 +777,12 @@ export class AdminService {
 
     this.logger.log(
       `Support request ${requestId} ${decision}: ` +
-        `status=${updated.status}, ` +
-        (decision === 'DENY' ? `reason=${options.denialReasonCode}, ` : '') +
-        (decision === 'APPROVE'
-          ? `amount=${options.amount}, expires=${expiresAt?.toISOString()}, `
-          : '') +
-        `admin=${options.adminId || 'admin'}`,
+      `status=${updated.status}, ` +
+      (decision === 'DENY' ? `reason=${options.denialReasonCode}, ` : '') +
+      (decision === 'APPROVE'
+        ? `amount=${options.amount}, expires=${expiresAt?.toISOString()}, `
+        : '') +
+      `admin=${options.adminId || 'admin'}`,
     );
 
     return {
