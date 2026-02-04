@@ -18,11 +18,12 @@ import {
   RequireCapability,
   RequireCategory,
 } from '../staff/guards';
+import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('admin')
-@UseGuards(CapabilityGuard)
+@UseGuards(AuthGuard, CapabilityGuard)
 export class AdminController {
-  constructor(private adminService: AdminService) {}
+  constructor(private adminService: AdminService) { }
 
   // ===== DASHBOARD =====
 
