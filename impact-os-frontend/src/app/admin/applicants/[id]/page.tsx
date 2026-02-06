@@ -54,6 +54,26 @@ interface ApplicantDetail {
     psnPrimaryConstraint?: 'DATA' | 'TRANSPORT' | 'TOOLS' | 'OTHER';
 }
 
+// Helper: Convert 0-1 decimal score to percentage string
+function formatScore(score: number | undefined): string {
+    if (score === undefined || score === null) return '—';
+    // Scores are stored as 0-1 decimals, convert to percentage
+    const percent = Math.round(score * 100);
+    return `${percent}%`;
+}
+
+// Helper: Format weeklyHours enum to readable text
+function formatWeeklyHours(hours: string | number | undefined): string {
+    if (!hours) return '—';
+    const hoursMap: Record<string, string> = {
+        'UNDER_5': 'Under 5 hours',
+        'FIVE_TO_TEN': '5-10 hours',
+        'TEN_TO_TWENTY': '10-20 hours',
+        'OVER_TWENTY': '20+ hours',
+    };
+    return hoursMap[String(hours)] || String(hours);
+}
+
 function SkillTriadMini({ technical, soft, commercial }: { technical: number; soft: number; commercial: number }) {
     const size = 120;
     const centerX = size / 2;
@@ -253,7 +273,7 @@ export default function ApplicantDetailPage() {
                             </div>
                             <div className={styles.infoItem}>
                                 <label>Weekly Hours</label>
-                                <span>{applicant.weeklyHours || '—'} hrs</span>
+                                <span>{formatWeeklyHours(applicant.weeklyHours)}</span>
                             </div>
                         </div>
                     </section>
@@ -293,37 +313,37 @@ export default function ApplicantDetailPage() {
                         <div className={styles.scoreCard}>
                             <div className={styles.mainScore}>
                                 <span className={styles.scoreLabel}>Readiness Score</span>
-                                <span className={styles.scoreValue}>{applicant.readinessScore}%</span>
+                                <span className={styles.scoreValue}>{formatScore(applicant.readinessScore)}</span>
                             </div>
 
                             <div className={styles.scoreBreakdown}>
                                 <div className={styles.scoreItem}>
                                     <span>Action Orientation</span>
                                     <div className={styles.scoreBar}>
-                                        <div style={{ width: `${applicant.actionOrientation}%` }} />
+                                        <div style={{ width: `${(applicant.actionOrientation || 0) * 100}%` }} />
                                     </div>
-                                    <span>{applicant.actionOrientation}%</span>
+                                    <span>{formatScore(applicant.actionOrientation)}</span>
                                 </div>
                                 <div className={styles.scoreItem}>
                                     <span>Market Awareness</span>
                                     <div className={styles.scoreBar}>
-                                        <div style={{ width: `${applicant.marketAwareness}%` }} />
+                                        <div style={{ width: `${(applicant.marketAwareness || 0) * 100}%` }} />
                                     </div>
-                                    <span>{applicant.marketAwareness}%</span>
+                                    <span>{formatScore(applicant.marketAwareness)}</span>
                                 </div>
                                 <div className={styles.scoreItem}>
                                     <span>Rejection Resilience</span>
                                     <div className={styles.scoreBar}>
-                                        <div style={{ width: `${applicant.rejectionResilience}%` }} />
+                                        <div style={{ width: `${(applicant.rejectionResilience || 0) * 100}%` }} />
                                     </div>
-                                    <span>{applicant.rejectionResilience}%</span>
+                                    <span>{formatScore(applicant.rejectionResilience)}</span>
                                 </div>
                                 <div className={styles.scoreItem}>
                                     <span>Commitment Signal</span>
                                     <div className={styles.scoreBar}>
-                                        <div style={{ width: `${applicant.commitmentSignal}%` }} />
+                                        <div style={{ width: `${(applicant.commitmentSignal || 0) * 100}%` }} />
                                     </div>
-                                    <span>{applicant.commitmentSignal}%</span>
+                                    <span>{formatScore(applicant.commitmentSignal)}</span>
                                 </div>
                             </div>
                         </div>

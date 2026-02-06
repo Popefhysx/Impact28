@@ -30,6 +30,14 @@ interface PipelineStats {
     conditional: number;
 }
 
+// Helper: Convert 0-1 decimal score to percentage string
+function formatScore(score: number | null): string {
+    if (score === null || score === undefined) return '—';
+    // Scores are stored as 0-1 decimals, convert to percentage
+    const percent = Math.round(score * 100);
+    return `${percent}%`;
+}
+
 const statusColors: Record<string, string> = {
     'DRAFT': 'badge-muted',
     'PENDING': 'badge-warning',
@@ -462,7 +470,7 @@ export default function ApplicantsPage() {
                                         <td>
                                             {applicant.readinessScore !== null ? (
                                                 <span className={styles.scoreValue}>
-                                                    {applicant.readinessScore}%
+                                                    {formatScore(applicant.readinessScore)}
                                                 </span>
                                             ) : (
                                                 <span className={styles.noScore}>—</span>
@@ -549,7 +557,7 @@ export default function ApplicantsPage() {
                                     <div className={styles.cardRow}>
                                         <span className={styles.cardLabel}>Score</span>
                                         <span className={styles.scoreValue}>
-                                            {applicant.readinessScore !== null ? `${applicant.readinessScore}%` : '—'}
+                                            {formatScore(applicant.readinessScore)}
                                         </span>
                                     </div>
                                     <div className={styles.cardRow}>

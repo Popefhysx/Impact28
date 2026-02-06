@@ -288,6 +288,7 @@ export class AdminService {
           email: true,
           status: true,
           readinessScore: true,
+          aiRecommendation: true,
           skillTrack: true,
           submittedAt: true,
           reviewedAt: true,
