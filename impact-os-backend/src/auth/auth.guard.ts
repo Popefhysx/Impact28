@@ -11,11 +11,20 @@ import {
   ExecutionContext,
   UnauthorizedException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
+
+interface TokenPayload {
+  userId: string;
+  email: string;
+}
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private jwtService: JwtService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -31,13 +40,21 @@ export class AuthGuard implements CanActivate {
       ? authHeader.substring(7)
       : authHeader;
 
-    // Verify token and get user
+    // Verify and decode JWT token
+    let payload: TokenPayload;
     try {
-      const user = await this.authService.getCurrentUser(token);
+      payload = this.jwtService.verify<TokenPayload>(token);
+    } catch {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    // Get user by extracted userId
+    try {
+      const user = await this.authService.getCurrentUser(payload.userId);
       request.user = user;
       return true;
-    } catch (error) {
-      throw new UnauthorizedException('Invalid or expired token');
+    } catch {
+      throw new UnauthorizedException('User not found or inactive');
     }
   }
 }
