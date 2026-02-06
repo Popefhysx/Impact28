@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma';
 import { ConfigService } from '@nestjs/config';
 import { ApplicantStatus, RejectionReason, Applicant } from '@prisma/client';
 import { AdmissionService } from '../admission';
+import { AssessmentService } from '../assessment';
 
 /**
  * AI Scoring Service
@@ -42,8 +43,16 @@ export class ScoringService {
     private config: ConfigService,
     @Inject(forwardRef(() => AdmissionService))
     private admissionService: AdmissionService,
+    @Inject(forwardRef(() => AssessmentService))
+    private assessmentService: AssessmentService,
   ) {
     this.anthropicApiKey = this.config.get<string>('ANTHROPIC_API_KEY');
+    // Log API key status on startup
+    if (this.anthropicApiKey) {
+      this.logger.log('AI scoring enabled (ANTHROPIC_API_KEY configured)');
+    } else {
+      this.logger.warn('AI scoring disabled - ANTHROPIC_API_KEY not configured, using rule-based scoring');
+    }
   }
 
   /**
@@ -97,6 +106,16 @@ export class ScoringService {
       this.logger.log(
         `Scored applicant ${applicantId}: ${result.recommendation} (${result.readinessScore.toFixed(2)})`,
       );
+
+      // Run assessment to calculate Skill Triad, offer type, and eligibility
+      // This must happen BEFORE admission processing so all data is available
+      try {
+        await this.assessmentService.assessApplicant(applicantId);
+        this.logger.log(`Assessed applicant ${applicantId}: Skill Triad and offer calculated`);
+      } catch (assessError) {
+        this.logger.error(`Assessment failed for ${applicantId}: ${assessError}`);
+        // Continue to admission even if assessment fails - admin can review manually
+      }
 
       // Trigger admission processing (emails, conditional tasks) async
       this.admissionService.processAdmission(applicantId).catch((error) => {
@@ -410,7 +429,9 @@ Return JSON only:
       });
 
       if (!response.ok) {
-        throw new Error(`Claude API error: ${response.status}`);
+        const errorBody = await response.text();
+        this.logger.error(`Claude API returned ${response.status}: ${errorBody}`);
+        throw new Error(`Claude API error: ${response.status} - ${errorBody}`);
       }
 
       const data = await response.json();
@@ -468,7 +489,14 @@ Return JSON only:
         },
       };
     } catch (error) {
-      this.logger.warn(`AI scoring failed, falling back to rules: ${error}`);
+      // Detailed error logging for debugging
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`AI scoring failed for applicant, falling back to rules.`);
+      this.logger.error(`Error: ${errorMessage}`);
+      if (errorStack) {
+        this.logger.error(`Stack: ${errorStack}`);
+      }
       return this.scoreWithRules(applicant);
     }
   }
