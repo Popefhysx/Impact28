@@ -107,62 +107,72 @@ export default function ApplicantDetailPage() {
     const [notes, setNotes] = useState('');
 
     useEffect(() => {
-        // Mock data - will connect to backend
-        const mockApplicant: ApplicantDetail = {
-            id: params.id as string,
-            email: 'adaeze@email.com',
-            firstName: 'Adaeze',
-            lastName: 'Okonkwo',
-            phone: '+234 803 123 4567',
-            country: 'Nigeria',
-            city: 'Lagos',
-            currentStatus: 'UNEMPLOYED',
-            weeklyHours: 30,
-            skillTrack: 'DESIGN',
-            technicalProbe: 'I have been learning UI/UX design for 6 months through YouTube tutorials and Figma practice. I created a portfolio of 5 app redesign concepts and recently completed a Google UX certificate. I understand design thinking, wireframing, and prototyping fundamentals.',
-            commercialProbe: 'I helped my cousin redesign their small business logo for free to build my portfolio. I have been applying to freelance jobs on Fiverr but haven\'t landed a paying client yet. I understand that I need to prove my skills with real work.',
-            exposureProbe: 'I have faced many rejections in job applications which was discouraging. But I realized each rejection teaches me something. I started asking for feedback and improved my approach. Now I see rejection as data, not defeat.',
-            commitmentProbe: 'I am ready to commit 30+ hours weekly because this is my priority. I have arranged my schedule to minimize distractions. My family supports my decision to focus on building this skill. I understand this is a 90-day intensive program.',
-            readinessScore: 78,
-            actionOrientation: 72,
-            marketAwareness: 65,
-            rejectionResilience: 81,
-            commitmentSignal: 85,
-            riskFlags: ['LOW_COMMERCIAL_EXPOSURE'],
-            aiRecommendation: 'ADMIT',
-            triadTechnical: 65,
-            triadSoft: 55,
-            triadCommercial: 35,
-            offerType: 'FULL_SUPPORT',
-            receivesStipend: true,
-            status: 'SCORED',
-            submittedAt: '2026-01-25T14:30:00Z',
-            // PSN Data
-            psnLevel: 'HIGH',
-            psnScore: 78,
-            psnConfidence: 0.85,
-            psnPrimaryConstraint: 'DATA',
+        const fetchApplicant = async () => {
+            try {
+                const token = localStorage.getItem('impact_token');
+                const response = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_URL}/admin/applicants/${params.id}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch applicant');
+                }
+
+                const data = await response.json();
+                setApplicant({
+                    ...data,
+                    phone: data.whatsapp,
+                    city: data.state,
+                });
+            } catch (error) {
+                console.error('Error fetching applicant:', error);
+            } finally {
+                setLoading(false);
+            }
         };
 
-        setTimeout(() => {
-            setApplicant(mockApplicant);
-            setLoading(false);
-        }, 300);
+        if (params.id) {
+            fetchApplicant();
+        }
     }, [params.id]);
 
     const handleDecision = async (decision: 'ADMITTED' | 'CONDITIONAL' | 'REJECTED') => {
+        if (!applicant) return;
+
         setDeciding(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        try {
+            const token = localStorage.getItem('impact_token');
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/admin/applicants/${applicant.id}/decision`,
+                {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ decision, notes }),
+                }
+            );
 
-        // In real implementation, call the API
-        // await fetch(`/api/admin/applicants/${applicant?.id}/decision`, {
-        //     method: 'POST',
-        //     body: JSON.stringify({ decision, notes }),
-        // });
+            if (!response.ok) {
+                throw new Error('Failed to make decision');
+            }
 
-        alert(`Decision: ${decision}\nNotes: ${notes || '(none)'}`);
-        router.push('/admin/applicants');
+            const result = await response.json();
+            alert(`Decision: ${decision}\n${result.message}`);
+            router.push('/admin/applicants');
+        } catch (error) {
+            console.error('Error making decision:', error);
+            alert('Failed to save decision. Please try again.');
+        } finally {
+            setDeciding(false);
+        }
     };
 
     if (loading) {
