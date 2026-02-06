@@ -225,14 +225,29 @@ export class IntakeService {
         ...this.defaultSelect,
         email: true,
         firstName: true,
+        lastName: true,
+        skillTrack: true,
       },
     });
 
-    // Send confirmation email
+    // Send confirmation email to applicant
     await this.emailService.sendApplicationReceived(
       submitted.email,
       submitted.firstName,
     );
+
+    // Send admin alert email (async, non-blocking)
+    this.emailService
+      .sendAdminNewApplicationAlert({
+        firstName: submitted.firstName,
+        lastName: submitted.lastName || '',
+        email: submitted.email,
+        skillTrack: submitted.skillTrack || undefined,
+        applicantId: submitted.id,
+      })
+      .catch((error: Error) => {
+        this.logger.error(`Admin alert failed: ${error.message}`);
+      });
 
     // Trigger AI scoring (async, non-blocking)
     this.scoringService

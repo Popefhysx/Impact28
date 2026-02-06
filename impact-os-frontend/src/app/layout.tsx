@@ -4,10 +4,10 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { PermissionsProvider } from "@/contexts/PermissionsContext";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://impact28.vercel.app"),
+  metadataBase: new URL("https://app.cycle28.org"),
   icons: {
-    icon: "/triadOG.png",
-    apple: "/triadOG.png",
+    icon: "/cycle28-logo.png",
+    apple: "/cycle28-logo.png",
   },
   title: {
     default: "Impact OS",
@@ -23,10 +23,10 @@ export const metadata: Metadata = {
     siteName: "Impact OS",
     images: [
       {
-        url: "/triad.webp",
+        url: "/cycle28-logo.png",
         width: 1200,
         height: 630,
-        alt: "Impact OS - Skill Triad",
+        alt: "Cycle 28 - Impact OS",
       },
     ],
     type: "website",
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
       template: "%s | Impact OS",
     },
     description: "Behavioral Operating System for Economic Transformation",
-    images: ["/triad.webp"],
+    images: ["/cycle28-logo.png"],
   },
 };
 

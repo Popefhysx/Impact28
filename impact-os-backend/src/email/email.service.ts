@@ -523,6 +523,74 @@ export class EmailService {
   }
 
   /**
+   * Send admin alert for new application submission
+   */
+  async sendAdminNewApplicationAlert(applicantData: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    skillTrack?: string;
+    applicantId: string;
+  }): Promise<void> {
+    const { firstName, lastName, email, skillTrack, applicantId } = applicantData;
+
+    // Get admin email from config or use default
+    const adminEmail = this.configService.get<string>('ADMIN_ALERT_EMAIL') || 'ark@diranx.com';
+
+    const html = `
+      <div style="font-family: 'Jost', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px;">
+        <div style="background: #02213D; padding: 24px; border-radius: 12px 12px 0 0;">
+          <h1 style="color: #C4A052; margin: 0; font-size: 22px;">🔔 New Application Submitted</h1>
+        </div>
+        <div style="background: #ffffff; padding: 24px; border-radius: 0 0 12px 12px;">
+          <p style="color: #333; font-size: 16px; margin-bottom: 20px;">
+            A new application has been submitted and is ready for review.
+          </p>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #eee; color: #666;">Name</td>
+              <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: 600; color: #02213D;">${firstName} ${lastName}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #eee; color: #666;">Email</td>
+              <td style="padding: 10px; border-bottom: 1px solid #eee; color: #02213D;">${email}</td>
+            </tr>
+            ${skillTrack ? `
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #eee; color: #666;">Skill Track</td>
+              <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: 600; color: #02213D;">${skillTrack}</td>
+            </tr>
+            ` : ''}
+          </table>
+          <a href="https://app.cycle28.org/admin/applicants/${applicantId}" 
+             style="display: inline-block; background: #C4A052; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">
+            Review Application →
+          </a>
+        </div>
+      </div>
+    `;
+
+    try {
+      await this.sendEmailWithContext(
+        adminEmail,
+        `New Application: ${firstName} ${lastName}`,
+        html,
+        'admin_new_application',
+        {
+          triggerSource: CommunicationSource.SYSTEM,
+          recipientType: RecipientType.STAFF,
+          recipientName: 'Admin',
+          linkedEntityType: 'applicant',
+          linkedEntityId: applicantId,
+        },
+      );
+      this.logger.log(`Admin alert sent for new application: ${firstName} ${lastName}`);
+    } catch (error) {
+      this.logger.error(`Failed to send admin alert: ${error}`);
+    }
+  }
+
+  /**
    * Send readiness-tiered rejection email with personalized messaging
    */
   async sendReadinessRejectionEmail(
