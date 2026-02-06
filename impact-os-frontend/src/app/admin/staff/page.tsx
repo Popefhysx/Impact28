@@ -261,9 +261,13 @@ export default function StaffPage() {
 
         setInviteLoading(true);
         try {
+            const token = localStorage.getItem('auth_token');
             const response = await fetch(`${API_BASE}/staff/invite`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({
                     email: inviteEmail,
                     category: inviteCategory,
@@ -272,22 +276,32 @@ export default function StaffPage() {
                 }),
             });
 
-            if (response.ok) {
-                // Refresh staff list
-                const refreshRes = await fetch(`${API_BASE}/staff`);
-                if (refreshRes.ok) {
-                    const data = await refreshRes.json();
-                    setStaffMembers(data.staff || []);
-                }
-                // Reset form
-                setInviteEmail('');
-                setInviteCategory('STAFF');
-                setInviteTemplate('');
-                setInviteCohorts([]);
-                setShowInviteModal(false);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `Failed to send invite (${response.status})`);
             }
+
+            // Refresh staff list
+            const refreshRes = await fetch(`${API_BASE}/staff`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            if (refreshRes.ok) {
+                const data = await refreshRes.json();
+                setStaffMembers(data.staff || []);
+            }
+
+            // Reset form and close modal
+            setInviteEmail('');
+            setInviteCategory('STAFF');
+            setInviteTemplate('');
+            setInviteCohorts([]);
+            setShowInviteModal(false);
+
+            // Show success feedback
+            alert('Invite sent successfully!');
         } catch (error) {
             console.error('Invite failed:', error);
+            alert(error instanceof Error ? error.message : 'Failed to send invite. Please try again.');
         } finally {
             setInviteLoading(false);
         }
