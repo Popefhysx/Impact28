@@ -1,4 +1,4 @@
-import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma';
 import { NotificationRoutingService } from '../notifications';
@@ -68,7 +68,6 @@ export class EmailService {
   constructor(
     private configService: ConfigService,
     private prisma: PrismaService,
-    @Inject(forwardRef(() => NotificationRoutingService))
     private notificationRouting: NotificationRoutingService,
   ) {
     this.resendApiKey = this.configService.get<string>('RESEND_API_KEY') || '';
