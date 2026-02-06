@@ -6,8 +6,8 @@ import { PermissionsProvider } from "@/contexts/PermissionsContext";
 export const metadata: Metadata = {
   metadataBase: new URL("https://app.cycle28.org"),
   icons: {
-    icon: "/cycle28-logo.png",
-    apple: "/cycle28-logo.png",
+    icon: "/cycle28-logo.png?v=2",
+    apple: "/cycle28-logo.png?v=2",
   },
   title: {
     default: "Impact OS",

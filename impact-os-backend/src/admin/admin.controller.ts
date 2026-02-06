@@ -8,6 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
+import { ScoringService } from '../scoring/scoring.service';
 import {
   ApplicantStatus,
   IdentityLevel,
@@ -23,7 +24,10 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 @Controller('admin')
 @UseGuards(JwtAuthGuard, CapabilityGuard)
 export class AdminController {
-  constructor(private adminService: AdminService) { }
+  constructor(
+    private adminService: AdminService,
+    private scoringService: ScoringService,
+  ) { }
 
   // ===== DASHBOARD =====
 
@@ -104,6 +108,27 @@ export class AdminController {
       customMessage,
       isCapacityRejection,
     });
+  }
+
+  @Post('applicants/:id/rescore')
+  @RequireCapability('admissions.manage')
+  @RequireCategory('ADMIN')
+  async rescoreApplicant(@Param('id') id: string): Promise<{
+    success: boolean;
+    message: string;
+    method: string;
+    readinessScore: number;
+    recommendation: string;
+  }> {
+    const result = await this.scoringService.scoreApplicant(id);
+    const method = (result.diagnosticReport as { method?: string })?.method || 'unknown';
+    return {
+      success: true,
+      message: `Re-scored applicant using ${method} method`,
+      method,
+      readinessScore: result.readinessScore,
+      recommendation: result.recommendation,
+    };
   }
 
   // ===== USERS =====
