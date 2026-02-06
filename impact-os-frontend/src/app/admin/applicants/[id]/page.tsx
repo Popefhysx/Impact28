@@ -109,7 +109,7 @@ export default function ApplicantDetailPage() {
     useEffect(() => {
         const fetchApplicant = async () => {
             try {
-                const token = localStorage.getItem('impact_token');
+                const token = localStorage.getItem('auth_token');
                 const response = await fetch(
                     `${process.env.NEXT_PUBLIC_API_URL}/admin/applicants/${params.id}`,
                     {
@@ -147,7 +147,7 @@ export default function ApplicantDetailPage() {
 
         setDeciding(true);
         try {
-            const token = localStorage.getItem('impact_token');
+            const token = localStorage.getItem('auth_token');
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/admin/applicants/${applicant.id}/decision`,
                 {
