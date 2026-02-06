@@ -305,8 +305,8 @@
 /* Recommendation */
 .recommendation {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: var(--space-sm);
 }
 
 .recommendation h3 {
@@ -315,9 +315,35 @@
 }
 
 .recommendation .badge {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 4px;
+    width: fit-content;
+}
+
+/* Explanation Box */
+.explanationBox {
+    margin-top: var(--space-sm);
+    padding: var(--space-sm);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--gold-warm);
+}
+
+.explanationText {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    margin: 0 0 var(--space-xs) 0;
+}
+
+.methodBadge {
+    display: inline-block;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 2px 6px;
+    background: var(--bg-primary);
+    border-radius: var(--radius-xs);
 }
 
 /* Skill Triad */

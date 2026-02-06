@@ -260,6 +260,14 @@ export class ScoringService {
       recommendation = 'REJECT';
     }
 
+    // Generate explanation for the recommendation
+    const explanation = this.generateExplanation(
+      recommendation,
+      readinessScore,
+      { actionOrientation, marketAwareness, rejectionResilience, commitmentSignal },
+      riskFlags,
+    );
+
     return {
       readinessScore,
       scores: {
@@ -273,6 +281,7 @@ export class ScoringService {
       diagnosticReport: {
         method: 'RULE_BASED',
         timestamp: new Date().toISOString(),
+        explanation,
         probeAnalysis: {
           technical: {
             text: applicant.technicalProbe,
@@ -298,6 +307,73 @@ export class ScoringService {
         },
       },
     };
+  }
+
+  /**
+   * Generate a human-readable explanation for the recommendation
+   */
+  private generateExplanation(
+    recommendation: string,
+    readinessScore: number,
+    scores: ProbeScores,
+    riskFlags: string[],
+  ): string {
+    const scorePercent = Math.round(readinessScore * 100);
+    const parts: string[] = [];
+
+    // Main recommendation reason
+    switch (recommendation) {
+      case 'ADMIT':
+        parts.push(`Strong readiness score of ${scorePercent}% with no risk flags.`);
+        break;
+      case 'CONDITIONAL':
+        if (riskFlags.length > 0) {
+          parts.push(`Moderate readiness (${scorePercent}%) but flagged concerns need addressing.`);
+        } else {
+          parts.push(`Readiness score of ${scorePercent}% meets conditional admission threshold.`);
+        }
+        break;
+      case 'WAITLIST':
+        parts.push(`Readiness score of ${scorePercent}% is below admission threshold.`);
+        break;
+      case 'REJECT':
+        parts.push(`Low readiness score of ${scorePercent}% indicates significant gaps.`);
+        break;
+    }
+
+    // Highlight lowest score
+    const lowestScore = Object.entries(scores).reduce((min, [key, val]) =>
+      val < min.val ? { key, val } : min,
+      { key: '', val: 1 },
+    );
+    const scoreLabels: Record<string, string> = {
+      actionOrientation: 'action orientation',
+      marketAwareness: 'market awareness',
+      rejectionResilience: 'rejection resilience',
+      commitmentSignal: 'commitment signal',
+    };
+    if (lowestScore.val < 0.5) {
+      parts.push(`Lowest area: ${scoreLabels[lowestScore.key]} (${Math.round(lowestScore.val * 100)}%).`);
+    }
+
+    // Risk flags summary
+    if (riskFlags.length > 0) {
+      const flagDescriptions: Record<string, string> = {
+        LOW_ACTION_ORIENTATION: 'passive approach to skill application',
+        LOW_MARKET_AWARENESS: 'limited commercial understanding',
+        LOW_REJECTION_RESILIENCE: 'concerns about handling setbacks',
+        WEAK_COMMITMENT_SIGNAL: 'unclear commitment to program',
+        NO_INTERNET_ACCESS: 'no reliable internet access',
+        LIMITED_TIME_COMMITMENT: 'limited weekly hours available',
+        SHARED_DEVICE: 'relies on shared device',
+      };
+      const flagTexts = riskFlags
+        .map(f => flagDescriptions[f] || f.toLowerCase().replace(/_/g, ' '))
+        .slice(0, 2);
+      parts.push(`Concerns: ${flagTexts.join(', ')}.`);
+    }
+
+    return parts.join(' ');
   }
 
   /**

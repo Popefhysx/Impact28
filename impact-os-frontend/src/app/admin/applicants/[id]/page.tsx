@@ -11,6 +11,12 @@ import {
 import styles from './page.module.css';
 
 // Types
+interface DiagnosticReport {
+    method?: 'RULE_BASED' | 'AI_CLAUDE_SONNET';
+    explanation?: string;
+    aiReasoning?: string;
+}
+
 interface ApplicantDetail {
     id: string;
     email: string;
@@ -33,6 +39,7 @@ interface ApplicantDetail {
     commitmentSignal?: number;
     riskFlags?: string[];
     aiRecommendation?: string;
+    diagnosticReport?: DiagnosticReport;
     triadTechnical?: number;
     triadSoft?: number;
     triadCommercial?: number;
@@ -344,6 +351,17 @@ export default function ApplicantDetailPage() {
                                 {applicant.aiRecommendation === 'ADMIT' ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
                                 {applicant.aiRecommendation}
                             </span>
+                            {/* Explanation */}
+                            {(applicant.diagnosticReport?.explanation || applicant.diagnosticReport?.aiReasoning) && (
+                                <div className={styles.explanationBox}>
+                                    <p className={styles.explanationText}>
+                                        {applicant.diagnosticReport?.aiReasoning || applicant.diagnosticReport?.explanation}
+                                    </p>
+                                    <span className={styles.methodBadge}>
+                                        {applicant.diagnosticReport?.method === 'AI_CLAUDE_SONNET' ? '🤖 AI Analysis' : '📊 Rule-Based'}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     </section>
 
