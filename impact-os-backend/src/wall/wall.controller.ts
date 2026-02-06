@@ -11,7 +11,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { WallService, CreateWallPostDto } from './wall.service';
-import { AuthGuard } from '../auth';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import type { WallPostStatus } from '@prisma/client';
 
 /**
@@ -24,7 +24,7 @@ import type { WallPostStatus } from '@prisma/client';
  */
 @Controller('wall')
 export class WallController {
-  constructor(private wallService: WallService) {}
+  constructor(private wallService: WallService) { }
 
   // ===== PUBLIC ENDPOINTS =====
 
@@ -50,7 +50,7 @@ export class WallController {
    * Auto-publishes immediately
    */
   @Post()
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   async createPost(
     @Req() req: any,
     @Body() dto: any, // CreateWallPostDto
@@ -62,7 +62,7 @@ export class WallController {
    * Get my own posts
    */
   @Get('mine')
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getMyPosts(@Req() req: any) {
     return this.wallService.getUserPosts(req.user.id);
   }
@@ -71,7 +71,7 @@ export class WallController {
    * Delete my own post
    */
   @Delete(':id')
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   async deleteMyPost(@Req() req: any, @Param('id') postId: string) {
     return this.wallService.deleteOwnPost(req.user.id, postId);
   }
@@ -82,7 +82,7 @@ export class WallController {
    * Get all posts for admin moderation
    */
   @Get('admin')
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getAdminWall(
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
@@ -100,7 +100,7 @@ export class WallController {
    * Get wall statistics
    */
   @Get('admin/stats')
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getWallStats() {
     // TODO: Add admin role check
     return this.wallService.getWallStats();
@@ -110,7 +110,7 @@ export class WallController {
    * Remove a post (flag for removal)
    */
   @Delete('admin/:id')
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   async removePost(@Req() req: any, @Param('id') postId: string) {
     // TODO: Add admin role check
     return this.wallService.removePost(postId, req.user.id);
@@ -120,9 +120,10 @@ export class WallController {
    * Restore a removed post
    */
   @Patch('admin/:id/restore')
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   async restorePost(@Param('id') postId: string) {
     // TODO: Add admin role check
     return this.wallService.restorePost(postId);
   }
 }
+

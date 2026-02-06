@@ -18,10 +18,10 @@ import {
   RequireCapability,
   RequireCategory,
 } from '../staff/guards';
-import { AuthGuard } from '../auth/auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('admin')
-@UseGuards(AuthGuard, CapabilityGuard)
+@UseGuards(JwtAuthGuard, CapabilityGuard)
 export class AdminController {
   constructor(private adminService: AdminService) { }
 

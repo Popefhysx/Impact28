@@ -6,7 +6,7 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from './jwt-auth.guard';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
@@ -49,10 +49,10 @@ export class AuthController {
    * Get current authenticated user
    */
   @Get('me')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   async getCurrentUser(@Req() req: any) {
-    // req.user is populated by JwtStrategy
-    return this.authService.getCurrentUser(req.user.id);
+    // req.user is populated by JwtStrategy.validate()
+    return req.user;
   }
 
   /**
@@ -68,7 +68,7 @@ export class AuthController {
    * Change PIN for authenticated user
    */
   @Post('change-pin')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   async changePin(
     @Req() req: any,
     @Body('currentPin') currentPin: string,
