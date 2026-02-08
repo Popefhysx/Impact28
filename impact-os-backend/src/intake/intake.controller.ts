@@ -12,7 +12,7 @@ import {
 
 @Controller('intake')
 export class IntakeController {
-  constructor(private readonly intakeService: IntakeService) {}
+  constructor(private readonly intakeService: IntakeService) { }
 
   // POST /intake/start - Start a new application (Section 1)
   @Post('start')
@@ -77,7 +77,7 @@ export class IntakeController {
   // POST /intake/accept/:token - Accept offer and create User
   @Post('accept/:token')
   acceptOffer(@Param('token') token: string, @Body() dto: AcceptOfferDto) {
-    return this.intakeService.acceptOffer(token, dto.username, dto.pin);
+    return this.intakeService.acceptOffer(token, dto.username, dto.pin, dto.skillTrack);
   }
 
   // POST /intake/decline/:token - Decline offer

@@ -28,9 +28,10 @@ export interface DashboardStats {
     total: number;
     pending: number;
     admitted: number;
-    conditional: number;
+    waitlist: number;
     rejected: number;
     scoring: number;
+    scored: number;
   };
   users: {
     total: number;
@@ -47,6 +48,12 @@ export interface DashboardStats {
     pendingReviews: number;
     completedToday: number;
     activeAssignments: number;
+  };
+  testimonials: {
+    pending: number;
+  };
+  partners: {
+    pending: number;
   };
 }
 
@@ -90,7 +97,7 @@ export class AdminService {
             where: { status: ApplicantStatus.ADMITTED },
           }),
           this.prisma.applicant.count({
-            where: { status: ApplicantStatus.CONDITIONAL },
+            where: { status: ApplicantStatus.WAITLIST },
           }),
           this.prisma.applicant.count({
             where: { status: ApplicantStatus.REJECTED },
@@ -146,14 +153,22 @@ export class AdminService {
       byLevel[level.identityLevel] = level._count;
     }
 
+    // Count scored applicants and pending testimonials/partners
+    const [scoredCount, pendingTestimonials, pendingPartners] = await Promise.all([
+      this.prisma.applicant.count({ where: { status: ApplicantStatus.SCORED } }),
+      this.prisma.testimonial.count({ where: { status: TestimonialStatus.PENDING } }),
+      this.prisma.partner.count({ where: { status: { in: ['LEAD', 'QUALIFIED'] } } }),
+    ]);
+
     return {
       applicants: {
         total: applicantStats[0],
         pending: applicantStats[1],
         admitted: applicantStats[2],
-        conditional: applicantStats[3],
+        waitlist: applicantStats[3],
         rejected: applicantStats[4],
         scoring: applicantStats[5],
+        scored: scoredCount,
       },
       users: {
         total: userStats[0],
@@ -170,6 +185,12 @@ export class AdminService {
         pendingReviews: missionStats[0],
         completedToday: missionStats[1],
         activeAssignments: missionStats[2],
+      },
+      testimonials: {
+        pending: pendingTestimonials,
+      },
+      partners: {
+        pending: pendingPartners,
       },
     };
   }
@@ -573,7 +594,7 @@ export class AdminService {
    */
   async makeAdmissionDecision(
     applicantId: string,
-    decision: 'ADMITTED' | 'CONDITIONAL' | 'REJECTED',
+    decision: 'ADMITTED' | 'WAITLIST' | 'REJECTED',
     options?: {
       notes?: string;
       customMessage?: string;
@@ -591,7 +612,7 @@ export class AdminService {
     // Map decision to status
     const statusMap: Record<string, ApplicantStatus> = {
       ADMITTED: ApplicantStatus.ADMITTED,
-      CONDITIONAL: ApplicantStatus.CONDITIONAL,
+      WAITLIST: ApplicantStatus.WAITLIST,
       REJECTED: ApplicantStatus.REJECTED,
     };
 
@@ -640,7 +661,7 @@ export class AdminService {
    */
   async makeBulkDecision(
     applicantIds: string[],
-    decision: 'ADMITTED' | 'CONDITIONAL' | 'REJECTED',
+    decision: 'ADMITTED' | 'WAITLIST' | 'REJECTED',
     options?: {
       notes?: string;
       customMessage?: string;

@@ -525,10 +525,24 @@
         padding: var(--space-md);
     }
 
-    .headerStats {
+    .header {
         flex-direction: column;
         gap: var(--space-sm);
+    }
+
+    .header h1 {
+        font-size: 20px;
+    }
+
+    .headerStats {
+        flex-wrap: wrap;
+        gap: var(--space-xs);
         width: 100%;
+    }
+
+    .statBadge {
+        font-size: 12px;
+        padding: var(--space-xs) 8px;
     }
 
     .capacityCard {
@@ -556,5 +570,60 @@
 
     .gridView {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: var(--space-sm);
+    }
+
+    .header h1 {
+        font-size: 18px;
+    }
+
+    .subtitle {
+        font-size: 12px;
+    }
+
+    .statBadge {
+        font-size: 11px;
+        padding: 3px 6px;
+    }
+
+    .applicantCard {
+        border-radius: var(--radius-sm);
+    }
+
+    .cardHeader {
+        padding: var(--space-sm);
+    }
+
+    .cardBody {
+        padding: var(--space-sm);
+    }
+
+    .cardFooter {
+        padding: var(--space-xs) var(--space-sm);
+    }
+
+    .name {
+        font-size: 13px;
+    }
+
+    .email {
+        font-size: 11px;
+    }
+
+    .viewButton {
+        font-size: 12px;
+        padding: 5px 10px;
+    }
+
+    .bulkApprove,
+    .bulkReject,
+    .bulkClear {
+        font-size: 12px;
+        padding: 5px 10px;
     }
 }

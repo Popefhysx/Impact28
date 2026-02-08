@@ -54,9 +54,39 @@
   /* Typography */
   --font-sans: 'Jost', system-ui, -apple-system, sans-serif;
 
+  /* Spacing Extended */
+  --space-3xl: 64px;
+
   /* Sidebar */
-  --sidebar-width: 180px;
+  --sidebar-width: 160px;
   --sidebar-collapsed: 64px;
+
+  /* Sidebar Dark Theme */
+  --sidebar-bg: var(--navy-deep);
+  --sidebar-text: rgba(255, 255, 255, 0.6);
+  --sidebar-text-bright: rgba(255, 255, 255, 0.9);
+  --sidebar-text-dim: rgba(255, 255, 255, 0.35);
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-hover: rgba(255, 255, 255, 0.08);
+  --sidebar-active: rgba(197, 173, 103, 0.15);
+  --sidebar-avatar: rgba(197, 173, 103, 0.25);
+
+  /* Page Header */
+  --page-header-height: 56px;
+  --page-header-bg: var(--bg-secondary);
+  --page-header-border: var(--border-subtle);
+
+  /* Cohort Timeline Phases */
+  --phase-pre-cohort: var(--text-muted);
+  --phase-training: var(--navy-medium);
+  --phase-market: var(--gold-warm);
+  --phase-income: var(--accent-success);
+  --phase-exit: var(--navy-deep);
+
+  /* Alert */
+  --alert-bg: rgba(217, 119, 6, 0.08);
+  --alert-border: rgba(217, 119, 6, 0.25);
+  --alert-text: var(--accent-warning);
 }
 
 * {

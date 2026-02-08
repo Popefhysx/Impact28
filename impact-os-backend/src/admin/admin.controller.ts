@@ -81,7 +81,7 @@ export class AdminController {
   @RequireCapability('admissions.manage')
   async makeAdmissionDecision(
     @Param('id') id: string,
-    @Body('decision') decision: 'ADMITTED' | 'CONDITIONAL' | 'REJECTED',
+    @Body('decision') decision: 'ADMITTED' | 'WAITLIST' | 'REJECTED',
     @Body('notes') notes?: string,
     @Body('customMessage') customMessage?: string,
     @Body('isCapacityRejection') isCapacityRejection?: boolean,
@@ -98,7 +98,7 @@ export class AdminController {
   @RequireCategory('ADMIN')
   async makeBulkDecision(
     @Body('applicantIds') applicantIds: string[],
-    @Body('decision') decision: 'ADMITTED' | 'CONDITIONAL' | 'REJECTED',
+    @Body('decision') decision: 'ADMITTED' | 'WAITLIST' | 'REJECTED',
     @Body('notes') notes?: string,
     @Body('customMessage') customMessage?: string,
     @Body('isCapacityRejection') isCapacityRejection?: boolean,

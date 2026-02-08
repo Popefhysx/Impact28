@@ -191,6 +191,11 @@ model User {
   pausedAt        DateTime?
   pauseReason     String?
   
+  // Command Centre (Participant State Authority)
+  participantState ParticipantState @default(ACTIVE)
+  graduatedAt      DateTime?
+  exitedAt         DateTime?
+  
   // Support Cooldown
   supportCooldownUntil DateTime?  // When cooldown expires for next request
   
@@ -211,9 +216,12 @@ model User {
   behaviorLogs        BehaviorLog[]
   wallPosts           WallPost[]
   interventionAlerts  InterventionAlert[]
+  participantStateLogs ParticipantStateLog[]
+  gateEvaluations     GateEvaluation[]
   
   @@index([email])
   @@index([identityLevel])
+  @@index([participantState])
 }
 
 // ============================================================================
@@ -261,15 +269,24 @@ model Cohort {
   
   isActive      Boolean     @default(true)
   
+  // Command Centre (Calendar Engine)
+  currentPhase    CohortPhase  @default(PRE_COHORT)
+  currentDay      Int          @default(0)       // Program day (1-90, 0 = pre-cohort)
+  timezone        String       @default("Africa/Lagos")
+  orientationDate DateTime?    // Day before program start
+  
   applicants    Applicant[]
   users         User[]
   config        CohortConfig?
   commitmentAllocations CommitmentAllocation[]
   psnForecast   CohortPsnForecast?
   calendarEvents CalendarEvent[]
+  gateEvaluations GateEvaluation[]
   
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+  
+  @@index([currentPhase])
 }
 
 // ============================================================================
@@ -426,6 +443,66 @@ model DetectionTrigger {
   createdAt       DateTime  @default(now())
   
   @@index([participantId, createdAt])
+}
+
+// ============================================================================
+// COMMAND CENTRE (Gates, State Authority, Audit)
+// ============================================================================
+
+// Gate Evaluation Record (Immutable)
+model GateEvaluation {
+  id              String      @id @default(cuid())
+  cohortId        String
+  cohort          Cohort      @relation(fields: [cohortId], references: [id])
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  
+  gateType        GateType
+  dayNumber       Int         // Actual day when executed
+  
+  result          GateResult
+  evaluationData  Json        // Inputs used for evaluation (immutable snapshot)
+  
+  executedAt      DateTime    @default(now())
+  
+  @@index([cohortId, gateType])
+  @@index([userId, gateType])
+  @@index([result])
+}
+
+// Participant State Log (Immutable Audit Trail)
+model ParticipantStateLog {
+  id               String           @id @default(cuid())
+  userId           String
+  user             User             @relation(fields: [userId], references: [id])
+  
+  fromState        ParticipantState
+  toState          ParticipantState
+  reason           String           @db.VarChar(500)
+  triggeredBy      String           // "SYSTEM" or staffId
+  gateEvaluationId String?          // If triggered by a gate
+  
+  createdAt        DateTime         @default(now())
+  
+  @@index([userId, createdAt])
+}
+
+// Command Audit Log (Override Tracking - ADMIN only)
+model CommandAuditLog {
+  id              String      @id @default(cuid())
+  action          String      // "OVERRIDE_GATE", "FORCE_GRADUATE", "MANUAL_PAUSE", etc.
+  targetId        String      // userId or cohortId
+  targetType      String      // "USER", "COHORT"
+  reason          String      @db.VarChar(500)
+  performedBy     String      // Staff userId (ADMIN only)
+  previousValue   Json?
+  newValue        Json?
+  
+  createdAt       DateTime    @default(now())
+  
+  @@index([targetId, targetType])
+  @@index([performedBy])
+  @@index([createdAt])
 }
 
 // ============================================================================
@@ -1226,6 +1303,7 @@ enum ApplicantStatus {
   PARTIAL
   PENDING
   SCORING
+  SCORED      // AI assessment complete, awaiting admin decision
   ADMITTED
   CONDITIONAL
   REJECTED
@@ -1405,6 +1483,40 @@ enum DetectionAction {
   PROMPT       // Soft message to participant
   QUEUE        // Added to operator queue
   ALERT        // Admin alert triggered
+}
+
+// ============================================================================
+// COMMAND CENTRE ENUMS
+// ============================================================================
+
+enum ParticipantState {
+  ACTIVE         // Default - actively participating
+  AT_RISK        // Flagged for intervention
+  PAUSED         // Temporarily suspended
+  EXITED         // Non-completion exit
+  GRADUATED      // Successfully completed program
+}
+
+enum CohortPhase {
+  PRE_COHORT     // Day -28 to 0 (Intake, Screening, Onboarding)
+  TRAINING       // Day 1-42 (Technical & skill missions)
+  MARKET         // Day 43-69 (Outreach & exposure)
+  INCOME         // Day 70-90 (Income verification)
+  EXIT           // Post Day 90 (Graduation or non-completion)
+}
+
+enum GateType {
+  DAY_1_BASELINE         // Day 1: START / EXCLUDE
+  DAY_30_SELLABLE_SKILL  // Day 30: PASS / INTERVENE
+  DAY_60_MARKET_CONTACT  // Day 60: PASS / ESCALATE
+  DAY_90_INCOME          // Day 90: GRADUATE / EXIT
+}
+
+enum GateResult {
+  PASS                   // Gate passed successfully
+  FAIL                   // Gate failed - action required
+  INTERVENTION_REQUIRED  // Needs manual review
+  PENDING                // Awaiting inputs
 }
 
 // ============================================================================

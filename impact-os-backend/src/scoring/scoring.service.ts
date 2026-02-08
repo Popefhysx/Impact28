@@ -29,7 +29,7 @@ interface ScoringResult {
   readinessScore: number;
   scores: ProbeScores;
   riskFlags: string[];
-  recommendation: 'ADMIT' | 'CONDITIONAL' | 'WAITLIST' | 'REJECT';
+  recommendation: 'ADMIT' | 'WAITLIST' | 'REJECT';
   diagnosticReport: object;
 }
 
@@ -79,8 +79,7 @@ export class ScoringService {
         ? await this.scoreWithAI(applicant)
         : this.scoreWithRules(applicant);
 
-      // Determine final status and apply
-      const finalStatus = this.mapRecommendationToStatus(result.recommendation);
+      // Store scores and set status to SCORED — admin makes the final admission decision
       const rejectionReason =
         result.recommendation === 'REJECT'
           ? this.determineRejectionReason(result)
@@ -89,7 +88,7 @@ export class ScoringService {
       await this.prisma.applicant.update({
         where: { id: applicantId },
         data: {
-          status: finalStatus,
+          status: ApplicantStatus.SCORED,
           readinessScore: result.readinessScore,
           actionOrientation: result.scores.actionOrientation,
           marketAwareness: result.scores.marketAwareness,
@@ -99,30 +98,21 @@ export class ScoringService {
           aiRecommendation: result.recommendation,
           diagnosticReport: result.diagnosticReport,
           rejectionReason: rejectionReason,
-          reviewedAt: new Date(),
         },
       });
 
       this.logger.log(
-        `Scored applicant ${applicantId}: ${result.recommendation} (${result.readinessScore.toFixed(2)})`,
+        `Scored applicant ${applicantId}: AI recommends ${result.recommendation} (${result.readinessScore.toFixed(2)}) — awaiting admin decision`,
       );
 
       // Run assessment to calculate Skill Triad, offer type, and eligibility
-      // This must happen BEFORE admission processing so all data is available
       try {
         await this.assessmentService.assessApplicant(applicantId);
         this.logger.log(`Assessed applicant ${applicantId}: Skill Triad and offer calculated`);
       } catch (assessError) {
         this.logger.error(`Assessment failed for ${applicantId}: ${assessError}`);
-        // Continue to admission even if assessment fails - admin can review manually
+        // Admin can still review manually even without assessment data
       }
-
-      // Trigger admission processing (emails, conditional tasks) async
-      this.admissionService.processAdmission(applicantId).catch((error) => {
-        this.logger.error(
-          `Admission processing failed for ${applicantId}: ${error.message}`,
-        );
-      });
 
       return result;
     } catch (error) {
@@ -271,8 +261,6 @@ export class ScoringService {
 
     if (readinessScore >= 0.7 && riskFlags.length === 0) {
       recommendation = 'ADMIT';
-    } else if (readinessScore >= 0.55 || riskFlags.length <= 2) {
-      recommendation = 'CONDITIONAL';
     } else if (readinessScore >= 0.4) {
       recommendation = 'WAITLIST';
     } else {
@@ -345,15 +333,12 @@ export class ScoringService {
       case 'ADMIT':
         parts.push(`Strong readiness score of ${scorePercent}% with no risk flags.`);
         break;
-      case 'CONDITIONAL':
-        if (riskFlags.length > 0) {
-          parts.push(`Moderate readiness (${scorePercent}%) but flagged concerns need addressing.`);
-        } else {
-          parts.push(`Readiness score of ${scorePercent}% meets conditional admission threshold.`);
-        }
-        break;
       case 'WAITLIST':
-        parts.push(`Readiness score of ${scorePercent}% is below admission threshold.`);
+        if (riskFlags.length > 0) {
+          parts.push(`Moderate readiness (${scorePercent}%) with flagged concerns.`);
+        } else {
+          parts.push(`Readiness score of ${scorePercent}% is below admission threshold.`);
+        }
         break;
       case 'REJECT':
         parts.push(`Low readiness score of ${scorePercent}% indicates significant gaps.`);
@@ -446,8 +431,6 @@ Return JSON only:
       let recommendation: ScoringResult['recommendation'];
       if (readinessScore >= 0.7 && aiResult.riskFlags.length === 0) {
         recommendation = 'ADMIT';
-      } else if (readinessScore >= 0.55) {
-        recommendation = 'CONDITIONAL';
       } else if (readinessScore >= 0.4) {
         recommendation = 'WAITLIST';
       } else {
@@ -535,19 +518,12 @@ Answer: "${applicant.commitmentProbe}"
 Evaluate and return JSON scores.`;
   }
 
+  // AI recommendation is stored as a suggestion; admin makes the final decision
+  // All scored applicants go to SCORED status regardless of AI recommendation
   private mapRecommendationToStatus(
-    recommendation: ScoringResult['recommendation'],
+    _recommendation: ScoringResult['recommendation'],
   ): ApplicantStatus {
-    switch (recommendation) {
-      case 'ADMIT':
-        return ApplicantStatus.ADMITTED;
-      case 'CONDITIONAL':
-        return ApplicantStatus.CONDITIONAL;
-      case 'WAITLIST':
-        return ApplicantStatus.WAITLIST;
-      case 'REJECT':
-        return ApplicantStatus.REJECTED;
-    }
+    return ApplicantStatus.SCORED;
   }
 
   private determineRejectionReason(result: ScoringResult): RejectionReason {

@@ -1,6 +1,5 @@
 .container {
-    padding: var(--space-lg);
-    max-width: 1200px;
+    /* No max-width or padding — inherits from admin layout .main */
 }
 
 /* Toolbar */
@@ -257,6 +256,26 @@
 .formField select:focus {
     outline: none;
     border-color: var(--gold-warm);
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+}
+
+/* Override browser-default blue on date/time pickers */
+.formField input[type="date"],
+.formField input[type="time"] {
+    accent-color: var(--navy-deep);
+    color-scheme: light;
+}
+
+.formField input[type="date"]::-webkit-calendar-picker-indicator,
+.formField input[type="time"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+    filter: invert(10%) sepia(30%) saturate(600%) hue-rotate(190deg);
+}
+
+.formField input[type="date"]::-webkit-calendar-picker-indicator:hover,
+.formField input[type="time"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
 }
 
 .formField textarea {
@@ -275,10 +294,92 @@
     color: var(--text-muted);
 }
 
-.select {
-    appearance: none;
-    background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;
-    padding-right: 36px;
+/* Milestones Preview (One-Date System) */
+.milestonesPreview {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.milestonesHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--navy-deep);
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+.milestonesList {
+    display: flex;
+    flex-direction: column;
+}
+
+.milestoneItem {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 13px;
+    align-items: center;
+}
+
+.milestoneItem:last-child {
+    border-bottom: none;
+}
+
+.milestoneHighlight {
+    background: rgba(212, 175, 55, 0.08);
+    font-weight: 600;
+}
+
+.milestoneLabel {
+    color: var(--text-primary);
+}
+
+.milestoneDate {
+    color: var(--navy-deep);
+    font-weight: 500;
+    font-size: 12px;
+}
+
+.milestoneFormula {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-style: italic;
+}
+
+/* Event Type Pill Selector */
+.typePills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+}
+
+.typePill {
+    padding: 6px 14px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.typePill:hover {
+    border-color: var(--text-muted);
+    background: var(--bg-elevated);
+}
+
+.typePillActive {
+    font-weight: 600;
 }
 
 .modalActions {

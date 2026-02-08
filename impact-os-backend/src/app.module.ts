@@ -26,6 +26,7 @@ import { ScheduledTasksModule } from './scheduled-tasks';
 import { WallModule } from './wall';
 import { CommunicationsModule } from './communications';
 import { SettingsModule } from './settings';
+import { CommandCentreModule } from './command-centre';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { SettingsModule } from './settings';
     WallModule,
     CommunicationsModule,
     SettingsModule,
+    CommandCentreModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

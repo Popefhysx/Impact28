@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { User, Mail, Phone, MapPin, Briefcase, Save, Loader2, Camera, Check } from 'lucide-react';
-import { PageHeader } from '@/components/ui';
 import styles from '../settings.module.css';
 
 interface ProfileData {
@@ -121,10 +120,6 @@ export default function ProfilePage() {
 
     return (
         <div className={styles.container}>
-            <PageHeader
-                title="Profile"
-                subtitle="Manage your personal information and preferences"
-            />
 
             <div className={styles.content}>
                 <div className={styles.card}>

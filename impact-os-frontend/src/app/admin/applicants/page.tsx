@@ -27,7 +27,7 @@ interface PipelineStats {
     scored: number;
     admitted: number;
     rejected: number;
-    conditional: number;
+    waitlist: number;
 }
 
 // Helper: Convert 0-1 decimal score to percentage string
@@ -44,7 +44,7 @@ const statusColors: Record<string, string> = {
     'SCORING': 'badge-info',
     'SCORED': 'badge-gold',
     'ADMITTED': 'badge-success',
-    'CONDITIONAL': 'badge-warning',
+    'WAITLIST': 'badge-warning',
     'REJECTED': 'badge-danger',
 };
 
@@ -54,7 +54,7 @@ const statusIcons: Record<string, React.ReactNode> = {
     'SCORING': <AlertCircle size={14} />,
     'SCORED': <FileText size={14} />,
     'ADMITTED': <Check size={14} />,
-    'CONDITIONAL': <AlertCircle size={14} />,
+    'WAITLIST': <Clock size={14} />,
     'REJECTED': <X size={14} />,
 };
 
@@ -118,7 +118,7 @@ export default function ApplicantsPage() {
             status: 'SCORED',
             skillTrack: 'VIDEO_EDITING',
             readinessScore: 58,
-            aiRecommendation: 'CONDITIONAL',
+            aiRecommendation: 'WAITLIST',
             startedAt: '2026-01-22T15:30:00Z',
             submittedAt: '2026-01-23T09:00:00Z',
         },
@@ -163,10 +163,10 @@ export default function ApplicantsPage() {
             email: 'tunde.akande@email.com',
             firstName: 'Tunde',
             lastName: 'Akande',
-            status: 'CONDITIONAL',
+            status: 'WAITLIST',
             skillTrack: 'GRAPHIC_DESIGN',
             readinessScore: 65,
-            aiRecommendation: 'CONDITIONAL',
+            aiRecommendation: 'WAITLIST',
             startedAt: '2026-01-20T11:30:00Z',
             submittedAt: '2026-01-20T17:00:00Z',
         },
@@ -216,7 +216,7 @@ export default function ApplicantsPage() {
         scored: applicants.filter(a => a.status === 'SCORED').length,
         admitted: applicants.filter(a => a.status === 'ADMITTED').length,
         rejected: applicants.filter(a => a.status === 'REJECTED').length,
-        conditional: applicants.filter(a => a.status === 'CONDITIONAL').length,
+        waitlist: applicants.filter(a => a.status === 'WAITLIST').length,
     };
 
     // Filter applicants
@@ -369,7 +369,7 @@ export default function ApplicantsPage() {
                             { value: 'SCORING', label: 'Scoring' },
                             { value: 'SCORED', label: 'Scored' },
                             { value: 'ADMITTED', label: 'Admitted' },
-                            { value: 'CONDITIONAL', label: 'Conditional' },
+                            { value: 'WAITLIST', label: 'Waitlist' },
                             { value: 'REJECTED', label: 'Rejected' },
                         ],
                     },
@@ -479,7 +479,7 @@ export default function ApplicantsPage() {
                                         <td>
                                             {applicant.aiRecommendation ? (
                                                 <span className={`badge ${applicant.aiRecommendation === 'ADMIT' ? 'badge-success' :
-                                                    applicant.aiRecommendation === 'CONDITIONAL' ? 'badge-warning' :
+                                                    applicant.aiRecommendation === 'WAITLIST' ? 'badge-warning' :
                                                         'badge-danger'
                                                     }`}>
                                                     {applicant.aiRecommendation}
@@ -564,7 +564,7 @@ export default function ApplicantsPage() {
                                         <span className={styles.cardLabel}>AI Rec</span>
                                         {applicant.aiRecommendation ? (
                                             <span className={`badge ${applicant.aiRecommendation === 'ADMIT' ? 'badge-success' :
-                                                applicant.aiRecommendation === 'CONDITIONAL' ? 'badge-warning' : 'badge-danger'
+                                                applicant.aiRecommendation === 'WAITLIST' ? 'badge-warning' : 'badge-danger'
                                                 }`}>
                                                 {applicant.aiRecommendation}
                                             </span>

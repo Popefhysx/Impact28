@@ -47,9 +47,9 @@ export class NotificationsService {
             this.prisma.partnerInquiry.count({
                 where: { status: InquiryStatus.NEW },
             }).catch(() => 0), // May not exist
-            // Pending applications
+            // Pending + scored applications awaiting admin decision
             this.prisma.applicant.count({
-                where: { status: ApplicantStatus.PENDING },
+                where: { status: { in: [ApplicantStatus.PENDING, ApplicantStatus.SCORED] } },
             }),
             // Pending income reviews
             this.prisma.incomeRecord.count({
@@ -92,21 +92,24 @@ export class NotificationsService {
             });
         }
 
-        // Get pending applications as notifications
+        // Get pending + scored applications as notifications
         const pendingApplications = await this.prisma.applicant.findMany({
-            where: { status: ApplicantStatus.PENDING },
+            where: { status: { in: [ApplicantStatus.PENDING, ApplicantStatus.SCORED] } },
             orderBy: { submittedAt: 'desc' },
             take: 5,
-            select: { id: true, firstName: true, lastName: true, submittedAt: true },
+            select: { id: true, firstName: true, lastName: true, submittedAt: true, status: true },
         });
 
         for (const app of pendingApplications) {
             if (app.submittedAt) {
+                const isScored = app.status === ApplicantStatus.SCORED;
                 notifications.push({
                     id: `application-${app.id}`,
                     type: 'application',
-                    title: 'New Application',
-                    message: `${app.firstName} ${app.lastName} submitted an application`,
+                    title: isScored ? 'Scored — Awaiting Decision' : 'New Application',
+                    message: isScored
+                        ? `${app.firstName} ${app.lastName} has been scored and awaits your decision`
+                        : `${app.firstName} ${app.lastName} submitted an application`,
                     read: false,
                     createdAt: app.submittedAt,
                     link: '/admin/applicants',

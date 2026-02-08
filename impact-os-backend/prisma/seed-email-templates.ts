@@ -328,6 +328,84 @@ const templates: TemplateSeed[] = [
     ],
     isSystem: true,
   },
+  {
+    slug: 'application_under_review',
+    name: 'Application Under Review',
+    description: 'Sent when an applicant is conditionally admitted — their application needs additional review',
+    category: CommunicationSource.ADMISSION,
+    subject: `Your application is under review, {{firstName}}`,
+    htmlContent: `
+<div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h1 style="color: #02213D;">Your Application Is Under Review 🔍</h1>
+  
+  <p>Hi {{firstName}},</p>
+  
+  <p>Thank you for your patience. We've completed our initial assessment of your application and our team is now conducting a detailed review.</p>
+  
+  <div style="background: #f0f4f8; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #02213D;">
+    <h3 style="margin-top: 0;">What this means:</h3>
+    <ul style="margin-bottom: 0;">
+      <li>Your application showed potential and is being given extra attention</li>
+      <li>A member of our team may reach out to you for additional information</li>
+      <li>You'll receive a final decision within a few business days</li>
+    </ul>
+  </div>
+  
+  <p>No action is needed from you at this time. We'll be in touch soon.</p>
+  
+  <p style="color: #666;">— The Project 3:10 Team</p>
+</div>`,
+    variables: [
+      { name: 'firstName', description: 'Applicant first name', required: true },
+    ],
+    isSystem: true,
+  },
+  {
+    slug: 'admin_new_application',
+    name: 'Admin New Application Alert',
+    description: 'Sent to admin when a new application is submitted',
+    category: CommunicationSource.SYSTEM,
+    subject: `New Application: {{firstName}} {{lastName}}`,
+    htmlContent: `
+<div style="font-family: 'Jost', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px;">
+  <div style="background: #02213D; padding: 24px; border-radius: 12px 12px 0 0;">
+    <h1 style="color: #C4A052; margin: 0; font-size: 22px;">🔔 New Application Submitted</h1>
+  </div>
+  <div style="background: #ffffff; padding: 24px; border-radius: 0 0 12px 12px;">
+    <p style="color: #333; font-size: 16px; margin-bottom: 20px;">
+      A new application has been submitted and is ready for review.
+    </p>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; color: #666;">Name</td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: 600; color: #02213D;">{{firstName}} {{lastName}}</td>
+      </tr>
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; color: #666;">Email</td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; color: #02213D;">{{email}}</td>
+      </tr>
+      {{#if skillTrack}}
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; color: #666;">Skill Track</td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: 600; color: #02213D;">{{skillTrack}}</td>
+      </tr>
+      {{/if}}
+    </table>
+    <a href="{{reviewLink}}" 
+       style="display: inline-block; background: #C4A052; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">
+      Review Application →
+    </a>
+  </div>
+</div>`,
+    variables: [
+      { name: 'firstName', description: 'Applicant first name', required: true },
+      { name: 'lastName', description: 'Applicant last name', required: true },
+      { name: 'email', description: 'Applicant email address', required: true },
+      { name: 'skillTrack', description: 'Selected skill track', required: false },
+      { name: 'reviewLink', description: 'Link to review application in admin', required: true },
+    ],
+    isSystem: true,
+  },
 ];
 
 async function seedTemplates() {

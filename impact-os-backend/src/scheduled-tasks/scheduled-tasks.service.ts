@@ -4,11 +4,15 @@ import { PsnService } from '../psn';
 import { PrismaService } from '../prisma';
 import { MissionEngineService } from '../mission';
 import { SupportRequestStatus } from '@prisma/client';
+import { CalendarEngineService } from '../command-centre/calendar-engine.service';
+import { GateEnforcementService } from '../command-centre/gate-enforcement.service';
+import { PauseEscalationService } from '../command-centre/pause-escalation.service';
 
 /**
  * Scheduled Tasks Service
  *
  * Contains all scheduled/cron jobs for Impact OS.
+ * Now includes Command Centre gate execution, phase updates, and pause checks.
  */
 @Injectable()
 export class ScheduledTasksService {
@@ -18,15 +22,92 @@ export class ScheduledTasksService {
     private psnService: PsnService,
     private prisma: PrismaService,
     private missionEngine: MissionEngineService,
-  ) {}
+    private calendarEngine: CalendarEngineService,
+    private gateEnforcement: GateEnforcementService,
+    private pauseEscalation: PauseEscalationService,
+  ) { }
+
+  // ============================================================================
+  // COMMAND CENTRE SCHEDULED TASKS
+  // ============================================================================
+
+  /**
+   * Update cohort day and phase daily at midnight
+   * This is the clock tick for the entire system.
+   */
+  @Cron('0 0 * * *') // Daily at midnight
+  async handleCohortDayUpdate() {
+    this.logger.log('[Command Centre] Updating cohort days and phases...');
+
+    try {
+      const result = await this.calendarEngine.updateAllCohorts();
+      this.logger.log(
+        `[Command Centre] Updated ${result.updated} cohort(s)`,
+      );
+    } catch (error) {
+      this.logger.error('[Command Centre] Cohort day update failed:', error);
+    }
+  }
+
+  /**
+   * Execute gates at 00:05 daily
+   * Gates run via cron at 00:05 on gate day (idempotent).
+   * No manual override during execution window.
+   */
+  @Cron('5 0 * * *') // Daily at 00:05
+  async handleGateExecution() {
+    this.logger.log('[Command Centre] Running gate execution check...');
+
+    try {
+      const result = await this.gateEnforcement.executeDueGates();
+
+      if (result.gatesExecuted > 0) {
+        this.logger.log(
+          `[Command Centre] Executed ${result.gatesExecuted} gate(s) across ${result.cohortsProcessed} cohort(s)`,
+        );
+        for (const r of result.results) {
+          this.logger.log(
+            `  Gate ${r.gateType}: ${r.passed} PASS, ${r.failed} FAIL, ${r.intervention} INTERVENTION`,
+          );
+        }
+      } else {
+        this.logger.debug('[Command Centre] No gates due today');
+      }
+    } catch (error) {
+      this.logger.error('[Command Centre] Gate execution failed:', error);
+    }
+  }
+
+  /**
+   * Run automatic pause checks daily at 6 AM
+   * Checks momentum thresholds, inactivity, and unresolved gates.
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_6AM)
+  async handleAutoPauseCheck() {
+    this.logger.log('[Command Centre] Running auto-pause check...');
+
+    try {
+      const result = await this.pauseEscalation.runAutoPauseCheck();
+      const total =
+        result.lowMomentum + result.inactivity + result.unresolvedGates;
+
+      if (total > 0) {
+        this.logger.log(
+          `[Command Centre] Auto-paused ${total} participant(s): ` +
+          `momentum=${result.lowMomentum}, inactivity=${result.inactivity}, gates=${result.unresolvedGates}`,
+        );
+      }
+    } catch (error) {
+      this.logger.error('[Command Centre] Auto-pause check failed:', error);
+    }
+  }
+
+  // ============================================================================
+  // EXISTING SCHEDULED TASKS
+  // ============================================================================
 
   /**
    * Run behavioral trigger detection daily at 6 AM
-   *
-   * Detects:
-   * - Trigger A: Momentum drops (>20 pts in 7 days)
-   * - Trigger B: Phase blockers (stuck for 7+ days)
-   * - Trigger C: Repeated near-misses (3+ failed missions in 14 days)
    */
   @Cron(CronExpression.EVERY_DAY_AT_6AM)
   async handleBehavioralTriggerDetection() {
@@ -37,7 +118,7 @@ export class ScheduledTasksService {
 
       this.logger.log(
         `Behavioral trigger detection complete: ` +
-          `${result.triggersCreated} triggers for ${result.participantsChecked} participants`,
+        `${result.triggersCreated} triggers for ${result.participantsChecked} participants`,
       );
 
       if (result.triggersCreated > 0) {
@@ -52,9 +133,6 @@ export class ScheduledTasksService {
 
   /**
    * Apply momentum decay daily at midnight
-   *
-   * Users who haven't checked in lose -5 momentum
-   * Creates LOW_MOMENTUM alerts if below threshold
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleMomentumDecay() {
@@ -73,11 +151,8 @@ export class ScheduledTasksService {
 
   /**
    * Expire overdue missions every 6 hours
-   *
-   * Marks ASSIGNED/IN_PROGRESS missions as EXPIRED if past expiresAt
-   * Creates MISSED_MISSIONS alerts for repeat offenders
    */
-  @Cron('0 */6 * * *') // Every 6 hours
+  @Cron('0 */6 * * *')
   async handleMissionExpiry() {
     this.logger.log('Running mission expiry check...');
 
@@ -94,8 +169,6 @@ export class ScheduledTasksService {
 
   /**
    * Recalculate Wall post ranks every hour
-   *
-   * Auto-ranks posts based on user's triad score, momentum, streak, etc.
    */
   @Cron(CronExpression.EVERY_HOUR)
   async handleWallRankRecalculation() {
@@ -112,10 +185,6 @@ export class ScheduledTasksService {
 
   /**
    * Expire stale support requests every hour
-   *
-   * Marks APPROVED_PENDING_DISBURSE requests as EXPIRED if:
-   * - expiresAt is set and has passed
-   * - status is still pending disbursement
    */
   @Cron(CronExpression.EVERY_HOUR)
   async handleSupportRequestExpiration() {
@@ -124,7 +193,6 @@ export class ScheduledTasksService {
     try {
       const now = new Date();
 
-      // Find and update expired requests
       const result = await this.prisma.supportRequest.updateMany({
         where: {
           status: SupportRequestStatus.APPROVED_PENDING_DISBURSE,
@@ -150,31 +218,31 @@ export class ScheduledTasksService {
     }
   }
 
-  /**
-   * Manual trigger for testing behavioral detection
-   */
+  // ============================================================================
+  // MANUAL TRIGGERS (Testing)
+  // ============================================================================
+
   async runDetectionNow() {
     return this.psnService.runBehavioralTriggerDetection();
   }
 
-  /**
-   * Manual trigger for testing expiration
-   */
   async runExpirationNow() {
     return this.handleSupportRequestExpiration();
   }
 
-  /**
-   * Manual trigger for testing momentum decay
-   */
   async runDecayNow() {
     return this.missionEngine.applyMomentumDecay();
   }
 
-  /**
-   * Manual trigger for testing mission expiry
-   */
   async runMissionExpiryNow() {
     return this.missionEngine.expireMissions();
+  }
+
+  async runGateExecutionNow() {
+    return this.gateEnforcement.executeDueGates();
+  }
+
+  async runPauseCheckNow() {
+    return this.pauseEscalation.runAutoPauseCheck();
   }
 }

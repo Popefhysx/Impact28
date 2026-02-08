@@ -138,3 +138,123 @@
         transform: scale(1.1);
     }
 }
+
+/* ===== Form Styles ===== */
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    text-align: left;
+    margin-top: var(--space-lg);
+}
+
+.fieldGroup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.label {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--navy-deep);
+}
+
+.fieldHint {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.input {
+    padding: var(--space-md);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    font-size: 16px;
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    transition: border-color 0.2s;
+}
+
+.input:focus {
+    outline: none;
+    border-color: var(--gold-warm);
+    box-shadow: 0 0 0 3px rgba(196, 160, 82, 0.15);
+}
+
+.fieldError {
+    font-size: 13px;
+    color: #dc3545;
+    margin: 2px 0 0;
+}
+
+.errorMessage {
+    background: #fef3f2;
+    color: #dc3545;
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    text-align: center;
+    border: 1px solid #fecdd3;
+}
+
+/* ===== Track Selector Grid ===== */
+.trackGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+    margin-top: var(--space-xs);
+}
+
+.trackCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-md);
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: var(--font-sans);
+}
+
+.trackCard:hover {
+    border-color: var(--gold-warm);
+    background: var(--gold-pale);
+}
+
+.trackCardSelected {
+    border-color: var(--gold-warm);
+    background: var(--gold-pale);
+    box-shadow: 0 0 0 3px rgba(196, 160, 82, 0.2);
+}
+
+.trackIcon {
+    font-size: 28px;
+}
+
+.trackLabel {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--navy-deep);
+    text-align: center;
+}
+
+.button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+@media (max-width: 480px) {
+    .trackGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .card {
+        padding: var(--space-lg);
+    }
+}

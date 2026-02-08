@@ -14,7 +14,7 @@ export interface PageHeaderTab {
 }
 
 interface PageHeaderProps {
-    title: string;
+    title?: string;
     subtitle?: string;
     tabs?: PageHeaderTab[];
     actions?: ReactNode;
@@ -23,12 +23,14 @@ interface PageHeaderProps {
 export function PageHeader({ title, subtitle, tabs, actions }: PageHeaderProps) {
     return (
         <div className={styles.pageHeader}>
-            <header className={styles.header}>
-                <div>
-                    <h1>{title}</h1>
-                    {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
-                </div>
-            </header>
+            {title && (
+                <header className={styles.header}>
+                    <div>
+                        <h1>{title}</h1>
+                        {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
+                    </div>
+                </header>
+            )}
 
             {(tabs || actions) && (
                 <div className={styles.toolbar}>

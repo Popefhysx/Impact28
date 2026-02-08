@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { KeyRound, Save, Loader2, Check, AlertCircle } from 'lucide-react';
-import { PageHeader } from '@/components/ui';
 import styles from '../settings.module.css';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -71,10 +70,6 @@ export default function ChangePinPage() {
 
     return (
         <div className={styles.container}>
-            <PageHeader
-                title="Change PIN"
-                subtitle="Update your login PIN for enhanced security"
-            />
 
             <div className={styles.content}>
                 <div className={styles.card}>

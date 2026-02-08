@@ -15,6 +15,7 @@ export type EmailTemplateType =
   | 'application_reminder'
   | 'application_admitted'
   | 'application_conditional'
+  | 'application_under_review'
   | 'application_rejected'
   | 'resume_link';
 
@@ -252,6 +253,32 @@ export class EmailService {
       `,
       }),
 
+      application_under_review: (data) => ({
+        subject: `Your application is under review, ${data.firstName}`,
+        html: `
+        <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h1 style="color: #02213D;">Your Application Is Under Review 🔍</h1>
+          
+          <p>Hi ${data.firstName},</p>
+          
+          <p>Thank you for your patience. We've completed our initial assessment of your application and our team is now conducting a detailed review.</p>
+          
+          <div style="background: #f0f4f8; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #02213D;">
+            <h3 style="margin-top: 0;">What this means:</h3>
+            <ul style="margin-bottom: 0;">
+              <li>Your application showed potential and is being given extra attention</li>
+              <li>A member of our team may reach out to you for additional information</li>
+              <li>You'll receive a final decision within a few business days</li>
+            </ul>
+          </div>
+          
+          <p>No action is needed from you at this time. We'll be in touch soon.</p>
+          
+          <p style="color: #666;">— The Project 3:10 Team</p>
+        </div>
+      `,
+      }),
+
       application_rejected: (data) => ({
         subject: `Update on your Project 3:10 application`,
         html: `
@@ -448,6 +475,7 @@ export class EmailService {
       application_reminder: CommunicationSource.INTAKE,
       application_admitted: CommunicationSource.ADMISSION,
       application_conditional: CommunicationSource.ADMISSION,
+      application_under_review: CommunicationSource.ADMISSION,
       application_rejected: CommunicationSource.ADMISSION,
       resume_link: CommunicationSource.INTAKE,
     };

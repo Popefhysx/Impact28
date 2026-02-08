@@ -1,4 +1,4 @@
-import { IsString, Length, Matches, MinLength } from 'class-validator';
+import { IsString, IsOptional, Length, Matches, MinLength } from 'class-validator';
 
 export class AcceptOfferDto {
   @IsString()
@@ -13,4 +13,8 @@ export class AcceptOfferDto {
   @Length(4, 4, { message: 'PIN must be exactly 4 digits' })
   @Matches(/^\d{4}$/, { message: 'PIN must be exactly 4 digits' })
   pin: string;
+
+  @IsOptional()
+  @IsString()
+  skillTrack?: string;
 }

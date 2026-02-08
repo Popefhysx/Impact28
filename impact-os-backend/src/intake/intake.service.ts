@@ -378,8 +378,9 @@ export class IntakeService {
   /**
    * Accept offer - validate token and convert Applicant to User
    * User provides their own username and PIN
+   * If applicant's skillTrack is UNDECIDED, they must select a track
    */
-  async acceptOffer(token: string, username: string, pin: string) {
+  async acceptOffer(token: string, username: string, pin: string, skillTrack?: string) {
     const bcrypt = await import('bcrypt');
 
     const applicant = await this.prisma.applicant.findUnique({
@@ -405,6 +406,25 @@ export class IntakeService {
       throw new BadRequestException(
         'This application is not in ADMITTED status',
       );
+    }
+
+    // Handle UNDECIDED skill track — applicant must select during acceptance
+    const validTracks = ['GRAPHICS_DESIGN', 'DIGITAL_MARKETING', 'WEB_DESIGN', 'VIDEO_PRODUCTION', 'AI_FOR_BUSINESS', 'MUSIC_PRODUCTION'];
+    let finalSkillTrack = applicant.skillTrack;
+
+    if (applicant.skillTrack === 'UNDECIDED') {
+      if (!skillTrack || !validTracks.includes(skillTrack)) {
+        throw new BadRequestException(
+          `You must select a skill track. Valid options: ${validTracks.join(', ')}`,
+        );
+      }
+      finalSkillTrack = skillTrack as any;
+
+      // Update applicant record with chosen track
+      await this.prisma.applicant.update({
+        where: { id: applicant.id },
+        data: { skillTrack: skillTrack as any },
+      });
     }
 
     // Validate username format
@@ -441,7 +461,7 @@ export class IntakeService {
         firstName: applicant.firstName,
         lastName: applicant.lastName || '',
         whatsapp: applicant.whatsapp || undefined,
-        skillTrack: applicant.skillTrack,
+        skillTrack: finalSkillTrack,
         // Link to original applicant record (assessment data lives there)
         applicantId: applicant.id,
         // User-chosen authentication credentials (PIN is hashed)
@@ -516,6 +536,7 @@ export class IntakeService {
         firstName: true,
         email: true,
         status: true,
+        skillTrack: true,
         offerTokenExpiresAt: true,
       },
     });
@@ -543,6 +564,8 @@ export class IntakeService {
       valid: true,
       firstName: applicant.firstName,
       email: applicant.email,
+      skillTrack: applicant.skillTrack,
+      needsTrackSelection: applicant.skillTrack === 'UNDECIDED',
     };
   }
 

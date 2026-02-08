@@ -74,6 +74,46 @@ function formatWeeklyHours(hours: string | number | undefined): string {
     return hoursMap[String(hours)] || String(hours);
 }
 
+// Helper: Generate fallback recommendation context when diagnosticReport is missing
+function getRecommendationContext(applicant: ApplicantDetail): string {
+    const report = applicant.diagnosticReport;
+
+    // If we have a full explanation from the diagnostic report, use it
+    if (report?.aiReasoning) return report.aiReasoning;
+    if (report?.explanation) return report.explanation;
+
+    // Fallback: build a brief context from available score data
+    const parts: string[] = [];
+    const score = applicant.readinessScore;
+    const rec = applicant.aiRecommendation;
+
+    if (score !== undefined && score !== null) {
+        const pct = score <= 1 ? Math.round(score * 100) : Math.round(score);
+        if (rec === 'ADMIT') {
+            parts.push(`Strong readiness score of ${pct}%.`);
+        } else if (rec === 'WAITLIST') {
+            parts.push(`Moderate readiness score of ${pct}%, below admission threshold.`);
+        } else if (rec === 'REJECT') {
+            parts.push(`Low readiness score of ${pct}% indicates significant gaps.`);
+        } else {
+            parts.push(`Readiness score: ${pct}%.`);
+        }
+    }
+
+    if (applicant.riskFlags && applicant.riskFlags.length > 0) {
+        const flags = applicant.riskFlags
+            .slice(0, 2)
+            .map(f => f.replace(/_/g, ' ').toLowerCase());
+        parts.push(`Flagged concerns: ${flags.join(', ')}.`);
+    }
+
+    if (parts.length === 0) {
+        return 'Recommendation based on readiness threshold assessment.';
+    }
+
+    return parts.join(' ');
+}
+
 function SkillTriadMini({ technical, soft, commercial }: { technical: number; soft: number; commercial: number }) {
     const size = 120;
     const centerX = size / 2;
@@ -169,7 +209,7 @@ export default function ApplicantDetailPage() {
         }
     }, [params.id]);
 
-    const handleDecision = async (decision: 'ADMITTED' | 'CONDITIONAL' | 'REJECTED') => {
+    const handleDecision = async (decision: 'ADMITTED' | 'WAITLIST' | 'REJECTED') => {
         if (!applicant) return;
 
         setDeciding(true);
@@ -241,7 +281,7 @@ export default function ApplicantDetailPage() {
                 <div className={styles.headerMeta}>
                     <span className={`badge ${applicant.status === 'ADMITTED' ? 'badge-success' :
                         applicant.status === 'REJECTED' ? 'badge-danger' :
-                            applicant.status === 'CONDITIONAL' ? 'badge-warning' :
+                            applicant.status === 'WAITLIST' ? 'badge-warning' :
                                 'badge-gold'
                         }`}>
                         {applicant.status}
@@ -365,17 +405,17 @@ export default function ApplicantDetailPage() {
                         <div className={styles.recommendation}>
                             <h3>AI Recommendation</h3>
                             <span className={`badge ${applicant.aiRecommendation === 'ADMIT' ? 'badge-success' :
-                                applicant.aiRecommendation === 'CONDITIONAL' ? 'badge-warning' :
+                                applicant.aiRecommendation === 'WAITLIST' ? 'badge-warning' :
                                     'badge-danger'
                                 }`}>
                                 {applicant.aiRecommendation === 'ADMIT' ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
                                 {applicant.aiRecommendation}
                             </span>
-                            {/* Explanation */}
-                            {(applicant.diagnosticReport?.explanation || applicant.diagnosticReport?.aiReasoning) && (
+                            {/* Explanation — always shown */}
+                            {applicant.aiRecommendation && (
                                 <div className={styles.explanationBox}>
                                     <p className={styles.explanationText}>
-                                        {applicant.diagnosticReport?.aiReasoning || applicant.diagnosticReport?.explanation}
+                                        {getRecommendationContext(applicant)}
                                     </p>
                                     <span className={styles.methodBadge}>
                                         {applicant.diagnosticReport?.method === 'AI_CLAUDE_SONNET' ? '🤖 AI Analysis' : '📊 Rule-Based'}
@@ -491,12 +531,12 @@ export default function ApplicantDetailPage() {
                                     Admit
                                 </button>
                                 <button
-                                    className={styles.conditionalButton}
-                                    onClick={() => handleDecision('CONDITIONAL')}
+                                    className={styles.waitlistButton}
+                                    onClick={() => handleDecision('WAITLIST')}
                                     disabled={deciding}
                                 >
                                     {deciding ? <Loader2 className={styles.spinner} size={16} /> : <Clock size={16} />}
-                                    Conditional
+                                    Waitlist
                                 </button>
                                 <button
                                     className={styles.rejectButton}

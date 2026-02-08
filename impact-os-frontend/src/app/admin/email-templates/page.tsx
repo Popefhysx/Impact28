@@ -149,8 +149,6 @@ export default function AdminEmailTemplatesPage() {
         <div className={styles.container}>
             {/* Page Header with Section Tabs */}
             <PageHeader
-                title="Communications"
-                subtitle="Manage email templates and track delivery"
                 tabs={[
                     {
                         key: 'templates',

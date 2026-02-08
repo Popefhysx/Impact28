@@ -3,7 +3,6 @@ import { PrismaService } from '../prisma';
 import { EmailService, OfferEmailData } from '../email';
 import {
   ApplicantStatus,
-  ConditionalTaskType,
   RejectionReason,
 } from '@prisma/client';
 import { randomBytes } from 'crypto';
@@ -11,51 +10,11 @@ import { randomBytes } from 'crypto';
 /**
  * Admission Service
  *
- * Handles post-scoring actions:
- * - Sending admission/rejection emails
- * - Creating conditional tasks for CONDITIONAL applicants
- * - Converting admitted applicants to users
+ * Handles admin-driven post-scoring actions:
+ * - Sending admission offer emails (ADMITTED)
+ * - Sending rejection emails (REJECTED)
+ * - Waitlisting applicants (WAITLIST)
  */
-
-interface ConditionalTaskConfig {
-  type: ConditionalTaskType;
-  description: string;
-  daysToComplete: number;
-}
-
-// Default conditional tasks by risk flag
-const CONDITIONAL_TASK_MAP: Record<string, ConditionalTaskConfig> = {
-  LOW_ACTION_ORIENTATION: {
-    type: ConditionalTaskType.WHY_STATEMENT,
-    description:
-      'Write a 200-word statement explaining why you want to join and what action you will take in your first week.',
-    daysToComplete: 7,
-  },
-  WEAK_COMMITMENT_SIGNAL: {
-    type: ConditionalTaskType.TIME_AUDIT,
-    description:
-      'Complete a 7-day time audit showing how you will dedicate 10+ hours weekly to learning.',
-    daysToComplete: 7,
-  },
-  LIMITED_TIME_COMMITMENT: {
-    type: ConditionalTaskType.TIME_AUDIT,
-    description:
-      'Document your weekly schedule and identify at least 10 hours you can commit to training.',
-    daysToComplete: 5,
-  },
-  SHARED_DEVICE: {
-    type: ConditionalTaskType.OUTREACH_PROOF,
-    description:
-      'Show proof of a plan to secure consistent device access (borrowed laptop, cybercafe schedule, etc.).',
-    daysToComplete: 7,
-  },
-  DEFAULT: {
-    type: ConditionalTaskType.INTRO_QUIZ,
-    description:
-      'Complete the introductory quiz to demonstrate your commitment.',
-    daysToComplete: 7,
-  },
-};
 
 @Injectable()
 export class AdmissionService {
@@ -65,7 +24,7 @@ export class AdmissionService {
   constructor(
     private prisma: PrismaService,
     private emailService: EmailService,
-  ) {}
+  ) { }
 
   /**
    * Process admission decision after scoring
@@ -102,10 +61,6 @@ export class AdmissionService {
     switch (applicant.status) {
       case ApplicantStatus.ADMITTED:
         await this.handleAdmission(applicant);
-        break;
-
-      case ApplicantStatus.CONDITIONAL:
-        await this.handleConditional(applicant);
         break;
 
       case ApplicantStatus.WAITLIST:
@@ -177,44 +132,7 @@ export class AdmissionService {
     );
   }
 
-  /**
-   * Handle conditional admission - create task and send email
-   */
-  private async handleConditional(applicant: {
-    id: string;
-    email: string;
-    firstName: string;
-    riskFlags: string[];
-  }): Promise<void> {
-    // Determine which conditional task to assign based on risk flags
-    const taskConfig = this.determineConditionalTask(applicant.riskFlags);
 
-    // Create the conditional task
-    const deadline = new Date();
-    deadline.setDate(deadline.getDate() + taskConfig.daysToComplete);
-
-    await this.prisma.conditionalTask.create({
-      data: {
-        applicantId: applicant.id,
-        type: taskConfig.type,
-        deadline,
-      },
-    });
-
-    // Send conditional email
-    const dashboardLink = `${this.baseUrl}/apply/conditional/${applicant.id}`;
-
-    await this.emailService.sendConditionalEmail(
-      applicant.email,
-      applicant.firstName,
-      dashboardLink,
-      taskConfig.description,
-    );
-
-    this.logger.log(
-      `Created conditional task ${taskConfig.type} for ${applicant.email}`,
-    );
-  }
 
   /**
    * Handle rejection - send readiness-tiered rejection email
@@ -269,27 +187,6 @@ export class AdmissionService {
   }
 
   /**
-   * Determine which conditional task to assign based on risk flags
-   */
-  private determineConditionalTask(riskFlags: string[]): ConditionalTaskConfig {
-    // Priority order: most critical flags first
-    const priorityOrder = [
-      'LOW_ACTION_ORIENTATION',
-      'WEAK_COMMITMENT_SIGNAL',
-      'LIMITED_TIME_COMMITMENT',
-      'SHARED_DEVICE',
-    ];
-
-    for (const flag of priorityOrder) {
-      if (riskFlags.includes(flag) && CONDITIONAL_TASK_MAP[flag]) {
-        return CONDITIONAL_TASK_MAP[flag];
-      }
-    }
-
-    return CONDITIONAL_TASK_MAP.DEFAULT;
-  }
-
-  /**
    * Format rejection reason for email
    */
   private formatRejectionReason(
@@ -317,86 +214,5 @@ export class AdmissionService {
     };
 
     return reasonMap[reason] || undefined;
-  }
-
-  /**
-   * Submit proof for a conditional task
-   */
-  async submitConditionalProof(
-    applicantId: string,
-    taskId: string,
-    proofUrl: string,
-  ): Promise<boolean> {
-    const task = await this.prisma.conditionalTask.findFirst({
-      where: {
-        id: taskId,
-        applicantId: applicantId,
-        completed: false,
-      },
-    });
-
-    if (!task) {
-      return false;
-    }
-
-    // Check if deadline passed
-    if (new Date() > task.deadline) {
-      this.logger.warn(`Conditional task ${taskId} deadline passed`);
-      return false;
-    }
-
-    // Mark task as completed
-    await this.prisma.conditionalTask.update({
-      where: { id: taskId },
-      data: {
-        completed: true,
-        proofUrl,
-        submittedAt: new Date(),
-      },
-    });
-
-    // Upgrade applicant to ADMITTED
-    const applicant = await this.prisma.applicant.update({
-      where: { id: applicantId },
-      data: { status: ApplicantStatus.ADMITTED },
-      select: {
-        email: true,
-        firstName: true,
-        skillTrack: true,
-      },
-    });
-
-    // Send admission email
-    const dashboardLink = `${this.baseUrl}/dashboard`;
-    await this.emailService.sendAdmissionEmail(
-      applicant.email,
-      applicant.firstName,
-      dashboardLink,
-      applicant.skillTrack ?? undefined,
-    );
-
-    this.logger.log(
-      `Conditional task ${taskId} completed, upgraded to ADMITTED`,
-    );
-
-    return true;
-  }
-
-  /**
-   * Get pending conditional tasks for an applicant
-   */
-  async getPendingTasks(applicantId: string) {
-    return this.prisma.conditionalTask.findMany({
-      where: {
-        applicantId,
-        completed: false,
-      },
-      select: {
-        id: true,
-        type: true,
-        deadline: true,
-        createdAt: true,
-      },
-    });
   }
 }

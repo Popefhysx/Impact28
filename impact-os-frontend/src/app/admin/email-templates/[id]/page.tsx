@@ -149,8 +149,6 @@ export default function EmailTemplateEditorPage() {
 
             {/* Page Header */}
             <PageHeader
-                title={template.name}
-                subtitle={template.description}
                 actions={
                     <>
                         {hasChanges && (

@@ -23,3 +23,9 @@ export { RichTextEditor } from './RichTextEditor';
 export type { RichTextEditorProps, EditorVariable, EditorMode } from './RichTextEditor';
 
 export { NotificationHeader } from './NotificationHeader';
+
+export { StatCard } from './StatCard';
+export type { StatCardProps, StatCardBadge } from './StatCard';
+
+export { DataTable, getInitials, renderParticipant, renderActionButton } from './DataTable';
+export type { DataTableColumn, DataTableProps } from './DataTable';

@@ -6,19 +6,60 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
     LayoutDashboard, FileText, Users, DollarSign, Target,
-    PanelLeftClose, Menu, X, Settings, LogOut, ChevronUp,
+    ChevronsLeft, Menu, X, Settings, LogOut, ChevronUp,
     UserCog, BookOpen, HeartHandshake, Send, MessageSquareQuote,
-    ImageIcon, Handshake, Trophy, Calendar, Layers, Sliders, UserCircle, KeyRound
+    Handshake, UserCircle, KeyRound,
+    Shield, Bell, Layers, Calendar, Sliders
 } from 'lucide-react';
-import { NotificationHeader } from '@/components/ui';
 import styles from './layout.module.css';
 
-// Grouped navigation structure
+// ─── Route → Page Title mapping ────────────────────────────────────
+const routeTitles: Record<string, string> = {
+    '/admin': 'Dashboard',
+    '/admin/command-centre': 'Command Centre',
+    '/admin/applicants': 'Applicants',
+    '/admin/participants': 'Participants',
+    '/admin/staff': 'Staff',
+    '/admin/missions': 'Missions',
+    '/admin/support': 'Support',
+    '/admin/income': 'Income',
+    '/admin/resources': 'Resources',
+    '/admin/communications': 'Communications',
+    '/admin/partners': 'Partners',
+    '/admin/testimonials': 'Testimonials',
+    '/admin/settings/profile': 'Profile',
+    '/admin/email-templates': 'Communications',
+    '/admin/settings/change-pin': 'Change PIN',
+    '/admin/settings': 'Settings',
+};
+
+const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+};
+
+const getPageTitle = (pathname: string) => {
+    // Exact match first
+    if (routeTitles[pathname]) return routeTitles[pathname];
+    // Check prefix matches for nested routes (e.g. /admin/participants/[id])
+    const segments = pathname.split('/');
+    while (segments.length > 2) {
+        segments.pop();
+        const prefix = segments.join('/');
+        if (routeTitles[prefix]) return routeTitles[prefix];
+    }
+    return 'Admin';
+};
+
+// Grouped navigation structure — one-word labels
 const navGroups = [
     {
-        label: null, // No label for dashboard
+        label: null,
         items: [
             { href: '/admin', label: 'Dashboard', Icon: LayoutDashboard },
+            { href: '/admin/command-centre', label: 'Command', Icon: Shield },
         ]
     },
     {
@@ -35,31 +76,21 @@ const navGroups = [
             { href: '/admin/missions', label: 'Missions', Icon: Target },
             { href: '/admin/support', label: 'Support', Icon: HeartHandshake },
             { href: '/admin/income', label: 'Income', Icon: DollarSign },
+            { href: '/admin/resources', label: 'Resources', Icon: BookOpen },
         ]
     },
     {
-        label: 'Engagement',
+        label: 'Engage',
         items: [
-            { href: '/admin/communications', label: 'Communications', Icon: Send },
+            { href: '/admin/communications', label: 'Comms', Icon: Send },
             { href: '/admin/partners', label: 'Partners', Icon: Handshake },
             { href: '/admin/testimonials', label: 'Testimonials', Icon: MessageSquareQuote },
         ]
     },
     {
-        label: 'Content',
-        items: [
-            { href: '/wall', label: 'The Wall', Icon: ImageIcon },
-            { href: '/arena', label: 'The Arena', Icon: Trophy },
-            { href: '/admin/resources', label: 'Resources', Icon: BookOpen },
-        ]
-    },
-    {
         label: 'Settings',
         items: [
-            { href: '/admin/settings/cohorts', label: 'Cohorts', Icon: Users },
-            { href: '/admin/settings/phases', label: 'Phases', Icon: Layers },
-            { href: '/admin/settings/calendar', label: 'Calendar', Icon: Calendar },
-            { href: '/admin/settings/config', label: 'Program Config', Icon: Sliders },
+            { href: '/admin/settings', label: 'Settings', Icon: Settings },
         ]
     },
 ];
@@ -142,25 +173,24 @@ export default function AdminLayout({
                 <div className={styles.sidebarHeader}>
                     <div
                         className={styles.logo}
-                        onClick={() => collapsed && setCollapsed(false)}
+                        onClick={() => collapsed ? setCollapsed(false) : undefined}
                         role={collapsed ? 'button' : undefined}
                         tabIndex={collapsed ? 0 : undefined}
+                        style={collapsed ? { cursor: 'pointer' } : undefined}
                     >
-                        <Image src="/triad.webp" alt="Impact OS" width={40} height={40} />
-                        {!collapsed && <span>Impact OS</span>}
+                        <Image src="/triad.webp" alt="Impact OS" width={24} height={24} />
+                        {!collapsed && <span>Project 3:10</span>}
                     </div>
                     {!collapsed && (
                         <button
-                            className={styles.collapseBtn}
+                            className={styles.collapseToggle}
                             onClick={() => setCollapsed(true)}
                             aria-label="Collapse sidebar"
                         >
-                            <PanelLeftClose size={16} />
+                            <ChevronsLeft size={16} />
                         </button>
                     )}
                 </div>
-
-                <div className={styles.roleTag}>Admin</div>
 
                 <nav className={styles.nav}>
                     {navGroups.map((group, groupIndex) => (
@@ -228,9 +258,16 @@ export default function AdminLayout({
             </aside>
 
             <main className={`${styles.main} ${collapsed ? styles.mainCollapsed : ''}`}>
+                {/* Shared Top Bar */}
                 <div className={styles.topBar}>
+                    <div className={styles.topBarLeft}>
+                        <h1>{getPageTitle(pathname)}</h1>
+                    </div>
                     <div className={styles.topBarRight}>
-                        <NotificationHeader variant="admin" />
+                        <span className={styles.greeting}>{getGreeting()}</span>
+                        <button className={styles.notificationBtn} title="Notifications">
+                            <Bell size={18} />
+                        </button>
                     </div>
                 </div>
                 {children}

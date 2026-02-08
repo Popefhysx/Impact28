@@ -244,8 +244,6 @@ export default function CommunicationsPage() {
         <div className={styles.container}>
             {/* Page Header with Section Tabs */}
             <PageHeader
-                title="Communications"
-                subtitle="Manage email templates and track delivery"
                 tabs={[
                     {
                         key: 'templates',

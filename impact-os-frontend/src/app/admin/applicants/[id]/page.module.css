@@ -462,12 +462,12 @@
     background: #15803d;
 }
 
-.conditionalButton {
+.waitlistButton {
     background: #ca8a04;
     color: white;
 }
 
-.conditionalButton:hover:not(:disabled) {
+.waitlistButton:hover:not(:disabled) {
     background: #a16207;
 }
 
@@ -678,7 +678,112 @@
         grid-template-columns: 1fr;
     }
 
+    .scoresColumn {
+        position: static;
+        max-height: none;
+    }
+
     .infoGrid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: var(--space-md);
+    }
+
+    .header h1 {
+        font-size: 20px;
+    }
+
+    .avatar {
+        width: 44px;
+        height: 44px;
+        font-size: 15px;
+    }
+
+    .headerMeta {
+        flex-wrap: wrap;
+    }
+
+    .section {
+        padding: var(--space-md);
+    }
+
+    .section h2 {
+        font-size: 14px;
+    }
+
+    .scoreItem {
+        grid-template-columns: 100px 1fr 36px;
+        font-size: 12px;
+    }
+
+    .scoreValue {
+        font-size: 22px;
+    }
+
+    .decisionButtons {
+        flex-direction: column;
+    }
+
+    .decisionButtons button {
+        justify-content: center;
+    }
+
+    .triadLabels {
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-xs);
+    }
+
+    .supportOfferRow {
+        font-size: 13px;
+    }
+
+    .explanationText {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: var(--space-sm);
+    }
+
+    .header h1 {
+        font-size: 18px;
+    }
+
+    .avatar {
+        width: 36px;
+        height: 36px;
+        font-size: 13px;
+    }
+
+    .section {
+        padding: var(--space-sm);
+    }
+
+    .probe {
+        padding: var(--space-sm);
+    }
+
+    .probe p {
+        font-size: 13px;
+    }
+
+    .scoreCard {
+        padding: var(--space-sm);
+    }
+
+    .decisionPanel {
+        padding: var(--space-md);
+    }
+
+    .riskBadge {
+        font-size: 11px;
+        padding: 3px 6px;
     }
 }
