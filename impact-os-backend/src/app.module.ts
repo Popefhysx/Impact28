@@ -27,6 +27,7 @@ import { WallModule } from './wall';
 import { CommunicationsModule } from './communications';
 import { SettingsModule } from './settings';
 import { CommandCentreModule } from './command-centre';
+import { HealthController } from './health/health.controller';
 
 @Module({
   imports: [
@@ -61,5 +62,6 @@ import { CommandCentreModule } from './command-centre';
     SettingsModule,
     CommandCentreModule,
   ],
+  controllers: [HealthController],
 })
 export class AppModule { }
