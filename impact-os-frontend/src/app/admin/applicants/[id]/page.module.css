@@ -346,6 +346,21 @@
     border-radius: var(--radius-xs);
 }
 
+.explanationSection {
+    margin-top: var(--space-xs);
+    padding-top: var(--space-xs);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.explanationLabel {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+    letter-spacing: 0.3px;
+}
+
 /* Skill Triad */
 .triadContainer {
     display: flex;

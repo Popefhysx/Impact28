@@ -89,15 +89,44 @@ function formatCurrentStatus(status: string | undefined): string {
     return statusMap[status] || status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
-// Helper: Generate fallback recommendation context when diagnosticReport is missing
-function getRecommendationContext(applicant: ApplicantDetail): string {
+// Helper: Parse the recommendation reasoning into structured parts for display
+interface RecommendationParts {
+    summary: string;
+    strengths?: string;
+    concerns?: string;
+    method: string;
+}
+
+function getRecommendationParts(applicant: ApplicantDetail): RecommendationParts {
     const report = applicant.diagnosticReport;
+    const method = report?.method === 'AI_CLAUDE_SONNET' ? '🤖 AI Analysis' : '📊 Rule-Based';
 
-    // If we have a full explanation from the diagnostic report, use it
-    if (report?.aiReasoning) return report.aiReasoning;
-    if (report?.explanation) return report.explanation;
+    // AI reasoning may be a pre-formatted string with "Strengths:" and "Concerns:" sections
+    const reasoning = report?.aiReasoning || report?.explanation;
 
-    // Fallback: build a brief context from available score data
+    if (reasoning) {
+        // Try to parse structured sections from the reasoning string
+        const strengthsMatch = reasoning.match(/Strengths?:\s*(.+?)(?=Concerns?:|$)/is);
+        const concernsMatch = reasoning.match(/Concerns?:\s*(.+?)$/is);
+
+        if (strengthsMatch || concernsMatch) {
+            // Strip the Strengths/Concerns sections from the summary
+            const summary = reasoning
+                .replace(/Strengths?:\s*.+?(?=Concerns?:|$)/is, '')
+                .replace(/Concerns?:\s*.+$/is, '')
+                .trim();
+            return {
+                summary: summary || reasoning.split('.')[0] + '.',
+                strengths: strengthsMatch?.[1]?.trim(),
+                concerns: concernsMatch?.[1]?.trim(),
+                method,
+            };
+        }
+
+        return { summary: reasoning, method };
+    }
+
+    // Fallback: build context from score data
     const parts: string[] = [];
     const score = applicant.readinessScore;
     const rec = applicant.aiRecommendation;
@@ -105,28 +134,40 @@ function getRecommendationContext(applicant: ApplicantDetail): string {
     if (score !== undefined && score !== null) {
         const pct = score <= 1 ? Math.round(score * 100) : Math.round(score);
         if (rec === 'ADMIT') {
-            parts.push(`Strong readiness score of ${pct}%.`);
+            parts.push(`Strong readiness score of ${pct}%, showing solid preparation for the program.`);
         } else if (rec === 'WAITLIST') {
-            parts.push(`Moderate readiness score of ${pct}%, below admission threshold.`);
+            parts.push(`Readiness score of ${pct}% is below the admission threshold but shows potential.`);
         } else if (rec === 'REJECT') {
-            parts.push(`Low readiness score of ${pct}% indicates significant gaps.`);
+            parts.push(`Readiness score of ${pct}% indicates significant gaps that need addressing before joining.`);
         } else {
             parts.push(`Readiness score: ${pct}%.`);
         }
     }
 
     if (applicant.riskFlags && applicant.riskFlags.length > 0) {
+        const flagLabels: Record<string, string> = {
+            LOW_ACTION_ORIENTATION: 'passive approach to applying skills',
+            LOW_MARKET_AWARENESS: 'limited commercial understanding',
+            LOW_REJECTION_RESILIENCE: 'may struggle with setbacks',
+            WEAK_COMMITMENT_SIGNAL: 'unclear program commitment',
+            NO_INTERNET_ACCESS: 'no reliable internet access',
+            LIMITED_TIME_COMMITMENT: 'limited available hours',
+            SHARED_DEVICE: 'uses a shared device',
+        };
         const flags = applicant.riskFlags
-            .slice(0, 2)
-            .map(f => f.replace(/_/g, ' ').toLowerCase());
-        parts.push(`Flagged concerns: ${flags.join(', ')}.`);
+            .slice(0, 3)
+            .map(f => flagLabels[f] || f.replace(/_/g, ' ').toLowerCase());
+        return {
+            summary: parts.join(' '),
+            concerns: flags.join('; '),
+            method,
+        };
     }
 
-    if (parts.length === 0) {
-        return 'Recommendation based on readiness threshold assessment.';
-    }
-
-    return parts.join(' ');
+    return {
+        summary: parts.length > 0 ? parts.join(' ') : 'Recommendation based on readiness threshold assessment.',
+        method,
+    };
 }
 
 function SkillTriadMini({ technical, soft, commercial }: { technical: number; soft: number; commercial: number }) {
@@ -433,17 +474,28 @@ export default function ApplicantDetailPage() {
                                 {applicant.aiRecommendation === 'ADMIT' ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
                                 {applicant.aiRecommendation}
                             </span>
-                            {/* Explanation — always shown */}
-                            {applicant.aiRecommendation && (
-                                <div className={styles.explanationBox}>
-                                    <p className={styles.explanationText}>
-                                        {getRecommendationContext(applicant)}
-                                    </p>
-                                    <span className={styles.methodBadge}>
-                                        {applicant.diagnosticReport?.method === 'AI_CLAUDE_SONNET' ? '🤖 AI Analysis' : '📊 Rule-Based'}
-                                    </span>
-                                </div>
-                            )}
+                            {/* Structured Explanation */}
+                            {applicant.aiRecommendation && (() => {
+                                const rec = getRecommendationParts(applicant);
+                                return (
+                                    <div className={styles.explanationBox}>
+                                        <p className={styles.explanationText}>{rec.summary}</p>
+                                        {rec.strengths && (
+                                            <div className={styles.explanationSection}>
+                                                <span className={styles.explanationLabel}>✅ Strengths</span>
+                                                <p className={styles.explanationText}>{rec.strengths}</p>
+                                            </div>
+                                        )}
+                                        {rec.concerns && (
+                                            <div className={styles.explanationSection}>
+                                                <span className={styles.explanationLabel}>⚠️ Concerns</span>
+                                                <p className={styles.explanationText}>{rec.concerns}</p>
+                                            </div>
+                                        )}
+                                        <span className={styles.methodBadge}>{rec.method}</span>
+                                    </div>
+                                );
+                            })()}
                         </div>
                     </section>
 

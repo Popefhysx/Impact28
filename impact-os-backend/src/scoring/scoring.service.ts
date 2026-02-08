@@ -273,6 +273,7 @@ export class ScoringService {
       readinessScore,
       { actionOrientation, marketAwareness, rejectionResilience, commitmentSignal },
       riskFlags,
+      applicant,
     );
 
     return {
@@ -317,67 +318,126 @@ export class ScoringService {
   }
 
   /**
-   * Generate a human-readable explanation for the recommendation
+   * Generate a human-readable, context-specific explanation for the recommendation.
+   * References applicant's actual situation, answers, and specific gaps.
    */
   private generateExplanation(
     recommendation: string,
     readinessScore: number,
     scores: ProbeScores,
     riskFlags: string[],
+    applicant?: Applicant,
   ): string {
     const scorePercent = Math.round(readinessScore * 100);
     const parts: string[] = [];
 
-    // Main recommendation reason
+    // Build contextual opening based on applicant situation
+    const situationContext = applicant ? this.buildSituationContext(applicant) : '';
+
+    // Main recommendation narrative
     switch (recommendation) {
       case 'ADMIT':
-        parts.push(`Strong readiness score of ${scorePercent}% with no risk flags.`);
+        parts.push(
+          `${situationContext}With an overall readiness score of ${scorePercent}%, this applicant shows strong potential.`,
+        );
         break;
       case 'WAITLIST':
         if (riskFlags.length > 0) {
-          parts.push(`Moderate readiness (${scorePercent}%) with flagged concerns.`);
+          parts.push(
+            `${situationContext}Readiness is at ${scorePercent}% with some flagged concerns that may need addressing before full admission.`,
+          );
         } else {
-          parts.push(`Readiness score of ${scorePercent}% is below admission threshold.`);
+          parts.push(
+            `${situationContext}At ${scorePercent}%, this applicant is close to the admission threshold but falls short in key areas.`,
+          );
         }
         break;
       case 'REJECT':
-        parts.push(`Low readiness score of ${scorePercent}% indicates significant gaps.`);
+        parts.push(
+          `${situationContext}With a readiness score of ${scorePercent}%, significant gaps were identified that suggest this applicant is not yet ready for the program.`,
+        );
         break;
     }
 
-    // Highlight lowest score
+    // Highlight strongest area with context
+    const strongestScore = Object.entries(scores).reduce((max, [key, val]) =>
+      val > max.val ? { key, val } : max,
+      { key: '', val: 0 },
+    );
+    const scoreLabels: Record<string, string> = {
+      actionOrientation: 'action orientation — willingness to apply skills practically',
+      marketAwareness: 'market awareness — understanding of commercial value',
+      rejectionResilience: 'rejection resilience — ability to handle setbacks',
+      commitmentSignal: 'commitment signal — clarity of purpose and follow-through',
+    };
+    if (strongestScore.val >= 0.7) {
+      parts.push(
+        `Strongest area: ${scoreLabels[strongestScore.key]} (${Math.round(strongestScore.val * 100)}%).`,
+      );
+    }
+
+    // Highlight weakest area with actionable context
     const lowestScore = Object.entries(scores).reduce((min, [key, val]) =>
       val < min.val ? { key, val } : min,
       { key: '', val: 1 },
     );
-    const scoreLabels: Record<string, string> = {
-      actionOrientation: 'action orientation',
-      marketAwareness: 'market awareness',
-      rejectionResilience: 'rejection resilience',
-      commitmentSignal: 'commitment signal',
-    };
     if (lowestScore.val < 0.5) {
-      parts.push(`Lowest area: ${scoreLabels[lowestScore.key]} (${Math.round(lowestScore.val * 100)}%).`);
+      parts.push(
+        `Area needing growth: ${scoreLabels[lowestScore.key]} (${Math.round(lowestScore.val * 100)}%).`,
+      );
     }
 
-    // Risk flags summary
+    // Risk flags with human-readable descriptions
     if (riskFlags.length > 0) {
       const flagDescriptions: Record<string, string> = {
-        LOW_ACTION_ORIENTATION: 'passive approach to skill application',
-        LOW_MARKET_AWARENESS: 'limited commercial understanding',
-        LOW_REJECTION_RESILIENCE: 'concerns about handling setbacks',
-        WEAK_COMMITMENT_SIGNAL: 'unclear commitment to program',
-        NO_INTERNET_ACCESS: 'no reliable internet access',
-        LIMITED_TIME_COMMITMENT: 'limited weekly hours available',
-        SHARED_DEVICE: 'relies on shared device',
+        LOW_ACTION_ORIENTATION: 'shows a passive approach to applying new skills',
+        LOW_MARKET_AWARENESS: 'has limited understanding of how to monetize skills',
+        LOW_REJECTION_RESILIENCE: 'may struggle with the setbacks inherent in market exposure',
+        WEAK_COMMITMENT_SIGNAL: 'commitment to the full program schedule is unclear',
+        NO_INTERNET_ACCESS: 'lacks reliable internet, which is essential for the program',
+        LIMITED_TIME_COMMITMENT: 'available weekly hours may be insufficient for program demands',
+        SHARED_DEVICE: 'relies on a shared device, which may limit consistent participation',
       };
       const flagTexts = riskFlags
         .map(f => flagDescriptions[f] || f.toLowerCase().replace(/_/g, ' '))
-        .slice(0, 2);
-      parts.push(`Concerns: ${flagTexts.join(', ')}.`);
+        .slice(0, 3);
+      parts.push(`Flagged concerns: ${flagTexts.join('; ')}.`);
     }
 
     return parts.join(' ');
+  }
+
+  /**
+   * Build a brief context sentence about the applicant's situation.
+   */
+  private buildSituationContext(applicant: Applicant): string {
+    const statusMap: Record<string, string> = {
+      UNEMPLOYED: 'currently unemployed',
+      UNDEREMPLOYED: 'currently underemployed',
+      STUDENT: 'a student',
+      CAREGIVER: 'a caregiver',
+      BETWEEN_JOBS: 'between jobs',
+      STRUGGLING_BUSINESS: 'running a struggling business',
+    };
+    const situation = statusMap[applicant.currentStatus as string] || '';
+    const trackMap: Record<string, string> = {
+      GRAPHICS_DESIGN: 'graphic design',
+      DIGITAL_MARKETING: 'digital marketing',
+      WEB_DESIGN: 'web design',
+      VIDEO_PRODUCTION: 'video production',
+      AI_FOR_BUSINESS: 'AI for business',
+      MUSIC_PRODUCTION: 'music production',
+    };
+    const track = trackMap[applicant.skillTrack as string] || applicant.skillTrack || '';
+
+    const parts: string[] = [];
+    if (situation) parts.push(situation);
+    if (track) parts.push(`pursuing ${track}`);
+
+    if (parts.length > 0) {
+      return `This applicant is ${parts.join(' and ')}. `;
+    }
+    return '';
   }
 
   /**
@@ -385,7 +445,9 @@ export class ScoringService {
    */
   private async scoreWithAI(applicant: Applicant): Promise<ScoringResult> {
     const prompt = this.buildScoringPrompt(applicant);
-    const systemPrompt = `You are an AI evaluator for a skills training program. You assess applicant readiness based on their responses to diagnostic probes. Be encouraging but honest. Score each dimension 0-1.
+    const systemPrompt = `You are an AI evaluator for Cycle 28, a skills training program for young Nigerians. You assess applicant readiness based on their diagnostic probe responses and background.
+
+Score each dimension 0.0–1.0 and provide a contextual recommendation narrative.
 
 Return JSON only:
 {
@@ -394,7 +456,11 @@ Return JSON only:
   "rejectionResilience": 0.0-1.0,
   "commitmentSignal": 0.0-1.0,
   "riskFlags": ["FLAG1", "FLAG2"],
-  "reasoning": "Brief explanation"
+  "reasoning": {
+    "summary": "1-2 sentence overall assessment referencing the applicant's specific background and situation",
+    "strengths": "What stood out positively from their probe answers — cite specific things they said",
+    "concerns": "Specific gaps or risks, or 'None identified' if strong applicant"
+  }
 }`;
 
     try {
@@ -407,7 +473,7 @@ Return JSON only:
         },
         body: JSON.stringify({
           model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 500,
+          max_tokens: 800,
           system: systemPrompt,
           messages: [{ role: 'user', content: prompt }],
         }),
@@ -437,6 +503,21 @@ Return JSON only:
         recommendation = 'REJECT';
       }
 
+      // Process reasoning into a single human-readable string
+      const aiReasoningRaw = aiResult.reasoning;
+      let aiReasoning: string;
+      if (typeof aiReasoningRaw === 'object' && aiReasoningRaw !== null) {
+        const reasonParts: string[] = [];
+        if (aiReasoningRaw.summary) reasonParts.push(aiReasoningRaw.summary);
+        if (aiReasoningRaw.strengths) reasonParts.push(`Strengths: ${aiReasoningRaw.strengths}`);
+        if (aiReasoningRaw.concerns && aiReasoningRaw.concerns !== 'None identified') {
+          reasonParts.push(`Concerns: ${aiReasoningRaw.concerns}`);
+        }
+        aiReasoning = reasonParts.join(' ');
+      } else {
+        aiReasoning = String(aiReasoningRaw || '');
+      }
+
       return {
         readinessScore,
         scores: {
@@ -450,7 +531,7 @@ Return JSON only:
         diagnosticReport: {
           method: 'AI_CLAUDE_SONNET',
           timestamp: new Date().toISOString(),
-          aiReasoning: aiResult.reasoning,
+          aiReasoning,
           probeAnalysis: {
             technical: {
               text: applicant.technicalProbe,
