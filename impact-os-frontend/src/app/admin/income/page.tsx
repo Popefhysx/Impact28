@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Check, X, Eye, ExternalLink, Clock, User, Banknote, AlertCircle, Loader2 } from 'lucide-react';
+import { useToast } from '@/components/admin/Toast';
 import styles from './page.module.css';
 
 // Types for income verification
@@ -81,6 +82,7 @@ function formatTimeAgo(date: Date) {
 }
 
 export default function IncomeVerificationPage() {
+    const { showToast } = useToast();
     const [pendingIncomes, setPendingIncomes] = useState<Income[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedIncome, setSelectedIncome] = useState<string | null>(null);
@@ -140,11 +142,11 @@ export default function IncomeVerificationPage() {
             if (response.ok) {
                 setPendingIncomes(prev => prev.filter(i => i.id !== incomeId));
             } else {
-                alert(`Failed to approve income ${incomeId}`);
+                showToast('error', `Failed to approve income ${incomeId}`);
             }
         } catch (error) {
             console.error('Approve failed:', error);
-            alert(`Error approving income ${incomeId}`);
+            showToast('error', `Error approving income ${incomeId}`);
         }
     };
 
@@ -163,11 +165,11 @@ export default function IncomeVerificationPage() {
             if (response.ok) {
                 setPendingIncomes(prev => prev.filter(i => i.id !== incomeId));
             } else {
-                alert(`Failed to reject income ${incomeId}`);
+                showToast('error', `Failed to reject income ${incomeId}`);
             }
         } catch (error) {
             console.error('Reject failed:', error);
-            alert(`Error rejecting income ${incomeId}`);
+            showToast('error', `Error rejecting income ${incomeId}`);
         }
     };
 

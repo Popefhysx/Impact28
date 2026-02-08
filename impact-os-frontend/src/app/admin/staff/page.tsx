@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Search, Filter, UserPlus, Eye, MoreHorizontal, Shield, UserCheck, UserMinus, ChevronDown, Users, X } from 'lucide-react';
 import { Select } from '@/components/ui';
+import { useToast } from '@/components/admin/Toast';
 import styles from './page.module.css';
 
 // Types
@@ -50,6 +51,7 @@ const categoryIcons: Record<string, React.ReactNode> = {
 };
 
 export default function StaffPage() {
+    const { showToast } = useToast();
     const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -67,110 +69,6 @@ export default function StaffPage() {
     const [inviteLoading, setInviteLoading] = useState(false);
 
     const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-
-    // Mock data for demonstration
-    const mockStaffMembers: StaffMember[] = [
-        {
-            id: '1',
-            category: 'ADMIN',
-            isSuperAdmin: true,
-            capabilities: ['admin.full', 'staff.invite', 'staff.manage', 'admissions.manage'],
-            cohortIds: [],
-            isActive: true,
-            invitedAt: '2026-01-01T00:00:00Z',
-            user: {
-                id: 'u1',
-                email: 'sarah.johnson@cycle28.org',
-                firstName: 'Sarah',
-                lastName: 'Johnson',
-                avatarUrl: null,
-                lastLoginAt: '2026-01-29T10:30:00Z',
-            },
-        },
-        {
-            id: '2',
-            category: 'STAFF',
-            isSuperAdmin: false,
-            capabilities: ['participants.view', 'participants.edit', 'income.review', 'income.approve'],
-            cohortIds: ['cohort-1'],
-            isActive: true,
-            invitedAt: '2026-01-10T00:00:00Z',
-            user: {
-                id: 'u2',
-                email: 'david.okafor@cycle28.org',
-                firstName: 'David',
-                lastName: 'Okafor',
-                avatarUrl: null,
-                lastLoginAt: '2026-01-28T15:45:00Z',
-            },
-        },
-        {
-            id: '3',
-            category: 'STAFF',
-            isSuperAdmin: false,
-            capabilities: ['admissions.manage', 'cohort.manage', 'reports.view'],
-            cohortIds: ['cohort-1', 'cohort-2'],
-            isActive: true,
-            invitedAt: '2026-01-05T00:00:00Z',
-            user: {
-                id: 'u3',
-                email: 'aisha.ibrahim@cycle28.org',
-                firstName: 'Aisha',
-                lastName: 'Ibrahim',
-                avatarUrl: null,
-                lastLoginAt: '2026-01-29T08:00:00Z',
-            },
-        },
-        {
-            id: '4',
-            category: 'OBSERVER',
-            isSuperAdmin: false,
-            capabilities: ['reports.view', 'audit.view'],
-            cohortIds: ['cohort-1'],
-            isActive: true,
-            invitedAt: '2026-01-15T00:00:00Z',
-            user: {
-                id: 'u4',
-                email: 'partner@fundingorg.org',
-                firstName: 'Michael',
-                lastName: 'Chen',
-                avatarUrl: null,
-                lastLoginAt: '2026-01-25T14:20:00Z',
-            },
-        },
-        {
-            id: '5',
-            category: 'STAFF',
-            isSuperAdmin: false,
-            capabilities: ['participants.view', 'support.manage', 'stipend.approve'],
-            cohortIds: ['cohort-2'],
-            isActive: false,
-            invitedAt: '2025-12-01T00:00:00Z',
-            user: {
-                id: 'u5',
-                email: 'former.staff@cycle28.org',
-                firstName: 'James',
-                lastName: 'Adeyemi',
-                avatarUrl: null,
-                lastLoginAt: null,
-            },
-        },
-    ];
-
-    const mockTemplates: CapabilityTemplate[] = [
-        { id: 'mentor', label: 'Mentor', description: 'View participants and communicate directly', capabilities: [] },
-        { id: 'ops', label: 'Operations', description: 'Manage admissions and support requests', capabilities: [] },
-        { id: 'finance', label: 'Finance', description: 'Manage support budgets and disbursements', capabilities: [] },
-        { id: 'volunteer', label: 'Volunteer', description: 'Limited participant interaction', capabilities: [] },
-        { id: 'impact', label: 'Impact', description: 'Track outcomes and generate reports', capabilities: [] },
-        { id: 'partner', label: 'Partner', description: 'External stakeholder visibility', capabilities: [] },
-    ];
-
-    const mockCohorts: Cohort[] = [
-        { id: 'cohort-1', name: 'Cohort 28 - Lagos' },
-        { id: 'cohort-2', name: 'Cohort 28 - Abuja' },
-        { id: 'cohort-3', name: 'Cohort 29 - Lagos (Upcoming)' },
-    ];
 
     // Fetch staff members
     useEffect(() => {
@@ -190,47 +88,36 @@ export default function StaffPage() {
 
                 if (staffRes.ok) {
                     const data = await staffRes.json();
-                    setStaffMembers(data.staff?.length > 0 ? data.staff : (process.env.NODE_ENV !== 'production' ? mockStaffMembers : []));
-                } else if (process.env.NODE_ENV !== 'production') {
-                    setStaffMembers(mockStaffMembers);
+                    setStaffMembers(data.staff || []);
                 } else {
                     setStaffMembers([]);
                 }
 
                 if (templatesRes.ok) {
                     const tData = await templatesRes.json();
-                    setTemplates(tData.templates?.length > 0 ? tData.templates : (process.env.NODE_ENV !== 'production' ? mockTemplates : []));
-                } else if (process.env.NODE_ENV !== 'production') {
-                    setTemplates(mockTemplates);
+                    setTemplates(tData.templates || []);
                 } else {
                     setTemplates([]);
                 }
 
                 if (cohortsRes.ok) {
                     const cData = await cohortsRes.json();
-                    setCohorts(cData?.length > 0 ? cData : (process.env.NODE_ENV !== 'production' ? mockCohorts : []));
-                } else if (process.env.NODE_ENV !== 'production') {
-                    setCohorts(mockCohorts);
+                    setCohorts(Array.isArray(cData) ? cData : []);
                 } else {
                     setCohorts([]);
                 }
             } catch (error) {
                 console.error('Failed to fetch data:', error);
-                if (process.env.NODE_ENV !== 'production') {
-                    setStaffMembers(mockStaffMembers);
-                    setTemplates(mockTemplates);
-                    setCohorts(mockCohorts);
-                } else {
-                    setStaffMembers([]);
-                    setTemplates([]);
-                    setCohorts([]);
-                }
+                setStaffMembers([]);
+                setTemplates([]);
+                setCohorts([]);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
+
     }, [API_BASE]);
 
     // Filter staff
@@ -298,10 +185,10 @@ export default function StaffPage() {
             setShowInviteModal(false);
 
             // Show success feedback
-            alert('Invite sent successfully!');
+            showToast('success', 'Invite sent successfully!');
         } catch (error) {
             console.error('Invite failed:', error);
-            alert(error instanceof Error ? error.message : 'Failed to send invite. Please try again.');
+            showToast('error', error instanceof Error ? error.message : 'Failed to send invite. Please try again.');
         } finally {
             setInviteLoading(false);
         }
@@ -311,7 +198,6 @@ export default function StaffPage() {
         <div className={styles.container}>
             <header className={styles.header}>
                 <div>
-                    <h1>Staff Management</h1>
                     <p className={styles.subtitle}>Manage team members and their access levels</p>
                 </div>
                 <div className={styles.headerActions}>

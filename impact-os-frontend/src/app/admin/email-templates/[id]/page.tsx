@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Save, Loader2, AlertTriangle, Info, Send } from 'lucide-react';
 import { PageHeader, RichTextEditor, EditorVariable } from '@/components/ui';
+import { useToast } from '@/components/admin/Toast';
 import styles from './page.module.css';
 import { EmailTemplate } from '../types';
 import { getMockTemplate } from '../mockTemplates';
@@ -32,6 +33,7 @@ export default function EmailTemplateEditorPage() {
     const router = useRouter();
     const params = useParams();
     const templateId = params.id as string;
+    const { showToast } = useToast();
 
     const [template, setTemplate] = useState<EmailTemplate | null>(null);
     const [loading, setLoading] = useState(true);
@@ -109,7 +111,7 @@ export default function EmailTemplateEditorPage() {
 
     const handleSubmitForApproval = async () => {
         await handleSave();
-        alert('Template submitted for approval!');
+        showToast('success', 'Template submitted for approval!');
     };
 
     const hasChanges = template && (

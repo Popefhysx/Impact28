@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Users, Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
 import { PageHeader, Modal } from '@/components/ui';
+import { useToast } from '@/components/admin/Toast';
 import styles from '../settings.module.css';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
@@ -21,6 +22,7 @@ interface Cohort {
 }
 
 export default function CohortsPage() {
+    const { showToast } = useToast();
     const [cohorts, setCohorts] = useState<Cohort[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -113,7 +115,7 @@ export default function CohortsPage() {
                 await fetchCohorts();
             } else {
                 const data = await res.json();
-                alert(data.message || 'Cannot delete cohort with enrolled users');
+                showToast('error', data.message || 'Cannot delete cohort with enrolled users');
             }
         } catch (error) {
             console.error('Failed to delete cohort:', error);

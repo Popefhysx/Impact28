@@ -15,7 +15,7 @@ interface ProfileData {
     avatarUrl?: string;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 export default function ProfilePage() {
     const [profile, setProfile] = useState<ProfileData>({
@@ -40,7 +40,7 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
         try {
             const token = localStorage.getItem('auth_token');
-            const res = await fetch(`${API_BASE}/api/user/profile`, {
+            const res = await fetch(`${API_BASE}/user/profile`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                 },
@@ -72,7 +72,7 @@ export default function ProfilePage() {
 
         try {
             const token = localStorage.getItem('auth_token');
-            const res = await fetch(`${API_BASE}/api/user/profile`, {
+            const res = await fetch(`${API_BASE}/user/profile`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,

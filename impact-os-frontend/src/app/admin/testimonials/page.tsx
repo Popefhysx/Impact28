@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Search, Filter, Check, X, Clock, Star, Loader2, MessageSquareQuote, LayoutGrid, LayoutList, MapPin, Briefcase, Eye, PenSquare } from 'lucide-react';
 import Image from 'next/image';
 import { Select } from '@/components/ui/Select';
+import { useToast } from '@/components/admin/Toast';
 import styles from './page.module.css';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
@@ -99,6 +100,7 @@ const mockTestimonials: Testimonial[] = [
 ];
 
 export default function AdminTestimonialsPage() {
+    const { showToast } = useToast();
     const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('ALL');
@@ -232,7 +234,7 @@ export default function AdminTestimonialsPage() {
 
         // Validation: Ensure at least one of Company or Location is provided
         if (!editForm.company?.trim() && !editForm.location?.trim()) {
-            alert('Please provide either a Company or a Location.');
+            showToast('warning', 'Please provide either a Company or a Location.');
             return;
         }
 

@@ -6,6 +6,7 @@ import {
     Layers, ArrowUp, ArrowDown, Calendar, Clock, CalendarDays, Info
 } from 'lucide-react';
 import { PageHeader, Modal } from '@/components/ui';
+import { useToast } from '@/components/admin/Toast';
 import styles from './settings.module.css';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
@@ -113,6 +114,7 @@ export default function SettingsPage() {
 // COHORTS TAB — One-Date System
 // ============================================================================
 function CohortsTab() {
+    const { showToast } = useToast();
     const [cohorts, setCohorts] = useState<Cohort[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -168,7 +170,7 @@ function CohortsTab() {
         if (!confirm('Are you sure you want to delete this cohort?')) return;
         try {
             const res = await fetch(`${API_BASE}/settings/cohorts/${id}`, { method: 'DELETE' });
-            if (res.ok) { await fetchCohorts(); } else { const data = await res.json(); alert(data.message || 'Cannot delete cohort with enrolled users'); }
+            if (res.ok) { await fetchCohorts(); } else { const data = await res.json(); showToast('error', data.message || 'Cannot delete cohort with enrolled users'); }
         } catch (error) { console.error('Failed to delete cohort:', error); }
     };
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Filter, Check, X, Clock, AlertTriangle, Loader2, HeartHandshake, ArrowUpCircle, LayoutGrid, LayoutList } from 'lucide-react';
 import { Select } from '@/components/ui/Select';
+import { useToast } from '@/components/admin/Toast';
 import styles from './page.module.css';
 
 // Types
@@ -102,6 +103,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof
 };
 
 export default function AdminSupportQueuePage() {
+    const { showToast } = useToast();
     const [requests, setRequests] = useState<SupportRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'DENIED' | 'COMPLETED'>('ALL');
@@ -227,7 +229,7 @@ export default function AdminSupportQueuePage() {
         });
 
         // Show success feedback
-        alert('Request escalated to supervisor');
+        showToast('success', 'Request escalated to supervisor');
 
         setProcessing(false);
         setActionModal(null);

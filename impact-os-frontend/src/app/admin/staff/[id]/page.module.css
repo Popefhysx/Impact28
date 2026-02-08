@@ -52,6 +52,7 @@
 
 .saveButton:hover:not(:disabled) {
     background: var(--gold-deep);
+    color: white;
 }
 
 .saveButton:disabled {

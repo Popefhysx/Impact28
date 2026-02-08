@@ -287,6 +287,7 @@
 
 .viewButton:hover {
     background: var(--navy-dark);
+    color: white;
 }
 
 /* Grid View (Mobile) */

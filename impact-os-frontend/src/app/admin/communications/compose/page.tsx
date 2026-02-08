@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { ArrowLeft, Send, User, Users, Loader2, Eye, Save, X, UsersRound, CheckCircle, FileText, Briefcase, Handshake } from 'lucide-react';
 import Link from 'next/link';
 import { Select, RichTextEditor, Modal } from '@/components/ui';
+import { useToast } from '@/components/admin/Toast';
 import styles from './page.module.css';
 
 interface Recipient {
@@ -61,6 +62,7 @@ const COMPOSE_VARIABLES = [
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export default function ComposePage() {
+    const { showToast } = useToast();
     // Recipient mode
     const [segmentType, setSegmentType] = useState<SegmentType>('individual');
     const [recipients, setRecipients] = useState<Recipient[]>([]);
@@ -203,7 +205,7 @@ export default function ComposePage() {
     // Save as template
     const handleSaveTemplate = async () => {
         if (!templateName.trim() || !templateSlug.trim()) {
-            alert('Please enter a name and slug for the template');
+            showToast('warning', 'Please enter a name and slug for the template');
             return;
         }
 
@@ -234,11 +236,11 @@ export default function ComposePage() {
                 setTemplates(Array.isArray(updated) ? updated : []);
             } else {
                 const error = await res.json();
-                alert(error.message || 'Failed to save template');
+                showToast('error', error.message || 'Failed to save template');
             }
         } catch (error) {
             console.error('Save template error:', error);
-            alert('Failed to save template');
+            showToast('error', 'Failed to save template');
         } finally {
             setSavingTemplate(false);
         }
@@ -256,7 +258,7 @@ export default function ComposePage() {
     // Send email
     const handleSend = async () => {
         if (!subject.trim() || !content.trim()) {
-            alert('Please enter subject and content');
+            showToast('warning', 'Please enter subject and content');
             return;
         }
 
@@ -265,7 +267,7 @@ export default function ComposePage() {
         try {
             if (segmentType === 'individual') {
                 if (recipients.length === 0) {
-                    alert('Please add at least one recipient');
+                    showToast('warning', 'Please add at least one recipient');
                     setSending(false);
                     return;
                 }
@@ -283,12 +285,12 @@ export default function ComposePage() {
                     setSendSuccess(true);
                     setTimeout(() => setSendSuccess(false), 3000);
                 } else {
-                    alert(data.message || 'Send failed');
+                    showToast('error', data.message || 'Send failed');
                 }
             } else {
                 const segment = getSegmentPayload();
                 if (!segment) {
-                    alert('Please select a segment');
+                    showToast('warning', 'Please select a segment');
                     setSending(false);
                     return;
                 }
@@ -306,12 +308,12 @@ export default function ComposePage() {
                     setSendSuccess(true);
                     setTimeout(() => setSendSuccess(false), 3000);
                 } else {
-                    alert(data.message || 'Send failed');
+                    showToast('error', data.message || 'Send failed');
                 }
             }
         } catch (error) {
             console.error('Send error:', error);
-            alert('Failed to send email');
+            showToast('error', 'Failed to send email');
         } finally {
             setSending(false);
         }
