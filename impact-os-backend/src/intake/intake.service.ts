@@ -246,7 +246,7 @@ export class IntakeService {
         applicantId: submitted.id,
       })
       .catch((error: Error) => {
-        this.logger.error(`Admin alert failed: ${error.message}`);
+        this.logger.error(`Admin alert failed for ${submitted.id}: ${error.message}`, error.stack);
       });
 
     // Trigger AI scoring (async, non-blocking)
@@ -258,7 +258,7 @@ export class IntakeService {
         );
       })
       .catch((error: Error) => {
-        this.logger.error(`Scoring failed for ${id}: ${error.message}`);
+        this.logger.error(`Scoring failed for ${id}: ${error.message}`, error.stack);
       });
 
     return {

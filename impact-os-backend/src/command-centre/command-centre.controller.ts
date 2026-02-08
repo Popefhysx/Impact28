@@ -13,6 +13,8 @@ import { StateAuthorityService } from './state-authority.service';
 import { PauseEscalationService } from './pause-escalation.service';
 import { GraduationAuthorityService } from './graduation-authority.service';
 import { GateType, ParticipantState } from '@prisma/client';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CapabilityGuard } from '../staff/guards';
 
 /**
  * Command Centre Controller
@@ -21,6 +23,7 @@ import { GateType, ParticipantState } from '@prisma/client';
  * Provides dashboards, gate management, and override capabilities.
  */
 @Controller('admin/command-centre')
+@UseGuards(JwtAuthGuard, CapabilityGuard)
 export class CommandCentreController {
     constructor(
         private calendarEngine: CalendarEngineService,

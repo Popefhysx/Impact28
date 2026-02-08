@@ -154,10 +154,11 @@ export class AdminService {
     }
 
     // Count scored applicants and pending testimonials/partners
+    // .catch(() => 0) for resilience: SCORED enum and Partner table may not exist until migrations are applied
     const [scoredCount, pendingTestimonials, pendingPartners] = await Promise.all([
-      this.prisma.applicant.count({ where: { status: ApplicantStatus.SCORED } }),
-      this.prisma.testimonial.count({ where: { status: TestimonialStatus.PENDING } }),
-      this.prisma.partner.count({ where: { status: { in: ['LEAD', 'QUALIFIED'] } } }),
+      this.prisma.applicant.count({ where: { status: ApplicantStatus.SCORED } }).catch(() => 0),
+      this.prisma.testimonial.count({ where: { status: TestimonialStatus.PENDING } }).catch(() => 0),
+      this.prisma.partner.count({ where: { status: { in: ['LEAD', 'QUALIFIED'] } } }).catch(() => 0),
     ]);
 
     return {

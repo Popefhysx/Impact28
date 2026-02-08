@@ -48,8 +48,14 @@ export class NotificationsService {
                 where: { status: InquiryStatus.NEW },
             }).catch(() => 0), // May not exist
             // Pending + scored applications awaiting admin decision
+            // .catch(() => 0) for resilience: SCORED enum may not exist until migrations are applied
             this.prisma.applicant.count({
                 where: { status: { in: [ApplicantStatus.PENDING, ApplicantStatus.SCORED] } },
+            }).catch(() => {
+                // Fallback: count only PENDING if SCORED enum doesn't exist
+                return this.prisma.applicant.count({
+                    where: { status: ApplicantStatus.PENDING },
+                }).catch(() => 0);
             }),
             // Pending income reviews
             this.prisma.incomeRecord.count({
@@ -93,12 +99,23 @@ export class NotificationsService {
         }
 
         // Get pending + scored applications as notifications
-        const pendingApplications = await this.prisma.applicant.findMany({
-            where: { status: { in: [ApplicantStatus.PENDING, ApplicantStatus.SCORED] } },
-            orderBy: { submittedAt: 'desc' },
-            take: 5,
-            select: { id: true, firstName: true, lastName: true, submittedAt: true, status: true },
-        });
+        // Resilient: fall back to PENDING-only query if SCORED enum doesn't exist
+        let pendingApplications: Array<{ id: string; firstName: string; lastName: string; submittedAt: Date | null; status: ApplicantStatus }> = [];
+        try {
+            pendingApplications = await this.prisma.applicant.findMany({
+                where: { status: { in: [ApplicantStatus.PENDING, ApplicantStatus.SCORED] } },
+                orderBy: { submittedAt: 'desc' },
+                take: 5,
+                select: { id: true, firstName: true, lastName: true, submittedAt: true, status: true },
+            });
+        } catch {
+            pendingApplications = await this.prisma.applicant.findMany({
+                where: { status: ApplicantStatus.PENDING },
+                orderBy: { submittedAt: 'desc' },
+                take: 5,
+                select: { id: true, firstName: true, lastName: true, submittedAt: true, status: true },
+            }).catch(() => []);
+        }
 
         for (const app of pendingApplications) {
             if (app.submittedAt) {

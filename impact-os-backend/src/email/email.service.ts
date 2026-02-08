@@ -563,7 +563,7 @@ export class EmailService {
     const { firstName, lastName, email, skillTrack, applicantId } = applicantData;
 
     // Get admin email from config or use default
-    const adminEmail = this.configService.get<string>('ADMIN_ALERT_EMAIL') || 'ark@diranx.com';
+    const adminEmail = this.configService.get<string>('ADMIN_ALERT_EMAIL') || 'c28@diranx.com';
 
     const html = `
       <div style="font-family: 'Jost', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px;">
