@@ -600,6 +600,7 @@ export class AdminService {
       notes?: string;
       customMessage?: string;
       isCapacityRejection?: boolean;
+      rejectionReason?: string;
     },
   ) {
     const applicant = await this.prisma.applicant.findUnique({
@@ -607,7 +608,28 @@ export class AdminService {
     });
 
     if (!applicant) {
-      throw new Error(`Applicant ${applicantId} not found`);
+      throw new NotFoundException(`Applicant ${applicantId} not found`);
+    }
+
+    // Guard: only SCORED and WAITLIST applicants can be decided
+    const DECIDABLE_STATUSES: ApplicantStatus[] = [
+      ApplicantStatus.SCORED,
+      ApplicantStatus.WAITLIST,
+    ];
+    if (!DECIDABLE_STATUSES.includes(applicant.status)) {
+      throw new BadRequestException(
+        `Cannot make decision on applicant with status ${applicant.status}. Only SCORED or WAITLIST applicants can be decided.`,
+      );
+    }
+
+    // Capacity check for admissions
+    if (decision === 'ADMITTED') {
+      const capacity = await this.getCohortCapacity();
+      if (capacity.isAtCapacity) {
+        throw new BadRequestException(
+          `Cohort is at capacity (${capacity.filled}/${capacity.capacity}). Cannot admit more applicants.`,
+        );
+      }
     }
 
     // Map decision to status
@@ -627,15 +649,23 @@ export class AdminService {
       ...(options?.isCapacityRejection && { isCapacityRejection: true }),
     };
 
+    // Build update data
+    const updateData: Record<string, any> = {
+      status,
+      reviewedAt: new Date(),
+      reviewedBy: 'admin', // TODO: Use actual admin ID
+      diagnosticReport: diagnosticUpdate,
+    };
+
+    // If rejecting with a specific reason, update it
+    if (decision === 'REJECTED' && options?.rejectionReason) {
+      updateData.rejectionReason = options.rejectionReason;
+    }
+
     // Update applicant with decision
     const updated = await this.prisma.applicant.update({
       where: { id: applicantId },
-      data: {
-        status,
-        reviewedAt: new Date(),
-        reviewedBy: 'admin', // TODO: Use actual admin ID
-        diagnosticReport: diagnosticUpdate,
-      },
+      data: updateData,
     });
 
     this.logger.log(`Applicant ${applicantId} decision: ${decision}`);

@@ -8,6 +8,7 @@ import {
     Star, FileText, Check, X, AlertCircle, CheckCircle,
     Send, Loader2, HeartHandshake, Info
 } from 'lucide-react';
+import { useToast } from '@/components/admin/Toast';
 import styles from './page.module.css';
 
 // Types
@@ -182,11 +183,12 @@ function SkillTriadMini({ technical, soft, commercial }: { technical: number; so
 export default function ApplicantDetailPage() {
     const params = useParams();
     const router = useRouter();
+    const { showToast } = useToast();
     const [applicant, setApplicant] = useState<ApplicantDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [decidingAction, setDecidingAction] = useState<string | null>(null);
     const [notes, setNotes] = useState('');
-    const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [rejectionReason, setRejectionReason] = useState('');
 
     useEffect(() => {
         const fetchApplicant = async () => {
@@ -228,9 +230,12 @@ export default function ApplicantDetailPage() {
         if (!applicant) return;
 
         setDecidingAction(decision);
-        setFeedbackMessage(null);
         try {
             const token = localStorage.getItem('auth_token');
+            const body: Record<string, string> = { decision, notes };
+            if (decision === 'REJECTED' && rejectionReason) {
+                body.rejectionReason = rejectionReason;
+            }
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/admin/applicants/${applicant.id}/decision`,
                 {
@@ -239,21 +244,21 @@ export default function ApplicantDetailPage() {
                         Authorization: `Bearer ${token}`,
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ decision, notes }),
+                    body: JSON.stringify(body),
                 }
             );
 
             if (!response.ok) {
-                throw new Error('Failed to make decision');
+                const err = await response.json().catch(() => null);
+                throw new Error(err?.message || 'Failed to make decision');
             }
 
             const result = await response.json();
-            setFeedbackMessage({ type: 'success', text: result.message || `Decision: ${decision}` });
-            // Navigate back after a brief delay
+            showToast('success', result.message || `Applicant ${decision.toLowerCase()} successfully`);
             setTimeout(() => router.push('/admin/applicants'), 1500);
         } catch (error) {
             console.error('Error making decision:', error);
-            setFeedbackMessage({ type: 'error', text: 'Failed to save decision. Please try again.' });
+            showToast('error', error instanceof Error ? error.message : 'Failed to save decision. Please try again.');
         } finally {
             setDecidingAction(null);
         }
@@ -523,27 +528,10 @@ export default function ApplicantDetailPage() {
                         </section>
                     )}
 
-                    {/* Decision Panel — only for SCORED applicants */}
-                    {applicant.status === 'SCORED' && (
+                    {/* Decision Panel — only for SCORED or WAITLIST applicants */}
+                    {(applicant.status === 'SCORED' || applicant.status === 'WAITLIST') && (
                         <section className={styles.decisionPanel}>
                             <h2>Make Decision</h2>
-
-                            {/* Inline Toast */}
-                            {feedbackMessage && (
-                                <div style={{
-                                    padding: 'var(--space-sm) var(--space-md)',
-                                    borderRadius: 'var(--radius-sm)',
-                                    marginBottom: 'var(--space-md)',
-                                    fontSize: '14px',
-                                    fontWeight: 500,
-                                    background: feedbackMessage.type === 'success' ? 'rgba(22, 163, 74, 0.1)' : 'rgba(220, 38, 38, 0.1)',
-                                    color: feedbackMessage.type === 'success' ? '#16a34a' : '#dc2626',
-                                    border: `1px solid ${feedbackMessage.type === 'success' ? 'rgba(22, 163, 74, 0.3)' : 'rgba(220, 38, 38, 0.3)'}`,
-                                }}>
-                                    {feedbackMessage.type === 'success' ? <CheckCircle size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} /> : <AlertCircle size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} />}
-                                    {feedbackMessage.text}
-                                </div>
-                            )}
 
                             <div className={styles.notesField}>
                                 <label>Admin Notes (optional)</label>
@@ -553,6 +541,34 @@ export default function ApplicantDetailPage() {
                                     placeholder="Add notes about this decision..."
                                     rows={3}
                                 />
+                            </div>
+
+                            {/* Rejection Reason — shows inline when considering rejection */}
+                            <div className={styles.notesField}>
+                                <label>Rejection Reason (required if rejecting)</label>
+                                <select
+                                    value={rejectionReason}
+                                    onChange={(e) => setRejectionReason(e.target.value)}
+                                    style={{
+                                        width: '100%',
+                                        padding: 'var(--space-sm)',
+                                        border: '1px solid var(--border-subtle)',
+                                        borderRadius: 'var(--radius-sm)',
+                                        fontSize: '14px',
+                                        fontFamily: 'inherit',
+                                        background: 'var(--bg-primary)',
+                                        color: 'var(--text-primary)',
+                                    }}
+                                >
+                                    <option value="">— Select reason (only for rejection) —</option>
+                                    <option value="LOW_READINESS">Low Readiness</option>
+                                    <option value="NO_DEVICE">No Device Access</option>
+                                    <option value="NO_INTERNET">No Internet Access</option>
+                                    <option value="NO_CONSENT">Did Not Consent</option>
+                                    <option value="INCOMPLETE_FORM">Incomplete Form</option>
+                                    <option value="DUPLICATE">Duplicate Application</option>
+                                    <option value="STAFF_DECISION">Staff Decision</option>
+                                </select>
                             </div>
 
                             <div className={styles.decisionButtons}>

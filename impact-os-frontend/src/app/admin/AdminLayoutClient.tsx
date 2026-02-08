@@ -12,6 +12,7 @@ import {
     Shield, Bell, Layers, Calendar, Sliders
 } from 'lucide-react';
 import styles from './layout.module.css';
+import { ToastProvider } from '@/components/admin/Toast';
 
 // ─── Route → Page Title mapping ────────────────────────────────────
 const routeTitles: Record<string, string> = {
@@ -278,7 +279,9 @@ export default function AdminLayout({
                         </button>
                     </div>
                 </div>
-                {children}
+                <ToastProvider>
+                    {children}
+                </ToastProvider>
             </main>
         </div>
     );

@@ -85,11 +85,13 @@ export class AdminController {
     @Body('notes') notes?: string,
     @Body('customMessage') customMessage?: string,
     @Body('isCapacityRejection') isCapacityRejection?: boolean,
+    @Body('rejectionReason') rejectionReason?: string,
   ) {
     return this.adminService.makeAdmissionDecision(id, decision, {
       notes,
       customMessage,
       isCapacityRejection,
+      rejectionReason,
     });
   }
 
