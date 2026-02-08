@@ -9,6 +9,57 @@ import {
 } from '@prisma/client';
 import { createHash } from 'crypto';
 
+// ===== EMAIL DESIGN TOKENS =====
+// Centralized brand tokens for all email templates
+const EMAIL_TOKENS = {
+  // Brand colors
+  navy: '#02213D',
+  navyLight: '#0a3558',
+  gold: '#C4A052',
+  goldLight: '#d4b872',
+  // UI colors
+  bgBody: '#111827',
+  bgCard: '#1a2332',
+  bgElevated: '#243447',
+  bgMuted: '#f0f4f8',
+  // Text
+  textPrimary: '#ffffff',
+  textSecondary: '#94a3b8',
+  textDark: '#333333',
+  textMuted: '#666666',
+  // Accents
+  success: '#10B981',
+  info: '#3B82F6',
+  warning: '#F59E0B',
+  // Typography
+  fontStack: "'Inter', system-ui, -apple-system, sans-serif",
+  // Layout
+  maxWidth: '600px',
+  radius: '12px',
+  radiusSm: '8px',
+} as const;
+
+// Shared email wrapper for consistent dark-mode look
+const emailWrapper = (content: string) => `
+  <div style="background: ${EMAIL_TOKENS.bgBody}; padding: 40px 20px; min-height: 100%;">
+    <div style="font-family: ${EMAIL_TOKENS.fontStack}; max-width: ${EMAIL_TOKENS.maxWidth}; margin: 0 auto; color: ${EMAIL_TOKENS.textPrimary};">
+      ${content}
+      <p style="color: ${EMAIL_TOKENS.textSecondary}; text-align: center; margin-top: 40px; font-size: 13px; border-top: 1px solid ${EMAIL_TOKENS.bgElevated}; padding-top: 20px;">
+        — The Cycle28 Team
+      </p>
+    </div>
+  </div>
+`;
+
+// Shared CTA button
+const ctaButton = (href: string, label: string) => `
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="${href}" style="background: linear-gradient(135deg, ${EMAIL_TOKENS.gold} 0%, ${EMAIL_TOKENS.goldLight} 100%); color: ${EMAIL_TOKENS.navy}; padding: 16px 40px; text-decoration: none; border-radius: ${EMAIL_TOKENS.radiusSm}; font-weight: 700; display: inline-block; font-size: 15px; letter-spacing: 0.3px;">
+      ${label}
+    </a>
+  </div>
+`;
+
 // Email template types
 export type EmailTemplateType =
   | 'application_received'
@@ -47,6 +98,10 @@ export interface OfferEmailData {
   kpiTargets?: Record<string, number>;
   acceptLink: string;
   declineLink: string;
+  // Admission statistics
+  totalApplicants?: number;
+  admittedCount?: number;
+  acceptanceRate?: number;
 }
 
 // Email logging context - used to track who/what triggered the email
@@ -64,7 +119,7 @@ export interface EmailLogContext {
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private resendApiKey: string;
-  private fromEmail = 'Cycle28 x Project 3:10 <impact@cycle28.org>';
+  private fromEmail = 'Cycle28 <impact@cycle28.org>';
 
   constructor(
     private configService: ConfigService,
@@ -144,195 +199,146 @@ export class EmailService {
   > = {
       application_received: (data) => ({
         subject: `We've received your application, ${data.firstName}! 🎉`,
-        html: `
-        <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #02213D;">Application Received!</h1>
-          
-          <p>Hi ${data.firstName},</p>
-          
-          <p>Thank you for applying to <strong>Project 3:10</strong>. We've received your application and our team is reviewing it.</p>
-          
-          <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="margin-top: 0;">What happens next?</h3>
-            <ol style="margin-bottom: 0;">
-              <li><strong>Review (48 hours)</strong> — Our team reviews your application</li>
-              <li><strong>Decision</strong> — You'll receive an email with our decision</li>
-              <li><strong>Onboarding</strong> — If admitted, your journey begins!</li>
-            </ol>
+        html: emailWrapper(`
+          <div style="background: ${EMAIL_TOKENS.navy}; padding: 30px; border-radius: ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius} 0 0; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px; color: ${EMAIL_TOKENS.textPrimary};">Application Received! 🎉</h1>
           </div>
-          
-          <p>While you wait, save our WhatsApp number: <strong>+234 XXX XXX XXXX</strong></p>
-          
-          <p style="color: #666;">— The Project 3:10 Team</p>
-        </div>
-      `,
+          <div style="background: ${EMAIL_TOKENS.bgCard}; padding: 30px; border-radius: 0 0 ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius};">
+            <p style="color: ${EMAIL_TOKENS.textPrimary};">Hi ${data.firstName},</p>
+            <p style="color: ${EMAIL_TOKENS.textSecondary};">Thank you for applying to <strong style="color: ${EMAIL_TOKENS.gold};">Cycle28</strong>. We've received your application and our team is reviewing it.</p>
+            <div style="background: ${EMAIL_TOKENS.bgElevated}; padding: 20px; border-radius: ${EMAIL_TOKENS.radiusSm}; margin: 20px 0; border-left: 3px solid ${EMAIL_TOKENS.gold};">
+              <h3 style="margin-top: 0; color: ${EMAIL_TOKENS.textPrimary}; font-size: 15px;">What happens next?</h3>
+              <ol style="margin-bottom: 0; color: ${EMAIL_TOKENS.textSecondary}; line-height: 1.8;">
+                <li><strong style="color: ${EMAIL_TOKENS.textPrimary};">Review (48 hours)</strong> — Our team reviews your application</li>
+                <li><strong style="color: ${EMAIL_TOKENS.textPrimary};">Decision</strong> — You'll receive an email with our decision</li>
+                <li><strong style="color: ${EMAIL_TOKENS.textPrimary};">Onboarding</strong> — If admitted, your journey begins!</li>
+              </ol>
+            </div>
+            <p style="color: ${EMAIL_TOKENS.textSecondary}; font-size: 14px;">While you wait, save our WhatsApp number: <strong style="color: ${EMAIL_TOKENS.textPrimary};">+234 XXX XXX XXXX</strong></p>
+          </div>
+        `),
       }),
 
       application_reminder: (data) => ({
         subject: `Don't forget to complete your application, ${data.firstName}!`,
-        html: `
-        <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #02213D;">Your application is waiting ⏳</h1>
-          
-          <p>Hi ${data.firstName},</p>
-          
-          <p>You started your Project 3:10 application but haven't finished it yet. Don't let this opportunity slip away!</p>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${data.resumeLink}" style="background: #C4A052; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">
-              Continue My Application →
-            </a>
+        html: emailWrapper(`
+          <div style="background: ${EMAIL_TOKENS.navy}; padding: 30px; border-radius: ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius} 0 0; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px; color: ${EMAIL_TOKENS.textPrimary};">Your application is waiting ⏳</h1>
           </div>
-          
-          <p style="color: #666; font-size: 14px;">This link expires in 7 days.</p>
-          
-          <p style="color: #666;">— The Project 3:10 Team</p>
-        </div>
-      `,
+          <div style="background: ${EMAIL_TOKENS.bgCard}; padding: 30px; border-radius: 0 0 ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius};">
+            <p style="color: ${EMAIL_TOKENS.textPrimary};">Hi ${data.firstName},</p>
+            <p style="color: ${EMAIL_TOKENS.textSecondary};">You started your Cycle28 application but haven't finished it yet. Don't let this opportunity slip away!</p>
+            ${ctaButton(data.resumeLink || '#', 'Continue My Application →')}
+            <p style="color: ${EMAIL_TOKENS.textSecondary}; font-size: 13px; text-align: center;">This link expires in 7 days.</p>
+          </div>
+        `),
       }),
 
       application_admitted: (data) => ({
-        subject: `🎉 Congratulations ${data.firstName}! You're in!`,
-        html: `
-        <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #02213D;">Welcome to Project 3:10! 🚀</h1>
-          
-          <p>Hi ${data.firstName},</p>
-          
-          <p><strong>Congratulations!</strong> You've been admitted to Project 3:10${data.cohortName ? ` — ${data.cohortName}` : ''}.</p>
-          
-          ${data.skillTrack ? `<p>Your track: <strong>${data.skillTrack}</strong></p>` : ''}
-          
-          <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="margin-top: 0;">Your next steps:</h3>
-            <ol style="margin-bottom: 0;">
-              <li>Access your dashboard</li>
-              <li>Complete your profile</li>
-              <li>Start your first mission</li>
-            </ol>
+        subject: `🎉 Congratulations ${data.firstName}! You've been selected!`,
+        html: emailWrapper(`
+          <div style="background: linear-gradient(135deg, ${EMAIL_TOKENS.navy} 0%, ${EMAIL_TOKENS.navyLight} 100%); padding: 40px 30px; border-radius: ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius} 0 0; text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 10px;">🏆</div>
+            <h1 style="margin: 0; font-size: 26px; color: ${EMAIL_TOKENS.gold};">CONGRATULATIONS!</h1>
+            <p style="margin: 10px 0 0; color: ${EMAIL_TOKENS.textPrimary}; font-size: 16px;">You've been admitted to Cycle28${data.cohortName ? ` — ${data.cohortName}` : ''}</p>
           </div>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${data.dashboardLink}" style="background: #C4A052; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">
-              Access My Dashboard →
-            </a>
+          <div style="background: ${EMAIL_TOKENS.bgCard}; padding: 30px; border-radius: 0 0 ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius};">
+            <p style="color: ${EMAIL_TOKENS.textPrimary}; font-size: 16px;">Hi ${data.firstName},</p>
+            <p style="color: ${EMAIL_TOKENS.textSecondary}; font-size: 15px; line-height: 1.6;">This is not just an acceptance — it's recognition. Out of all the applicants, <strong style="color: ${EMAIL_TOKENS.gold};">you stood out</strong>.</p>
+            ${data.skillTrack ? `<p style="color: ${EMAIL_TOKENS.textSecondary};">Your track: <strong style="color: ${EMAIL_TOKENS.textPrimary};">${data.skillTrack}</strong></p>` : ''}
+            <div style="background: ${EMAIL_TOKENS.bgElevated}; padding: 20px; border-radius: ${EMAIL_TOKENS.radiusSm}; margin: 25px 0; border-left: 3px solid ${EMAIL_TOKENS.gold};">
+              <h3 style="margin-top: 0; color: ${EMAIL_TOKENS.gold}; font-size: 15px;">Your Next Steps</h3>
+              <ol style="margin-bottom: 0; color: ${EMAIL_TOKENS.textSecondary}; line-height: 2;">
+                <li>Access your dashboard</li>
+                <li>Complete your profile</li>
+                <li>Start your first mission</li>
+              </ol>
+            </div>
+            ${ctaButton(data.dashboardLink || '#', '🚀 Access My Dashboard')}
+            <p style="color: ${EMAIL_TOKENS.textPrimary}; text-align: center; font-style: italic; font-size: 15px;">From potential to paycheck. <strong>Your journey starts now.</strong></p>
           </div>
-          
-          <p>Remember: <strong>From potential to paycheck.</strong> Your journey starts now.</p>
-          
-          <p style="color: #666;">— The Project 3:10 Team</p>
-        </div>
-      `,
+        `),
       }),
 
       application_conditional: (data) => ({
         subject: `Almost there, ${data.firstName}! One more step...`,
-        html: `
-        <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #02213D;">You're almost in! 🎯</h1>
-          
-          <p>Hi ${data.firstName},</p>
-          
-          <p>We've reviewed your application and we see potential in you. However, before we can fully admit you, we need you to complete one pre-work task.</p>
-          
-          <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #C4A052;">
-            <h3 style="margin-top: 0;">Your Pre-Work Task:</h3>
-            <p style="margin-bottom: 0;">${data.preWorkTask || 'Complete the introductory quiz'}</p>
+        html: emailWrapper(`
+          <div style="background: ${EMAIL_TOKENS.navy}; padding: 30px; border-radius: ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius} 0 0; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px; color: ${EMAIL_TOKENS.textPrimary};">You're almost in! 🎯</h1>
           </div>
-          
-          <p><strong>Deadline:</strong> 7 days from now</p>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${data.dashboardLink}" style="background: #C4A052; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">
-              Complete My Task →
-            </a>
+          <div style="background: ${EMAIL_TOKENS.bgCard}; padding: 30px; border-radius: 0 0 ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius};">
+            <p style="color: ${EMAIL_TOKENS.textPrimary};">Hi ${data.firstName},</p>
+            <p style="color: ${EMAIL_TOKENS.textSecondary};">We've reviewed your application and we see potential in you. However, before we can fully admit you, we need you to complete one pre-work task.</p>
+            <div style="background: ${EMAIL_TOKENS.bgElevated}; padding: 20px; border-radius: ${EMAIL_TOKENS.radiusSm}; margin: 20px 0; border-left: 3px solid ${EMAIL_TOKENS.warning};">
+              <h3 style="margin-top: 0; color: ${EMAIL_TOKENS.warning}; font-size: 15px;">Your Pre-Work Task:</h3>
+              <p style="margin-bottom: 0; color: ${EMAIL_TOKENS.textPrimary};">${data.preWorkTask || 'Complete the introductory quiz'}</p>
+            </div>
+            <p style="color: ${EMAIL_TOKENS.textSecondary};"><strong style="color: ${EMAIL_TOKENS.textPrimary};">Deadline:</strong> 7 days from now</p>
+            ${ctaButton(data.dashboardLink || '#', 'Complete My Task →')}
           </div>
-          
-          <p style="color: #666;">— The Project 3:10 Team</p>
-        </div>
-      `,
+        `),
       }),
 
       application_under_review: (data) => ({
         subject: `Your application is under review, ${data.firstName}`,
-        html: `
-        <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #02213D;">Your Application Is Under Review 🔍</h1>
-          
-          <p>Hi ${data.firstName},</p>
-          
-          <p>Thank you for your patience. We've completed our initial assessment of your application and our team is now conducting a detailed review.</p>
-          
-          <div style="background: #f0f4f8; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #02213D;">
-            <h3 style="margin-top: 0;">What this means:</h3>
-            <ul style="margin-bottom: 0;">
-              <li>Your application showed potential and is being given extra attention</li>
-              <li>A member of our team may reach out to you for additional information</li>
-              <li>You'll receive a final decision within a few business days</li>
-            </ul>
+        html: emailWrapper(`
+          <div style="background: ${EMAIL_TOKENS.navy}; padding: 30px; border-radius: ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius} 0 0; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px; color: ${EMAIL_TOKENS.textPrimary};">Application Under Review 🔍</h1>
           </div>
-          
-          <p>No action is needed from you at this time. We'll be in touch soon.</p>
-          
-          <p style="color: #666;">— The Project 3:10 Team</p>
-        </div>
-      `,
+          <div style="background: ${EMAIL_TOKENS.bgCard}; padding: 30px; border-radius: 0 0 ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius};">
+            <p style="color: ${EMAIL_TOKENS.textPrimary};">Hi ${data.firstName},</p>
+            <p style="color: ${EMAIL_TOKENS.textSecondary};">Thank you for your patience. We've completed our initial assessment and our team is now conducting a detailed review.</p>
+            <div style="background: ${EMAIL_TOKENS.bgElevated}; padding: 20px; border-radius: ${EMAIL_TOKENS.radiusSm}; margin: 20px 0; border-left: 3px solid ${EMAIL_TOKENS.info};">
+              <h3 style="margin-top: 0; color: ${EMAIL_TOKENS.info}; font-size: 15px;">What this means:</h3>
+              <ul style="margin-bottom: 0; color: ${EMAIL_TOKENS.textSecondary}; line-height: 1.8;">
+                <li>Your application showed potential and is being given extra attention</li>
+                <li>A member of our team may reach out for additional information</li>
+                <li>You'll receive a final decision within a few business days</li>
+              </ul>
+            </div>
+            <p style="color: ${EMAIL_TOKENS.textSecondary};">No action is needed from you at this time. We'll be in touch soon.</p>
+          </div>
+        `),
       }),
 
       application_rejected: (data) => ({
-        subject: `Update on your Project 3:10 application`,
-        html: `
-        <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #02213D;">Thank you for applying</h1>
-          
-          <p>Hi ${data.firstName},</p>
-          
-          <p>After careful review, we're unable to offer you a spot in Project 3:10 at this time.</p>
-          
-          ${data.rejectionReason
-            ? `
-          <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0;"><strong>Reason:</strong> ${data.rejectionReason}</p>
+        subject: `Update on your Cycle28 application`,
+        html: emailWrapper(`
+          <div style="background: ${EMAIL_TOKENS.navy}; padding: 30px; border-radius: ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius} 0 0; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px; color: ${EMAIL_TOKENS.textPrimary};">Thank You For Applying</h1>
           </div>
-          `
+          <div style="background: ${EMAIL_TOKENS.bgCard}; padding: 30px; border-radius: 0 0 ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius};">
+            <p style="color: ${EMAIL_TOKENS.textPrimary};">Hi ${data.firstName},</p>
+            <p style="color: ${EMAIL_TOKENS.textSecondary};">After careful review, we're unable to offer you a spot in Cycle28 at this time.</p>
+            ${data.rejectionReason
+            ? `<div style="background: ${EMAIL_TOKENS.bgElevated}; padding: 15px 20px; border-radius: ${EMAIL_TOKENS.radiusSm}; margin: 20px 0; border-left: 3px solid ${EMAIL_TOKENS.textSecondary};">
+                <p style="margin: 0; color: ${EMAIL_TOKENS.textSecondary};"><strong style="color: ${EMAIL_TOKENS.textPrimary};">Reason:</strong> ${data.rejectionReason}</p>
+              </div>`
             : ''
           }
-          
-          <p>This doesn't mean you can't succeed. Here are some free resources to help you get started:</p>
-          
-          <ul>
-            <li><a href="https://www.youtube.com/@Cycle28Official">Our YouTube Channel</a> — Free tutorials</li>
-            <li><a href="https://cycle28.org/resources">Resource Library</a> — Guides and tools</li>
-          </ul>
-          
-          <p>You're welcome to reapply in the future after building more experience.</p>
-          
-          <p style="color: #666;">— The Project 3:10 Team</p>
-        </div>
-      `,
+            <p style="color: ${EMAIL_TOKENS.textSecondary};">This doesn't mean you can't succeed. Here are some free resources to help you grow:</p>
+            <ul style="color: ${EMAIL_TOKENS.textSecondary}; line-height: 1.8;">
+              <li><a href="https://www.youtube.com/@Cycle28Official" style="color: ${EMAIL_TOKENS.gold};">Our YouTube Channel</a> — Free tutorials</li>
+              <li><a href="https://cycle28.org/resources" style="color: ${EMAIL_TOKENS.gold};">Resource Library</a> — Guides and tools</li>
+            </ul>
+            <p style="color: ${EMAIL_TOKENS.textSecondary};">You're welcome to reapply in the future after building more experience.</p>
+          </div>
+        `),
       }),
 
       resume_link: (data) => ({
         subject: `Continue your application, ${data.firstName}`,
-        html: `
-        <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #02213D;">Here's your resume link 🔗</h1>
-          
-          <p>Hi ${data.firstName},</p>
-          
-          <p>You requested a link to continue your Project 3:10 application. Click below to pick up where you left off:</p>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${data.resumeLink}" style="background: #C4A052; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">
-              Continue My Application →
-            </a>
+        html: emailWrapper(`
+          <div style="background: ${EMAIL_TOKENS.navy}; padding: 30px; border-radius: ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius} 0 0; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px; color: ${EMAIL_TOKENS.textPrimary};">Here's your resume link 🔗</h1>
           </div>
-          
-          <p style="color: #666; font-size: 14px;">This link expires in 7 days. If you didn't request this, you can ignore this email.</p>
-          
-          <p style="color: #666;">— The Project 3:10 Team</p>
-        </div>
-      `,
+          <div style="background: ${EMAIL_TOKENS.bgCard}; padding: 30px; border-radius: 0 0 ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius};">
+            <p style="color: ${EMAIL_TOKENS.textPrimary};">Hi ${data.firstName},</p>
+            <p style="color: ${EMAIL_TOKENS.textSecondary};">You requested a link to continue your Cycle28 application. Click below to pick up where you left off:</p>
+            ${ctaButton(data.resumeLink || '#', 'Continue My Application →')}
+            <p style="color: ${EMAIL_TOKENS.textSecondary}; font-size: 13px; text-align: center;">This link expires in 7 days. If you didn't request this, you can ignore this email.</p>
+          </div>
+        `),
       }),
     };
 
@@ -664,58 +670,51 @@ export class EmailService {
       };
     } else if (readinessScore >= 50) {
       tier = {
-        subject: `Update on your Project 3:10 application`,
+        subject: `Update on your Cycle28 application`,
         headline: `Not Quite Ready — Yet`,
         message: `We appreciate your interest, but based on our assessment, you need more preparation before joining an intensive program like ours. ${primaryGap ? `Focus on developing your ${primaryGap}.` : ''}`,
         reapplyText: `Consider reapplying after <strong>3-6 months</strong> of self-directed learning.`,
       };
     } else if (readinessScore >= 30) {
       tier = {
-        subject: `Update on your Project 3:10 application`,
+        subject: `Update on your Cycle28 application`,
         headline: `Some Foundational Gaps`,
         message: `We're unable to offer you a spot right now. Our program moves quickly and requires a baseline of readiness that we didn't see in your application.`,
         reapplyText: `We recommend building foundational skills before considering reapplication.`,
       };
     } else {
       tier = {
-        subject: `Update on your Project 3:10 application`,
+        subject: `Update on your Cycle28 application`,
         headline: `Not a Fit Right Now`,
-        message: `After reviewing your application, we've determined that Project 3:10 isn't the right fit for you at this time.`,
+        message: `After reviewing your application, we've determined that Cycle28 isn't the right fit for you at this time.`,
         reapplyText: `We wish you the best in your journey.`,
       };
     }
 
-    const html = `
-      <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h1 style="color: #02213D;">${tier.headline}</h1>
-        
-        <p>Hi ${firstName},</p>
-        
-        <p>${tier.message}</p>
-        
+    const html = emailWrapper(`
+      <div style="background: ${EMAIL_TOKENS.navy}; padding: 30px; border-radius: ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius} 0 0; text-align: center;">
+        <h1 style="margin: 0; font-size: 24px; color: ${EMAIL_TOKENS.textPrimary};">${tier.headline}</h1>
+      </div>
+      <div style="background: ${EMAIL_TOKENS.bgCard}; padding: 30px; border-radius: 0 0 ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius};">
+        <p style="color: ${EMAIL_TOKENS.textPrimary};">Hi ${firstName},</p>
+        <p style="color: ${EMAIL_TOKENS.textSecondary};">${tier.message}</p>
         ${customMessage
-        ? `
-        <div style="background: #f0f4f8; border-left: 4px solid #02213D; padding: 15px; margin: 20px 0;">
-          <p style="margin: 0; font-style: italic;">"${customMessage}"</p>
-          <p style="margin: 10px 0 0 0; font-size: 12px; color: #666;">— From our review team</p>
-        </div>
-        `
+        ? `<div style="background: ${EMAIL_TOKENS.bgElevated}; border-left: 3px solid ${EMAIL_TOKENS.navy}; padding: 15px; margin: 20px 0; border-radius: ${EMAIL_TOKENS.radiusSm};">
+              <p style="margin: 0; font-style: italic; color: ${EMAIL_TOKENS.textSecondary};">&ldquo;${customMessage}&rdquo;</p>
+              <p style="margin: 10px 0 0 0; font-size: 12px; color: ${EMAIL_TOKENS.textMuted};">— From our review team</p>
+            </div>`
         : ''
       }
-        
-        <p>${tier.reapplyText}</p>
-        
-        <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="margin-top: 0;">Free Resources to Help You Grow</h3>
-          <ul style="margin-bottom: 0;">
-            <li><a href="https://www.youtube.com/@Cycle28Official">Our YouTube Channel</a> — Free tutorials</li>
-            <li><a href="https://cycle28.org/resources">Resource Library</a> — Guides and tools</li>
+        <p style="color: ${EMAIL_TOKENS.textSecondary};">${tier.reapplyText}</p>
+        <div style="background: ${EMAIL_TOKENS.bgElevated}; padding: 20px; border-radius: ${EMAIL_TOKENS.radiusSm}; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: ${EMAIL_TOKENS.textPrimary}; font-size: 15px;">Free Resources to Help You Grow</h3>
+          <ul style="margin-bottom: 0; color: ${EMAIL_TOKENS.textSecondary}; line-height: 1.8;">
+            <li><a href="https://www.youtube.com/@Cycle28Official" style="color: ${EMAIL_TOKENS.gold};">Our YouTube Channel</a> — Free tutorials</li>
+            <li><a href="https://cycle28.org/resources" style="color: ${EMAIL_TOKENS.gold};">Resource Library</a> — Guides and tools</li>
           </ul>
         </div>
-        
-        <p style="color: #666;">— The Project 3:10 Team</p>
       </div>
-    `;
+    `);
 
     // Use sendEmailWithContext for audit logging
     const result = await this.sendEmailWithContext(
@@ -768,91 +767,104 @@ export class EmailService {
     const offerDescription = offerDescriptions[data.offerType] || '';
     const focusLabel = focusLabels[data.primaryFocus] || data.primaryFocus;
 
-    const html = `
-      <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #fafafa;">
-        <div style="background: #02213D; color: white; padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-          <h1 style="margin: 0; font-size: 24px;">🎯 Your Project 3:10 Offer</h1>
-          <p style="margin: 10px 0 0 0; opacity: 0.9;">Personalized just for you, ${data.firstName}</p>
+    // Build the acceptance rate statistic
+    let statsHtml = '';
+    if (data.totalApplicants && data.admittedCount && data.totalApplicants > 0) {
+      const rate = Math.round((data.admittedCount / data.totalApplicants) * 100);
+      statsHtml = `
+        <div style="background: linear-gradient(135deg, ${EMAIL_TOKENS.bgElevated} 0%, ${EMAIL_TOKENS.bgCard} 100%); padding: 24px; border-radius: ${EMAIL_TOKENS.radiusSm}; margin: 25px 0; text-align: center; border: 1px solid ${EMAIL_TOKENS.gold}33;">
+          <p style="margin: 0 0 8px; color: ${EMAIL_TOKENS.textSecondary}; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Your Selection</p>
+          <p style="margin: 0; font-size: 32px; font-weight: 800; color: ${EMAIL_TOKENS.gold};">Top ${rate}%</p>
+          <p style="margin: 8px 0 0; color: ${EMAIL_TOKENS.textSecondary}; font-size: 14px;">
+            Selected from <strong style="color: ${EMAIL_TOKENS.textPrimary};">${data.totalApplicants.toLocaleString()}</strong> applicants — only <strong style="color: ${EMAIL_TOKENS.gold};">${data.admittedCount}</strong> were chosen
+          </p>
         </div>
+      `;
+    }
 
-        <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px;">
-          <!-- Skill Triad Visualization -->
-          <h2 style="color: #02213D; margin-top: 0;">Your Starting Position</h2>
-          
-          <div style="margin: 20px 0;">
-            <div style="margin-bottom: 15px;">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                <span style="font-weight: 600;">Technical</span>
-                <span style="color: #666;">${Math.round(data.triadTechnical)}%</span>
-              </div>
-              <div style="background: #e5e5e5; border-radius: 4px; height: 12px; overflow: hidden;">
-                <div style="background: #3B82F6; height: 100%; width: ${data.triadTechnical}%; border-radius: 4px;"></div>
-              </div>
+    const html = emailWrapper(`
+      <div style="background: linear-gradient(135deg, ${EMAIL_TOKENS.navy} 0%, ${EMAIL_TOKENS.navyLight} 100%); padding: 50px 30px 40px; border-radius: ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius} 0 0; text-align: center;">
+        <div style="font-size: 56px; margin-bottom: 15px;">🏆</div>
+        <h1 style="margin: 0; font-size: 28px; color: ${EMAIL_TOKENS.gold}; letter-spacing: 1px;">CONGRATULATIONS, ${data.firstName.toUpperCase()}!</h1>
+        <p style="margin: 12px 0 0; color: ${EMAIL_TOKENS.textPrimary}; font-size: 16px; opacity: 0.9;">You've been selected for Cycle28</p>
+        <div style="width: 60px; height: 3px; background: ${EMAIL_TOKENS.gold}; margin: 20px auto 0; border-radius: 2px;"></div>
+      </div>
+
+      <div style="background: ${EMAIL_TOKENS.bgCard}; padding: 35px; border-radius: 0 0 ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius};">
+        ${statsHtml}
+
+        <p style="color: ${EMAIL_TOKENS.textPrimary}; font-size: 16px; line-height: 1.6;">
+          This is not just an acceptance — <strong style="color: ${EMAIL_TOKENS.gold};">it's recognition</strong>. We saw something in your application that tells us you're ready to transform your potential into real results.
+        </p>
+
+        <h2 style="color: ${EMAIL_TOKENS.textPrimary}; margin: 30px 0 20px; font-size: 18px;">📊 Your Starting Position</h2>
+        
+        <div style="margin: 20px 0;">
+          <div style="margin-bottom: 18px;">
+            <div style="margin-bottom: 6px;">
+              <span style="font-weight: 600; color: ${EMAIL_TOKENS.textPrimary};">Technical</span>
+              <span style="color: ${EMAIL_TOKENS.textSecondary}; float: right;">${Math.round(data.triadTechnical)}%</span>
             </div>
-            
-            <div style="margin-bottom: 15px;">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                <span style="font-weight: 600;">Soft Skills</span>
-                <span style="color: #666;">${Math.round(data.triadSoft)}%</span>
-              </div>
-              <div style="background: #e5e5e5; border-radius: 4px; height: 12px; overflow: hidden;">
-                <div style="background: #10B981; height: 100%; width: ${data.triadSoft}%; border-radius: 4px;"></div>
-              </div>
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                <span style="font-weight: 600;">Commercial</span>
-                <span style="color: #666;">${Math.round(data.triadCommercial)}%</span>
-              </div>
-              <div style="background: #e5e5e5; border-radius: 4px; height: 12px; overflow: hidden;">
-                <div style="background: #C4A052; height: 100%; width: ${data.triadCommercial}%; border-radius: 4px;"></div>
-              </div>
+            <div style="background: ${EMAIL_TOKENS.bgElevated}; border-radius: 6px; height: 10px; overflow: hidden;">
+              <div style="background: linear-gradient(90deg, ${EMAIL_TOKENS.info}, #60A5FA); height: 100%; width: ${data.triadTechnical}%; border-radius: 6px;"></div>
             </div>
           </div>
-          
-          <p style="color: #666; font-size: 14px; margin-top: 0;">
-            Your main focus area: <strong style="color: #02213D;">${focusLabel}</strong>
-          </p>
-
-          <!-- Offer Type -->
-          <div style="background: linear-gradient(135deg, #02213D 0%, #1a3a5c 100%); color: white; padding: 25px; border-radius: 12px; margin: 25px 0;">
-            <h3 style="margin: 0 0 10px 0; font-size: 20px;">${offerLabel}</h3>
-            <p style="margin: 0; opacity: 0.9;">${offerDescription}</p>
+          <div style="margin-bottom: 18px;">
+            <div style="margin-bottom: 6px;">
+              <span style="font-weight: 600; color: ${EMAIL_TOKENS.textPrimary};">Soft Skills</span>
+              <span style="color: ${EMAIL_TOKENS.textSecondary}; float: right;">${Math.round(data.triadSoft)}%</span>
+            </div>
+            <div style="background: ${EMAIL_TOKENS.bgElevated}; border-radius: 6px; height: 10px; overflow: hidden;">
+              <div style="background: linear-gradient(90deg, ${EMAIL_TOKENS.success}, #34D399); height: 100%; width: ${data.triadSoft}%; border-radius: 6px;"></div>
+            </div>
           </div>
-
-          <!-- Journey Details -->
-          <h3 style="color: #02213D;">Your 90-Day Journey</h3>
-          <ul style="color: #444; line-height: 1.8;">
-            <li>Focus on <strong>${focusLabel}</strong> development</li>
-            <li>Weekly missions aligned to your growth areas</li>
-            <li>Daily momentum tracking and community support</li>
-            <li>Access to support resources when you need them</li>
-          </ul>
-
-          <!-- CTA Buttons -->
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${data.acceptLink}" style="background: #C4A052; color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-bottom: 15px;">
-              ✅ Accept My Offer
-            </a>
-            <br/>
-            <a href="${data.declineLink}" style="color: #666; font-size: 14px; text-decoration: underline;">
-              I need to decline at this time
-            </a>
+          <div style="margin-bottom: 18px;">
+            <div style="margin-bottom: 6px;">
+              <span style="font-weight: 600; color: ${EMAIL_TOKENS.textPrimary};">Commercial</span>
+              <span style="color: ${EMAIL_TOKENS.textSecondary}; float: right;">${Math.round(data.triadCommercial)}%</span>
+            </div>
+            <div style="background: ${EMAIL_TOKENS.bgElevated}; border-radius: 6px; height: 10px; overflow: hidden;">
+              <div style="background: linear-gradient(90deg, ${EMAIL_TOKENS.gold}, ${EMAIL_TOKENS.goldLight}); height: 100%; width: ${data.triadCommercial}%; border-radius: 6px;"></div>
+            </div>
           </div>
-
-          <p style="color: #999; font-size: 12px; text-align: center; margin-top: 30px;">
-            This offer expires in 7 days. Questions? Reply to this email.
-          </p>
         </div>
         
-        <p style="color: #666; text-align: center; margin-top: 20px; font-size: 14px;">
-          — The Project 3:10 Team
+        <p style="color: ${EMAIL_TOKENS.textSecondary}; font-size: 14px; margin-top: 0;">
+          Your main focus area: <strong style="color: ${EMAIL_TOKENS.gold};">${focusLabel}</strong>
+        </p>
+
+        <div style="background: linear-gradient(135deg, ${EMAIL_TOKENS.navy} 0%, ${EMAIL_TOKENS.navyLight} 100%); color: white; padding: 25px; border-radius: ${EMAIL_TOKENS.radius}; margin: 25px 0; border: 1px solid ${EMAIL_TOKENS.gold}33;">
+          <h3 style="margin: 0 0 10px 0; font-size: 20px; color: ${EMAIL_TOKENS.gold};">${offerLabel}</h3>
+          <p style="margin: 0; color: ${EMAIL_TOKENS.textSecondary};">${offerDescription}</p>
+        </div>
+
+        <h3 style="color: ${EMAIL_TOKENS.textPrimary}; font-size: 16px;">🗺️ Your 90-Day Journey</h3>
+        <ul style="color: ${EMAIL_TOKENS.textSecondary}; line-height: 2;">
+          <li>Focus on <strong style="color: ${EMAIL_TOKENS.textPrimary};">${focusLabel}</strong> development</li>
+          <li>Weekly missions aligned to your growth areas</li>
+          <li>Daily momentum tracking and community support</li>
+          <li>Access to mentors and support resources</li>
+        </ul>
+
+        ${ctaButton(data.acceptLink, '🚀 Accept My Offer')}
+        
+        <div style="text-align: center; margin-top: 10px;">
+          <a href="${data.declineLink}" style="color: ${EMAIL_TOKENS.textSecondary}; font-size: 13px; text-decoration: underline;">
+            I need to decline at this time
+          </a>
+        </div>
+
+        <p style="color: ${EMAIL_TOKENS.textSecondary}; font-size: 12px; text-align: center; margin-top: 30px; opacity: 0.7;">
+          This offer expires in 7 days. Questions? Reply to this email.
+        </p>
+
+        <p style="color: ${EMAIL_TOKENS.textPrimary}; text-align: center; font-style: italic; margin-top: 25px; font-size: 15px; border-top: 1px solid ${EMAIL_TOKENS.bgElevated}; padding-top: 20px;">
+          From potential to paycheck. <strong style="color: ${EMAIL_TOKENS.gold};">Your journey starts now.</strong>
         </p>
       </div>
-    `;
+    `);
 
-    const subject = `Your Project 3:10 Offer — ${offerLabel}`;
+    const subject = `🏆 Congratulations! Your Cycle28 Offer — ${offerLabel}`;
 
     // Use sendEmailWithContext for audit logging
     const result = await this.sendEmailWithContext(
@@ -877,37 +889,24 @@ export class EmailService {
     email: string,
     data: { firstName: string; otpCode: string; expiryMinutes: number },
   ): Promise<boolean> {
-    const html = `
-      <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #02213D; margin: 0; font-size: 24px;">Project 3:10</h1>
-        </div>
-        
-        <p style="color: #333; font-size: 16px; line-height: 1.6;">
-          Hi ${data.firstName},
-        </p>
-        
-        <p style="color: #333; font-size: 16px; line-height: 1.6;">
-          Use this code to log in to your dashboard:
-        </p>
-        
-        <div style="background: #f5f5f5; border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0;">
-          <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #02213D;">
+    const html = emailWrapper(`
+      <div style="background: ${EMAIL_TOKENS.navy}; padding: 30px; border-radius: ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius} 0 0; text-align: center;">
+        <h1 style="color: ${EMAIL_TOKENS.textPrimary}; margin: 0; font-size: 24px;">Cycle28</h1>
+      </div>
+      <div style="background: ${EMAIL_TOKENS.bgCard}; padding: 30px; border-radius: 0 0 ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius};">
+        <p style="color: ${EMAIL_TOKENS.textPrimary}; font-size: 16px; line-height: 1.6;">Hi ${data.firstName},</p>
+        <p style="color: ${EMAIL_TOKENS.textSecondary}; font-size: 16px; line-height: 1.6;">Use this code to log in to your dashboard:</p>
+        <div style="background: ${EMAIL_TOKENS.bgElevated}; border-radius: ${EMAIL_TOKENS.radius}; padding: 24px; text-align: center; margin: 24px 0;">
+          <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: ${EMAIL_TOKENS.gold};">
             ${data.otpCode}
           </span>
         </div>
-        
-        <p style="color: #666; font-size: 14px; text-align: center;">
-          This code expires in ${data.expiryMinutes} minutes.
-        </p>
-        
-        <p style="color: #999; font-size: 13px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
-          If you didn't request this code, you can safely ignore this email.
-        </p>
+        <p style="color: ${EMAIL_TOKENS.textSecondary}; font-size: 14px; text-align: center;">This code expires in ${data.expiryMinutes} minutes.</p>
+        <p style="color: ${EMAIL_TOKENS.textMuted}; font-size: 13px; margin-top: 25px; padding-top: 20px; border-top: 1px solid ${EMAIL_TOKENS.bgElevated};">If you didn't request this code, you can safely ignore this email.</p>
       </div>
-    `;
+    `);
 
-    const subject = `${data.otpCode} — Your Project 3:10 Login Code`;
+    const subject = `${data.otpCode} — Your Cycle28 Login Code`;
 
     // Use sendEmailWithContext for audit logging
     const result = await this.sendEmailWithContext(
@@ -961,51 +960,41 @@ export class EmailService {
       description: '',
     };
 
-    const html = `
-      <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: #02213D; color: white; padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-          <h1 style="margin: 0; font-size: 24px;">You're Invited to Project 3:10</h1>
-          <p style="margin: 10px 0 0 0; opacity: 0.9;">Staff Portal Access</p>
-        </div>
+    const html = emailWrapper(`
+      <div style="background: ${EMAIL_TOKENS.navy}; padding: 30px; border-radius: ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius} 0 0; text-align: center;">
+        <h1 style="margin: 0; font-size: 24px; color: ${EMAIL_TOKENS.textPrimary};">You're Invited to Cycle28</h1>
+        <p style="margin: 10px 0 0 0; color: ${EMAIL_TOKENS.textSecondary};">Staff Portal Access</p>
+      </div>
 
-        <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px; border: 1px solid #e5e5e5; border-top: none;">
-          <p style="color: #333; font-size: 16px; line-height: 1.6;">
-            ${data.inviterName ? `<strong>${data.inviterName}</strong> has invited you` : 'You have been invited'} 
-            to join the Project 3:10 staff team.
-          </p>
-          
-          <div style="background: linear-gradient(135deg, #02213D 0%, #1a3a5c 100%); color: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="margin: 0 0 8px 0; font-size: 18px;">${catInfo.label}</h3>
-            <p style="margin: 0; opacity: 0.9; font-size: 14px;">${catInfo.description}</p>
-          </div>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${data.setupLink}" style="background: #C4A052; color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
-              Complete Your Setup →
-            </a>
-          </div>
-          
-          <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-top: 20px;">
-            <p style="margin: 0; font-size: 14px; color: #666;">
-              <strong>What happens next?</strong><br/>
-              1. Click the button above to set up your account<br/>
-              2. Complete your profile<br/>
-              3. Access your staff dashboard
-            </p>
-          </div>
-          
-          <p style="color: #999; font-size: 12px; margin-top: 20px;">
-            This invitation link expires in 7 days. If you didn't expect this invitation, you can safely ignore this email.
+      <div style="background: ${EMAIL_TOKENS.bgCard}; padding: 30px; border-radius: 0 0 ${EMAIL_TOKENS.radius} ${EMAIL_TOKENS.radius};">
+        <p style="color: ${EMAIL_TOKENS.textPrimary}; font-size: 16px; line-height: 1.6;">
+          ${data.inviterName ? `<strong>${data.inviterName}</strong> has invited you` : 'You have been invited'} 
+          to join the Cycle28 staff team.
+        </p>
+        
+        <div style="background: linear-gradient(135deg, ${EMAIL_TOKENS.navy} 0%, ${EMAIL_TOKENS.navyLight} 100%); color: white; padding: 20px; border-radius: ${EMAIL_TOKENS.radiusSm}; margin: 20px 0;">
+          <h3 style="margin: 0 0 8px 0; font-size: 18px; color: ${EMAIL_TOKENS.gold};">${catInfo.label}</h3>
+          <p style="margin: 0; color: ${EMAIL_TOKENS.textSecondary}; font-size: 14px;">${catInfo.description}</p>
+        </div>
+        
+        ${ctaButton(data.setupLink, 'Complete Your Setup →')}
+        
+        <div style="background: ${EMAIL_TOKENS.bgElevated}; padding: 15px; border-radius: ${EMAIL_TOKENS.radiusSm}; margin-top: 20px;">
+          <p style="margin: 0; font-size: 14px; color: ${EMAIL_TOKENS.textSecondary};">
+            <strong style="color: ${EMAIL_TOKENS.textPrimary};">What happens next?</strong><br/>
+            1. Click the button above to set up your account<br/>
+            2. Complete your profile<br/>
+            3. Access your staff dashboard
           </p>
         </div>
         
-        <p style="color: #666; text-align: center; margin-top: 20px; font-size: 14px;">
-          — The Project 3:10 Team
+        <p style="color: ${EMAIL_TOKENS.textMuted}; font-size: 12px; margin-top: 20px;">
+          This invitation link expires in 7 days. If you didn't expect this invitation, you can safely ignore this email.
         </p>
       </div>
-    `;
+    `);
 
-    const subject = `You're invited to join Project 3:10 as ${catInfo.label}`;
+    const subject = `You're invited to join Cycle28 as ${catInfo.label}`;
 
     // Use sendEmailWithContext for audit logging
     const result = await this.sendEmailWithContext(

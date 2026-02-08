@@ -602,6 +602,7 @@ export class AdminService {
       isCapacityRejection?: boolean;
       rejectionReason?: string;
     },
+    adminEmail?: string,
   ) {
     const applicant = await this.prisma.applicant.findUnique({
       where: { id: applicantId },
@@ -653,13 +654,18 @@ export class AdminService {
     const updateData: Record<string, any> = {
       status,
       reviewedAt: new Date(),
-      reviewedBy: 'admin', // TODO: Use actual admin ID
+      reviewedBy: adminEmail || 'admin',
       diagnosticReport: diagnosticUpdate,
     };
 
     // If rejecting with a specific reason, update it
     if (decision === 'REJECTED' && options?.rejectionReason) {
       updateData.rejectionReason = options.rejectionReason;
+    }
+
+    // Clear stale rejectionReason when not rejecting
+    if (decision !== 'REJECTED') {
+      updateData.rejectionReason = null;
     }
 
     // Update applicant with decision

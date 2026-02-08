@@ -5,6 +5,7 @@ import {
   Param,
   Body,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
@@ -86,13 +87,14 @@ export class AdminController {
     @Body('customMessage') customMessage?: string,
     @Body('isCapacityRejection') isCapacityRejection?: boolean,
     @Body('rejectionReason') rejectionReason?: string,
+    @Req() req?: any,
   ) {
     return this.adminService.makeAdmissionDecision(id, decision, {
       notes,
       customMessage,
       isCapacityRejection,
       rejectionReason,
-    });
+    }, req?.user?.email);
   }
 
   @Post('applicants/bulk-decision')

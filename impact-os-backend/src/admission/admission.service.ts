@@ -112,6 +112,14 @@ export class AdmissionService {
     const acceptLink = `${this.baseUrl}/apply/accept/${offerToken}`;
     const declineLink = `${this.baseUrl}/apply/decline/${offerToken}`;
 
+    // Fetch admission statistics for the celebratory email
+    const [totalApplicants, admittedCount] = await Promise.all([
+      this.prisma.applicant.count(),
+      this.prisma.applicant.count({
+        where: { status: ApplicantStatus.ADMITTED },
+      }),
+    ]);
+
     // Send personalized offer email with Skill Triad
     const offerData: OfferEmailData = {
       firstName: applicant.firstName,
@@ -123,12 +131,14 @@ export class AdmissionService {
       kpiTargets: applicant.kpiTargets,
       acceptLink,
       declineLink,
+      totalApplicants,
+      admittedCount,
     };
 
     await this.emailService.sendOfferEmail(applicant.email, offerData);
 
     this.logger.log(
-      `Sent personalized offer email to ${applicant.email} (token: ${offerToken.substring(0, 8)}...)`,
+      `Sent personalized offer email to ${applicant.email} (token: ${offerToken.substring(0, 8)}..., stats: ${admittedCount}/${totalApplicants})`,
     );
   }
 
