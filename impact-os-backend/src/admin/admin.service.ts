@@ -113,12 +113,12 @@ export class AdminService {
         ]),
         // User stats (participants only — exclude staff)
         Promise.all([
-          this.prisma.user.count({ where: { NOT: { staff: {} } } }),
-          this.prisma.user.count({ where: { isActive: true, NOT: { staff: {} } } }),
-          this.prisma.user.count({ where: { isActive: false, NOT: { staff: {} } } }),
+          this.prisma.user.count({ where: { staff: null } }),
+          this.prisma.user.count({ where: { isActive: true, staff: null } }),
+          this.prisma.user.count({ where: { isActive: false, staff: null } }),
           this.prisma.user.groupBy({
             by: ['identityLevel'],
-            where: { NOT: { staff: {} } },
+            where: { staff: null },
             _count: true,
           }),
         ]),

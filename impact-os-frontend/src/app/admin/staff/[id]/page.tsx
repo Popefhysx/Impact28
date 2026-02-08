@@ -73,65 +73,17 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
 
     const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
-    // Mock data for demonstration
-    const mockStaff: StaffDetail = {
-        id: id,
-        category: 'STAFF',
-        isSuperAdmin: false,
-        capabilities: ['admissions.manage', 'cohort.manage', 'reports.view', 'participants.view'],
-        cohortIds: ['cohort-1'],
-        queueIds: [],
-        participantIds: [],
-        isActive: true,
-        invitedAt: '2026-01-05T00:00:00Z',
-        invitedBy: 'admin-001',
-        deactivatedAt: null,
-        user: {
-            id: 'u3',
-            email: 'aisha.ibrahim@cycle28.org',
-            firstName: 'Aisha',
-            lastName: 'Ibrahim',
-            avatarUrl: null,
-            lastLoginAt: '2026-01-29T08:00:00Z',
-            createdAt: '2026-01-05T00:00:00Z',
-        },
-        assignedCohorts: [
-            { id: 'cohort-1', name: 'Cohort 28 - Lagos', isActive: true },
-        ],
-    };
-
-    const mockCapabilityGroups: Record<string, CapabilityGroup> = {
-        program: {
-            label: 'Program Management',
-            capabilities: ['admissions.manage', 'cohort.manage', 'reports.view'],
-        },
-        participants: {
-            label: 'Participant Access',
-            capabilities: ['participants.view', 'participants.edit', 'support.manage'],
-        },
-        financial: {
-            label: 'Financial Operations',
-            capabilities: ['income.review', 'income.approve', 'stipend.approve', 'budget.manage'],
-        },
-        staff: {
-            label: 'Staff Administration',
-            capabilities: ['staff.invite', 'staff.manage', 'admin.full'],
-        },
-    };
-
-    const mockCohorts: Cohort[] = [
-        { id: 'cohort-1', name: 'Cohort 28 - Lagos' },
-        { id: 'cohort-2', name: 'Cohort 28 - Abuja' },
-        { id: 'cohort-3', name: 'Cohort 29 - Lagos (Upcoming)' },
-    ];
-
     useEffect(() => {
         const fetchData = async () => {
             try {
+                const token = localStorage.getItem('auth_token');
+                const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+
                 const [staffRes, templatesRes, cohortsRes] = await Promise.all([
-                    fetch(`${API_BASE}/staff/${id}`),
-                    fetch(`${API_BASE}/staff/templates`),
-                    fetch(`${API_BASE}/staff/cohorts`),
+                    fetch(`${API_BASE}/staff/${id}`, { headers }),
+                    fetch(`${API_BASE}/staff/templates`, { headers }),
+                    fetch(`${API_BASE}/staff/cohorts`, { headers }),
                 ]);
 
                 if (staffRes.ok) {
@@ -140,36 +92,23 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
                     setEditCategory(data.category);
                     setEditCapabilities(new Set(data.capabilities));
                     setEditCohorts(new Set(data.cohortIds));
-                } else {
-                    // Use mock data
-                    setStaff(mockStaff);
-                    setEditCategory(mockStaff.category);
-                    setEditCapabilities(new Set(mockStaff.capabilities));
-                    setEditCohorts(new Set(mockStaff.cohortIds));
                 }
 
                 if (templatesRes.ok) {
                     const tData: TemplatesResponse = await templatesRes.json();
-                    setCapabilityGroups(tData.groups && Object.keys(tData.groups).length > 0 ? tData.groups : mockCapabilityGroups);
-                } else {
-                    setCapabilityGroups(mockCapabilityGroups);
+                    if (tData.groups && Object.keys(tData.groups).length > 0) {
+                        setCapabilityGroups(tData.groups);
+                    }
                 }
 
                 if (cohortsRes.ok) {
                     const cData = await cohortsRes.json();
-                    setAvailableCohorts(cData?.length > 0 ? cData : mockCohorts);
-                } else {
-                    setAvailableCohorts(mockCohorts);
+                    if (Array.isArray(cData) && cData.length > 0) {
+                        setAvailableCohorts(cData);
+                    }
                 }
             } catch (error) {
                 console.error('Failed to fetch staff data:', error);
-                // Use mock data on error
-                setStaff(mockStaff);
-                setEditCategory(mockStaff.category);
-                setEditCapabilities(new Set(mockStaff.capabilities));
-                setEditCohorts(new Set(mockStaff.cohortIds));
-                setCapabilityGroups(mockCapabilityGroups);
-                setAvailableCohorts(mockCohorts);
             } finally {
                 setLoading(false);
             }
