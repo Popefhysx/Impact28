@@ -275,9 +275,13 @@ export default function ApplicantsPage() {
 
         setBulkLoading(true);
         try {
+            const token = localStorage.getItem('auth_token');
             const response = await fetch(`${API_BASE}/admin/applicants/bulk-decision`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({
                     applicantIds: Array.from(selectedIds),
                     decision,
@@ -286,9 +290,16 @@ export default function ApplicantsPage() {
 
             if (response.ok) {
                 // Refresh applicants
-                const refreshRes = await fetch(`${API_BASE}/admin/applicants`);
+                const refreshRes = await fetch(`${API_BASE}/admin/applicants`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
                 if (refreshRes.ok) {
-                    setApplicants(await refreshRes.json());
+                    const data = await refreshRes.json();
+                    const applicantsList = data?.applicants || data;
+                    setApplicants(applicantsList?.length > 0 ? applicantsList : []);
                 }
                 setSelectedIds(new Set());
             }
@@ -303,7 +314,6 @@ export default function ApplicantsPage() {
         <div className={styles.container}>
             <header className={styles.header}>
                 <div>
-                    <h1>Applicants</h1>
                     <p className={styles.subtitle}>Review and manage incoming applications</p>
                 </div>
                 <div className={styles.headerStats}>

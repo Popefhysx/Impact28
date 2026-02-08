@@ -475,10 +475,17 @@ Return JSON only:
       // Detailed error logging for debugging
       const errorMessage = error instanceof Error ? error.message : String(error);
       const errorStack = error instanceof Error ? error.stack : undefined;
-      this.logger.error(`AI scoring failed for applicant, falling back to rules.`);
-      this.logger.error(`Error: ${errorMessage}`);
+      this.logger.error(`AI scoring failed for applicant ${applicant.id}, falling back to rules.`);
+      this.logger.error(`AI Error: ${errorMessage}`);
       if (errorStack) {
-        this.logger.error(`Stack: ${errorStack}`);
+        this.logger.error(`AI Stack: ${errorStack}`);
+      }
+      // Log API key state for debugging (first/last 4 chars only)
+      if (this.anthropicApiKey) {
+        const keyPreview = `${this.anthropicApiKey.substring(0, 7)}...${this.anthropicApiKey.slice(-4)}`;
+        this.logger.error(`API key present: ${keyPreview} (length: ${this.anthropicApiKey.length})`);
+      } else {
+        this.logger.error('API key is undefined at time of AI call');
       }
       return this.scoreWithRules(applicant);
     }

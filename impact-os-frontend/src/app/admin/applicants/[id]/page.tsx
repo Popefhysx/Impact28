@@ -184,8 +184,9 @@ export default function ApplicantDetailPage() {
     const router = useRouter();
     const [applicant, setApplicant] = useState<ApplicantDetail | null>(null);
     const [loading, setLoading] = useState(true);
-    const [deciding, setDeciding] = useState(false);
+    const [decidingAction, setDecidingAction] = useState<string | null>(null);
     const [notes, setNotes] = useState('');
+    const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
     useEffect(() => {
         const fetchApplicant = async () => {
@@ -226,7 +227,8 @@ export default function ApplicantDetailPage() {
     const handleDecision = async (decision: 'ADMITTED' | 'WAITLIST' | 'REJECTED') => {
         if (!applicant) return;
 
-        setDeciding(true);
+        setDecidingAction(decision);
+        setFeedbackMessage(null);
         try {
             const token = localStorage.getItem('auth_token');
             const response = await fetch(
@@ -246,13 +248,14 @@ export default function ApplicantDetailPage() {
             }
 
             const result = await response.json();
-            alert(`Decision: ${decision}\n${result.message}`);
-            router.push('/admin/applicants');
+            setFeedbackMessage({ type: 'success', text: result.message || `Decision: ${decision}` });
+            // Navigate back after a brief delay
+            setTimeout(() => router.push('/admin/applicants'), 1500);
         } catch (error) {
             console.error('Error making decision:', error);
-            alert('Failed to save decision. Please try again.');
+            setFeedbackMessage({ type: 'error', text: 'Failed to save decision. Please try again.' });
         } finally {
-            setDeciding(false);
+            setDecidingAction(null);
         }
     };
 
@@ -520,10 +523,27 @@ export default function ApplicantDetailPage() {
                         </section>
                     )}
 
-                    {/* Decision Panel */}
-                    {applicant.status !== 'ADMITTED' && applicant.status !== 'REJECTED' && (
+                    {/* Decision Panel — only for SCORED applicants */}
+                    {applicant.status === 'SCORED' && (
                         <section className={styles.decisionPanel}>
                             <h2>Make Decision</h2>
+
+                            {/* Inline Toast */}
+                            {feedbackMessage && (
+                                <div style={{
+                                    padding: 'var(--space-sm) var(--space-md)',
+                                    borderRadius: 'var(--radius-sm)',
+                                    marginBottom: 'var(--space-md)',
+                                    fontSize: '14px',
+                                    fontWeight: 500,
+                                    background: feedbackMessage.type === 'success' ? 'rgba(22, 163, 74, 0.1)' : 'rgba(220, 38, 38, 0.1)',
+                                    color: feedbackMessage.type === 'success' ? '#16a34a' : '#dc2626',
+                                    border: `1px solid ${feedbackMessage.type === 'success' ? 'rgba(22, 163, 74, 0.3)' : 'rgba(220, 38, 38, 0.3)'}`,
+                                }}>
+                                    {feedbackMessage.type === 'success' ? <CheckCircle size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} /> : <AlertCircle size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} />}
+                                    {feedbackMessage.text}
+                                </div>
+                            )}
 
                             <div className={styles.notesField}>
                                 <label>Admin Notes (optional)</label>
@@ -539,25 +559,25 @@ export default function ApplicantDetailPage() {
                                 <button
                                     className={styles.admitButton}
                                     onClick={() => handleDecision('ADMITTED')}
-                                    disabled={deciding}
+                                    disabled={decidingAction !== null}
                                 >
-                                    {deciding ? <Loader2 className={styles.spinner} size={16} /> : <Check size={16} />}
+                                    {decidingAction === 'ADMITTED' ? <Loader2 className={styles.spinner} size={16} /> : <Check size={16} />}
                                     Admit
                                 </button>
                                 <button
                                     className={styles.waitlistButton}
                                     onClick={() => handleDecision('WAITLIST')}
-                                    disabled={deciding}
+                                    disabled={decidingAction !== null}
                                 >
-                                    {deciding ? <Loader2 className={styles.spinner} size={16} /> : <Clock size={16} />}
+                                    {decidingAction === 'WAITLIST' ? <Loader2 className={styles.spinner} size={16} /> : <Clock size={16} />}
                                     Waitlist
                                 </button>
                                 <button
                                     className={styles.rejectButton}
                                     onClick={() => handleDecision('REJECTED')}
-                                    disabled={deciding}
+                                    disabled={decidingAction !== null}
                                 >
-                                    {deciding ? <Loader2 className={styles.spinner} size={16} /> : <X size={16} />}
+                                    {decidingAction === 'REJECTED' ? <Loader2 className={styles.spinner} size={16} /> : <X size={16} />}
                                     Reject
                                 </button>
                             </div>

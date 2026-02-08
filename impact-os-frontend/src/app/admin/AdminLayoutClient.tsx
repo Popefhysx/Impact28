@@ -129,6 +129,14 @@ export default function AdminLayout({
         setMobileOpen(false);
     }, [pathname]);
 
+    // Auth check — redirect to login if no token
+    useEffect(() => {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+            router.push('/login');
+        }
+    }, [router]);
+
     // Check if any item in a group is active
     const isGroupActive = (items: { href: string }[]) => {
         return items.some(item =>
