@@ -64,7 +64,7 @@ export interface EmailLogContext {
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private resendApiKey: string;
-  private fromEmail = 'Project 3:10 <impact@cycle28.org>';
+  private fromEmail = 'Cycle28 x Project 3:10 <impact@cycle28.org>';
 
   constructor(
     private configService: ConfigService,
