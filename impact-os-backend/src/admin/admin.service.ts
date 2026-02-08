@@ -39,6 +39,11 @@ export interface DashboardStats {
     paused: number;
     byLevel: Record<string, number>;
   };
+  staff: {
+    total: number;
+    active: number;
+    byCategory: Record<string, number>;
+  };
   income: {
     pendingReviews: number;
     totalVerifiedUSD: number;
@@ -106,13 +111,14 @@ export class AdminService {
             where: { status: ApplicantStatus.SCORING },
           }),
         ]),
-        // User stats
+        // User stats (participants only — exclude staff)
         Promise.all([
-          this.prisma.user.count(),
-          this.prisma.user.count({ where: { isActive: true } }),
-          this.prisma.user.count({ where: { isActive: false } }),
+          this.prisma.user.count({ where: { NOT: { staff: {} } } }),
+          this.prisma.user.count({ where: { isActive: true, NOT: { staff: {} } } }),
+          this.prisma.user.count({ where: { isActive: false, NOT: { staff: {} } } }),
           this.prisma.user.groupBy({
             by: ['identityLevel'],
+            where: { NOT: { staff: {} } },
             _count: true,
           }),
         ]),
@@ -155,11 +161,27 @@ export class AdminService {
 
     // Count scored applicants and pending testimonials/partners
     // .catch(() => 0) for resilience: SCORED enum and Partner table may not exist until migrations are applied
-    const [scoredCount, pendingTestimonials, pendingPartners] = await Promise.all([
+    const [scoredCount, pendingTestimonials, pendingPartners, staffStats] = await Promise.all([
       this.prisma.applicant.count({ where: { status: ApplicantStatus.SCORED } }).catch(() => 0),
       this.prisma.testimonial.count({ where: { status: TestimonialStatus.PENDING } }).catch(() => 0),
       this.prisma.partner.count({ where: { status: { in: ['LEAD', 'QUALIFIED'] } } }).catch(() => 0),
+      // Staff stats
+      Promise.all([
+        this.prisma.staff.count(),
+        this.prisma.staff.count({ where: { isActive: true } }),
+        this.prisma.staff.groupBy({
+          by: ['category'],
+          _count: true,
+        }),
+      ]).catch(() => [0, 0, []] as [number, number, any[]]),
     ]);
+
+    const byCategory: Record<string, number> = {};
+    if (Array.isArray(staffStats[2])) {
+      for (const cat of staffStats[2]) {
+        byCategory[cat.category] = cat._count;
+      }
+    }
 
     return {
       applicants: {
@@ -176,6 +198,11 @@ export class AdminService {
         active: userStats[1],
         paused: userStats[2],
         byLevel,
+      },
+      staff: {
+        total: staffStats[0] as number,
+        active: staffStats[1] as number,
+        byCategory,
       },
       income: {
         pendingReviews: incomeStats[0],
