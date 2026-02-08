@@ -74,6 +74,20 @@ function formatWeeklyHours(hours: string | number | undefined): string {
     return hoursMap[String(hours)] || String(hours);
 }
 
+// Helper: Format CurrentStatus enum to readable text
+function formatCurrentStatus(status: string | undefined): string {
+    if (!status) return '—';
+    const statusMap: Record<string, string> = {
+        'UNEMPLOYED': 'Unemployed',
+        'UNDEREMPLOYED': 'Underemployed',
+        'STUDENT': 'Student',
+        'CAREGIVER': 'Caregiver',
+        'BETWEEN_JOBS': 'Between Jobs',
+        'STRUGGLING_BUSINESS': 'Struggling Business',
+    };
+    return statusMap[status] || status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
 // Helper: Generate fallback recommendation context when diagnosticReport is missing
 function getRecommendationContext(applicant: ApplicantDetail): string {
     const report = applicant.diagnosticReport;
@@ -309,7 +323,7 @@ export default function ApplicantDetailPage() {
                             </div>
                             <div className={styles.infoItem}>
                                 <label>Current Status</label>
-                                <span>{applicant.currentStatus || '—'}</span>
+                                <span>{formatCurrentStatus(applicant.currentStatus)}</span>
                             </div>
                             <div className={styles.infoItem}>
                                 <label>Weekly Hours</label>
