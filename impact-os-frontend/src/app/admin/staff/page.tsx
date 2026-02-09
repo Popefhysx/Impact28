@@ -75,6 +75,20 @@ const categoryIcons: Record<string, React.ReactNode> = {
     'OBSERVER': <Eye size={14} />,
 };
 
+// Map categories to their relevant templates
+const CATEGORY_TEMPLATES: Record<string, string[]> = {
+    'ADMIN': [],           // Admins get all capabilities — no template needed
+    'STAFF': ['OPS', 'MENTOR', 'FINANCE'],
+    'OBSERVER': ['IMPACT', 'PARTNER', 'VOLUNTEER'],
+};
+
+// Default template auto-selected for each category
+const CATEGORY_DEFAULT_TEMPLATE: Record<string, string> = {
+    'ADMIN': '',
+    'STAFF': 'OPS',
+    'OBSERVER': 'IMPACT',
+};
+
 export default function StaffPage() {
     const { showToast } = useToast();
     const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
@@ -89,9 +103,21 @@ export default function StaffPage() {
     // Invite form state
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteCategory, setInviteCategory] = useState<'ADMIN' | 'STAFF' | 'OBSERVER'>('STAFF');
-    const [inviteTemplate, setInviteTemplate] = useState('');
+    const [inviteTemplate, setInviteTemplate] = useState(CATEGORY_DEFAULT_TEMPLATE['STAFF']);
     const [inviteCohorts, setInviteCohorts] = useState<string[]>([]);
     const [inviteLoading, setInviteLoading] = useState(false);
+
+    // Filter templates by selected category
+    const relevantTemplates = templates.filter(t =>
+        (CATEGORY_TEMPLATES[inviteCategory] || []).includes(t.id)
+    );
+
+    // When category changes, auto-select a default template and reset if current doesn't apply
+    const handleCategoryChange = (val: string) => {
+        const cat = val as 'ADMIN' | 'STAFF' | 'OBSERVER';
+        setInviteCategory(cat);
+        setInviteTemplate(CATEGORY_DEFAULT_TEMPLATE[cat] || '');
+    };
 
     const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
@@ -205,7 +231,7 @@ export default function StaffPage() {
             // Reset form and close modal
             setInviteEmail('');
             setInviteCategory('STAFF');
-            setInviteTemplate('');
+            setInviteTemplate(CATEGORY_DEFAULT_TEMPLATE['STAFF']);
             setInviteCohorts([]);
             setShowInviteModal(false);
 
@@ -492,30 +518,29 @@ export default function StaffPage() {
                                     <label>Category</label>
                                     <Select
                                         value={inviteCategory}
-                                        onChange={(val) => setInviteCategory(val as 'ADMIN' | 'STAFF' | 'OBSERVER')}
+                                        onChange={handleCategoryChange}
                                         options={[
-                                            { value: 'ADMIN', label: 'Admin', description: 'Can change the system' },
+                                            { value: 'ADMIN', label: 'Admin', description: 'Full system access — no template needed' },
                                             { value: 'STAFF', label: 'Staff', description: 'Can execute assigned work' },
                                             { value: 'OBSERVER', label: 'Observer', description: 'Read-only access' },
                                         ]}
                                     />
                                 </div>
-                                <div className={styles.formGroup}>
-                                    <label>Role Template (optional)</label>
-                                    <Select
-                                        value={inviteTemplate}
-                                        onChange={setInviteTemplate}
-                                        placeholder="Select a template..."
-                                        options={[
-                                            { value: '', label: 'None', description: 'No template' },
-                                            ...templates.map((t) => ({
+                                {inviteCategory !== 'ADMIN' && (
+                                    <div className={styles.formGroup}>
+                                        <label>Role Template</label>
+                                        <Select
+                                            value={inviteTemplate}
+                                            onChange={setInviteTemplate}
+                                            placeholder="Select a role..."
+                                            options={relevantTemplates.map((t) => ({
                                                 value: t.id,
                                                 label: t.label,
                                                 description: t.description,
-                                            })),
-                                        ]}
-                                    />
-                                </div>
+                                            }))}
+                                        />
+                                    </div>
+                                )}
                                 {cohorts.length > 0 && (
                                     <div className={styles.formGroup}>
                                         <label>Assign to Cohorts (optional)</label>
