@@ -1,5 +1,7 @@
 .container {
     padding: var(--space-lg);
+    background: var(--bg-elevated);
+    min-height: 100vh;
 }
 
 .header {
@@ -286,7 +288,7 @@
 }
 
 .viewButton:hover {
-    background: var(--navy-dark);
+    background: var(--navy-dark) !important;
     color: white !important;
 }
 

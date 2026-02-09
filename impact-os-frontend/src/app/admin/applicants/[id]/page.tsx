@@ -6,9 +6,10 @@ import Link from 'next/link';
 import {
     ArrowLeft, User, MapPin, Briefcase, Monitor, Clock,
     Star, FileText, Check, X, AlertCircle, CheckCircle,
-    Send, Loader2, HeartHandshake, Info
+    Send, Loader2, HeartHandshake, Info, RefreshCw
 } from 'lucide-react';
 import { useToast } from '@/components/admin/Toast';
+import { Select } from '@/components/ui';
 import styles from './page.module.css';
 
 // Types
@@ -228,6 +229,7 @@ export default function ApplicantDetailPage() {
     const [applicant, setApplicant] = useState<ApplicantDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [decidingAction, setDecidingAction] = useState<string | null>(null);
+    const [rescoring, setRescoring] = useState(false);
     const [notes, setNotes] = useState('');
     const [rejectionReason, setRejectionReason] = useState('');
 
@@ -492,7 +494,42 @@ export default function ApplicantDetailPage() {
                                                 <p className={styles.explanationText}>{rec.concerns}</p>
                                             </div>
                                         )}
-                                        <span className={styles.methodBadge}>{rec.method}</span>
+                                        <div className={styles.methodRow}>
+                                            <span className={styles.methodBadge}>{rec.method}</span>
+                                            {rec.method === '📊 Rule-Based' && (
+                                                <button
+                                                    className={styles.rescoreButton}
+                                                    onClick={async () => {
+                                                        setRescoring(true);
+                                                        try {
+                                                            const token = localStorage.getItem('auth_token');
+                                                            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/applicants/${applicant.id}/rescore`, {
+                                                                method: 'POST',
+                                                                headers: {
+                                                                    'Content-Type': 'application/json',
+                                                                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                                                                },
+                                                            });
+                                                            if (res.ok) {
+                                                                showToast('success', 'Re-scored with AI. Refreshing...');
+                                                                window.location.reload();
+                                                            } else {
+                                                                const err = await res.json().catch(() => ({}));
+                                                                showToast('error', err.message || 'Re-scoring failed');
+                                                            }
+                                                        } catch {
+                                                            showToast('error', 'Re-scoring failed');
+                                                        } finally {
+                                                            setRescoring(false);
+                                                        }
+                                                    }}
+                                                    disabled={rescoring}
+                                                >
+                                                    <RefreshCw size={12} className={rescoring ? styles.spinning : ''} />
+                                                    {rescoring ? 'Scoring...' : 'Re-score with AI'}
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 );
                             })()}
@@ -598,29 +635,20 @@ export default function ApplicantDetailPage() {
                             {/* Rejection Reason — shows inline when considering rejection */}
                             <div className={styles.notesField}>
                                 <label>Rejection Reason (required if rejecting)</label>
-                                <select
+                                <Select
                                     value={rejectionReason}
-                                    onChange={(e) => setRejectionReason(e.target.value)}
-                                    style={{
-                                        width: '100%',
-                                        padding: 'var(--space-sm)',
-                                        border: '1px solid var(--border-subtle)',
-                                        borderRadius: 'var(--radius-sm)',
-                                        fontSize: '14px',
-                                        fontFamily: 'inherit',
-                                        background: 'var(--bg-primary)',
-                                        color: 'var(--text-primary)',
-                                    }}
-                                >
-                                    <option value="">— Select reason (only for rejection) —</option>
-                                    <option value="LOW_READINESS">Low Readiness</option>
-                                    <option value="NO_DEVICE">No Device Access</option>
-                                    <option value="NO_INTERNET">No Internet Access</option>
-                                    <option value="NO_CONSENT">Did Not Consent</option>
-                                    <option value="INCOMPLETE_FORM">Incomplete Form</option>
-                                    <option value="DUPLICATE">Duplicate Application</option>
-                                    <option value="STAFF_DECISION">Staff Decision</option>
-                                </select>
+                                    onChange={(val) => setRejectionReason(val)}
+                                    placeholder="— Select reason (only for rejection) —"
+                                    options={[
+                                        { value: 'LOW_READINESS', label: 'Low Readiness' },
+                                        { value: 'NO_DEVICE', label: 'No Device Access' },
+                                        { value: 'NO_INTERNET', label: 'No Internet Access' },
+                                        { value: 'NO_CONSENT', label: 'Did Not Consent' },
+                                        { value: 'INCOMPLETE_FORM', label: 'Incomplete Form' },
+                                        { value: 'DUPLICATE', label: 'Duplicate Application' },
+                                        { value: 'STAFF_DECISION', label: 'Staff Decision' },
+                                    ]}
+                                />
                             </div>
 
                             <div className={styles.decisionButtons}>
