@@ -33,7 +33,7 @@ export class AdminController {
   // ===== DASHBOARD =====
 
   @Get('dashboard')
-  @RequireCapability('reports.view', 'admissions.manage')
+  // No capability requirement — dashboard overview is accessible to all authenticated staff
   async getDashboardStats() {
     return this.adminService.getDashboardStats();
   }
