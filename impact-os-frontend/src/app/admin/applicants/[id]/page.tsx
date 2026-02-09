@@ -106,14 +106,14 @@ function getRecommendationParts(applicant: ApplicantDetail): RecommendationParts
 
     if (reasoning) {
         // Try to parse structured sections from the reasoning string
-        const strengthsMatch = reasoning.match(/Strengths?:\s*(.+?)(?=Concerns?:|$)/is);
-        const concernsMatch = reasoning.match(/Concerns?:\s*(.+?)$/is);
+        const strengthsMatch = reasoning.match(/Strengths?:\s*([\s\S]+?)(?=Concerns?:|$)/i);
+        const concernsMatch = reasoning.match(/Concerns?:\s*([\s\S]+?)$/i);
 
         if (strengthsMatch || concernsMatch) {
             // Strip the Strengths/Concerns sections from the summary
             const summary = reasoning
-                .replace(/Strengths?:\s*.+?(?=Concerns?:|$)/is, '')
-                .replace(/Concerns?:\s*.+$/is, '')
+                .replace(/Strengths?:\s*[\s\S]+?(?=Concerns?:|$)/i, '')
+                .replace(/Concerns?:\s*[\s\S]+$/i, '')
                 .trim();
             return {
                 summary: summary || reasoning.split('.')[0] + '.',
