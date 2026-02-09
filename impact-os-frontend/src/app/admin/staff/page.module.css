@@ -287,7 +287,20 @@
 
 .viewButton:hover {
     background: var(--navy-dark);
-    color: white;
+    color: white !important;
+}
+
+.pendingTag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--gold-warm);
+    background: rgba(198, 163, 89, 0.12);
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
 }
 
 /* Grid View (Mobile) */

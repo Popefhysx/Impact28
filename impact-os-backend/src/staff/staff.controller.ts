@@ -21,7 +21,7 @@ import { StaffCategory } from '@prisma/client';
  */
 @Controller('staff')
 export class StaffController {
-  constructor(private readonly staffService: StaffService) {}
+  constructor(private readonly staffService: StaffService) { }
 
   /**
    * GET /staff/validate-invite/:token
@@ -125,6 +125,15 @@ export class StaffController {
   @Delete(':id')
   async deactivateStaff(@Param('id') id: string) {
     return this.staffService.deactivateStaff(id);
+  }
+
+  /**
+   * POST /staff/:id/resend-invite
+   * Resend invite email with a fresh token
+   */
+  @Post(':id/resend-invite')
+  async resendInvite(@Param('id') id: string) {
+    return this.staffService.resendInvite(id);
   }
 
   /**

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, Filter, UserPlus, Eye, MoreHorizontal, Shield, UserCheck, UserMinus, ChevronDown, Users, X } from 'lucide-react';
+import { Search, Filter, UserPlus, Eye, MoreHorizontal, Shield, UserCheck, UserMinus, ChevronDown, Users, X, Clock, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Select } from '@/components/ui';
 import { useToast } from '@/components/admin/Toast';
 import styles from './page.module.css';
@@ -16,6 +16,8 @@ interface StaffMember {
     cohortIds: string[];
     isActive: boolean;
     invitedAt: string;
+    setupCompleted: boolean;
+    inviteTokenExpiresAt: string | null;
     user: {
         id: string;
         email: string;
@@ -24,6 +26,30 @@ interface StaffMember {
         avatarUrl: string | null;
         lastLoginAt: string | null;
     };
+}
+
+// Helper: Get display name (use email prefix when name is placeholder)
+function getDisplayName(user: StaffMember['user']): { name: string; isPlaceholder: boolean } {
+    if (user.firstName === 'Pending' && user.lastName === 'Setup') {
+        const emailName = user.email.split('@')[0].replace(/[._]/g, ' ');
+        return { name: emailName, isPlaceholder: true };
+    }
+    return { name: `${user.firstName} ${user.lastName}`, isPlaceholder: false };
+}
+
+// Helper: Get staff status based on setupCompleted and isActive
+function getStaffStatus(staff: StaffMember): { label: string; badge: string; icon: React.ReactNode } {
+    if (!staff.isActive) {
+        return { label: 'Deactivated', badge: 'badge-danger', icon: <X size={12} /> };
+    }
+    if (!staff.setupCompleted) {
+        // Check if invite token has expired
+        if (staff.inviteTokenExpiresAt && new Date(staff.inviteTokenExpiresAt) < new Date()) {
+            return { label: 'Invite Expired', badge: 'badge-danger', icon: <AlertTriangle size={12} /> };
+        }
+        return { label: 'Pending Setup', badge: 'badge-warning', icon: <Clock size={12} /> };
+    }
+    return { label: 'Active', badge: 'badge-success', icon: <UserCheck size={12} /> };
 }
 
 interface CapabilityTemplate {
@@ -282,6 +308,7 @@ export default function StaffPage() {
                     <thead>
                         <tr>
                             <th>Staff Member</th>
+                            <th>Status</th>
                             <th>Category</th>
                             <th>Capabilities</th>
                             <th>Cohorts</th>
@@ -293,72 +320,85 @@ export default function StaffPage() {
                     <tbody>
                         {loading ? (
                             <tr>
-                                <td colSpan={7} className={styles.loadingCell}>
+                                <td colSpan={8} className={styles.loadingCell}>
                                     Loading staff members...
                                 </td>
                             </tr>
                         ) : filteredStaff.length === 0 ? (
                             <tr>
-                                <td colSpan={7} className={styles.emptyCell}>
+                                <td colSpan={8} className={styles.emptyCell}>
                                     {staffMembers.length === 0
                                         ? 'No staff members yet. Invite someone to get started.'
                                         : 'No staff members found matching your filters.'}
                                 </td>
                             </tr>
                         ) : (
-                            filteredStaff.map((staff) => (
-                                <tr key={staff.id}>
-                                    <td>
-                                        <div className={styles.staffInfo}>
-                                            <div className={styles.avatar}>
-                                                {staff.user.firstName[0]}{staff.user.lastName[0]}
-                                            </div>
-                                            <div>
-                                                <div className={styles.name}>
-                                                    {staff.user.firstName} {staff.user.lastName}
-                                                    {staff.isSuperAdmin && (
-                                                        <span className={styles.superBadge}>Super</span>
-                                                    )}
+                            filteredStaff.map((staff) => {
+                                const display = getDisplayName(staff.user);
+                                const status = getStaffStatus(staff);
+                                return (
+                                    <tr key={staff.id}>
+                                        <td>
+                                            <div className={styles.staffInfo}>
+                                                <div className={styles.avatar}>
+                                                    {display.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                                                 </div>
-                                                <div className={styles.email}>{staff.user.email}</div>
+                                                <div>
+                                                    <div className={styles.name}>
+                                                        {display.name}
+                                                        {display.isPlaceholder && (
+                                                            <span className={styles.pendingTag}>invited</span>
+                                                        )}
+                                                        {staff.isSuperAdmin && (
+                                                            <span className={styles.superBadge}>Super</span>
+                                                        )}
+                                                    </div>
+                                                    <div className={styles.email}>{staff.user.email}</div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span className={`badge ${categoryColors[staff.category] || ''}`}>
-                                            {categoryIcons[staff.category]}
-                                            {staff.category}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span className={styles.capCount}>
-                                            {staff.capabilities.length} capabilities
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span className={styles.cohortCount}>
-                                            {staff.cohortIds.length === 0
-                                                ? 'All'
-                                                : `${staff.cohortIds.length} assigned`}
-                                        </span>
-                                    </td>
-                                    <td className={styles.dateCell}>
-                                        {formatDate(staff.invitedAt)}
-                                    </td>
-                                    <td className={styles.dateCell}>
-                                        {formatDate(staff.user.lastLoginAt)}
-                                    </td>
-                                    <td>
-                                        <Link
-                                            href={`/admin/staff/${staff.id}`}
-                                            className={styles.viewButton}
-                                        >
-                                            <Eye size={16} />
-                                            Manage
-                                        </Link>
-                                    </td>
-                                </tr>
-                            ))
+                                        </td>
+                                        <td>
+                                            <span className={`badge ${status.badge}`}>
+                                                {status.icon}
+                                                {status.label}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className={`badge ${categoryColors[staff.category] || ''}`}>
+                                                {categoryIcons[staff.category]}
+                                                {staff.category}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className={styles.capCount}>
+                                                {staff.capabilities.length} capabilities
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className={styles.cohortCount}>
+                                                {staff.cohortIds.length === 0
+                                                    ? 'All'
+                                                    : `${staff.cohortIds.length} assigned`}
+                                            </span>
+                                        </td>
+                                        <td className={styles.dateCell}>
+                                            {formatDate(staff.invitedAt)}
+                                        </td>
+                                        <td className={styles.dateCell}>
+                                            {formatDate(staff.user.lastLoginAt)}
+                                        </td>
+                                        <td>
+                                            <Link
+                                                href={`/admin/staff/${staff.id}`}
+                                                className={styles.viewButton}
+                                            >
+                                                <Eye size={16} />
+                                                Manage
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         )}
                     </tbody>
                 </table>

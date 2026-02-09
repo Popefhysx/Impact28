@@ -170,7 +170,16 @@ export class StaffService {
     const [staff, total] = await Promise.all([
       this.prisma.staff.findMany({
         where,
-        include: {
+        select: {
+          id: true,
+          category: true,
+          isSuperAdmin: true,
+          capabilities: true,
+          cohortIds: true,
+          isActive: true,
+          invitedAt: true,
+          setupCompleted: true,
+          inviteTokenExpiresAt: true,
           user: {
             select: {
               id: true,
@@ -404,6 +413,54 @@ export class StaffService {
   }
 
   /**
+   * Resend invite email with a fresh token
+   */
+  async resendInvite(staffId: string) {
+    const staff = await this.prisma.staff.findUnique({
+      where: { id: staffId },
+      include: { user: true },
+    });
+
+    if (!staff) {
+      throw new NotFoundException('Staff member not found');
+    }
+
+    if (staff.setupCompleted) {
+      throw new BadRequestException('This staff member has already completed setup');
+    }
+
+    // Generate a fresh invite token
+    const inviteToken = crypto.randomBytes(32).toString('hex');
+    const inviteTokenExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    await this.prisma.staff.update({
+      where: { id: staffId },
+      data: {
+        inviteToken,
+        inviteTokenExpiresAt,
+      },
+    });
+
+    // Generate setup link
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const setupLink = `${baseUrl}/admin/setup/${inviteToken}`;
+
+    // Resend the email
+    await this.emailService.sendStaffInvite(staff.user.email, {
+      category: staff.category,
+      setupLink,
+    });
+
+    this.logger.log(`Invite resent for staff ${staff.user.email}`);
+
+    return {
+      success: true,
+      message: 'Invite email resent successfully',
+      expiresAt: inviteTokenExpiresAt,
+    };
+  }
+
+  /**
    * Validate an invite token (for frontend pre-check)
    */
   async validateInviteToken(token: string) {
@@ -518,10 +575,47 @@ export class StaffService {
 
     this.logger.log(`Staff member ${normalizedUsername} completed setup`);
 
+    // Notify admin that staff completed setup (async, non-blocking)
+    if (staff.invitedBy && staff.invitedBy !== 'system') {
+      this.notifyAdminOfSetupComplete(staff.invitedBy, `${firstName} ${lastName}`, staff.user.email)
+        .catch((err: Error) => this.logger.error(`Failed to notify admin of setup: ${err.message}`));
+    }
+
     return {
       success: true,
       message: 'Account setup complete. You can now log in.',
       username: normalizedUsername,
     };
+  }
+
+  /**
+   * Notify the inviting admin that a staff member completed setup
+   */
+  private async notifyAdminOfSetupComplete(inviterUserId: string, staffName: string, staffEmail: string) {
+    try {
+      const inviter = await this.prisma.user.findUnique({
+        where: { id: inviterUserId },
+        select: { email: true, firstName: true },
+      });
+
+      if (!inviter) return;
+
+      // Create in-app notification
+      await this.prisma.notification.create({
+        data: {
+          userId: inviterUserId,
+          type: 'STAFF_SETUP_COMPLETE',
+          title: 'Staff Setup Complete',
+          message: `${staffName} (${staffEmail}) has completed their account setup and can now log in.`,
+        },
+      }).catch(() => {
+        // Notification table may not exist yet, silently skip
+        this.logger.warn('Could not create in-app notification (table may not exist)');
+      });
+
+      this.logger.log(`Admin ${inviter.email} notified: ${staffName} completed setup`);
+    } catch (error) {
+      this.logger.error(`Failed to notify admin: ${error}`);
+    }
   }
 }

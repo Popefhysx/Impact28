@@ -2,7 +2,8 @@
 
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Save, Shield, UserCheck, Eye, UserMinus, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Save, Shield, UserCheck, Eye, UserMinus, Check, X, ChevronDown, ChevronUp, RefreshCw, Clock, AlertTriangle, Mail } from 'lucide-react';
+import { useToast } from '@/components/admin/Toast';
 import styles from './page.module.css';
 
 interface StaffDetail {
@@ -17,6 +18,8 @@ interface StaffDetail {
     invitedAt: string;
     invitedBy: string;
     deactivatedAt: string | null;
+    setupCompleted: boolean;
+    inviteTokenExpiresAt: string | null;
     user: {
         id: string;
         email: string;
@@ -58,11 +61,21 @@ const categoryIcons: Record<string, React.ReactNode> = {
 
 export default function StaffDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
+    const { showToast } = useToast();
     const [staff, setStaff] = useState<StaffDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [resending, setResending] = useState(false);
     const [capabilityGroups, setCapabilityGroups] = useState<Record<string, CapabilityGroup>>({});
     const [availableCohorts, setAvailableCohorts] = useState<Cohort[]>([]);
+
+    // Helper: get auth headers
+    const getHeaders = () => {
+        const token = localStorage.getItem('auth_token');
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        return headers;
+    };
 
     // Edit state
     const [editCategory, setEditCategory] = useState<'ADMIN' | 'STAFF' | 'OBSERVER'>('STAFF');
@@ -173,7 +186,7 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
         try {
             const response = await fetch(`${API_BASE}/staff/${staff.id}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getHeaders(),
                 body: JSON.stringify({
                     category: editCategory,
                     capabilities: [...editCapabilities],
@@ -185,9 +198,13 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
                 const updated = await response.json();
                 setStaff({ ...staff, ...updated });
                 setHasChanges(false);
+                showToast('success', 'Changes saved successfully');
+            } else {
+                showToast('error', 'Failed to save changes');
             }
         } catch (error) {
             console.error('Save failed:', error);
+            showToast('error', 'Failed to save changes');
         } finally {
             setSaving(false);
         }
@@ -198,12 +215,41 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
         try {
             const response = await fetch(`${API_BASE}/staff/${staff.id}`, {
                 method: 'DELETE',
+                headers: getHeaders(),
             });
             if (response.ok) {
                 window.location.href = '/admin/staff';
+            } else {
+                showToast('error', 'Failed to deactivate staff member');
             }
         } catch (error) {
             console.error('Deactivate failed:', error);
+            showToast('error', 'Failed to deactivate staff member');
+        }
+    };
+
+    const handleResendInvite = async () => {
+        if (!staff) return;
+        setResending(true);
+        try {
+            const response = await fetch(`${API_BASE}/staff/${staff.id}/resend-invite`, {
+                method: 'POST',
+                headers: getHeaders(),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setStaff({ ...staff, inviteTokenExpiresAt: data.expiresAt });
+                showToast('success', 'Invite email resent successfully');
+            } else {
+                const errData = await response.json().catch(() => ({}));
+                showToast('error', errData.message || 'Failed to resend invite');
+            }
+        } catch (error) {
+            console.error('Resend invite failed:', error);
+            showToast('error', 'Failed to resend invite');
+        } finally {
+            setResending(false);
         }
     };
 
@@ -251,11 +297,15 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
             <div className={styles.profileCard}>
                 <div className={styles.profileMain}>
                     <div className={styles.avatar}>
-                        {staff.user.firstName[0]}{staff.user.lastName[0]}
+                        {staff.user.firstName === 'Pending' && staff.user.lastName === 'Setup'
+                            ? staff.user.email.split('@')[0].slice(0, 2).toUpperCase()
+                            : `${staff.user.firstName[0]}${staff.user.lastName[0]}`}
                     </div>
                     <div className={styles.profileInfo}>
                         <h1 className={styles.profileName}>
-                            {staff.user.firstName} {staff.user.lastName}
+                            {staff.user.firstName === 'Pending' && staff.user.lastName === 'Setup'
+                                ? staff.user.email.split('@')[0].replace(/[._]/g, ' ')
+                                : `${staff.user.firstName} ${staff.user.lastName}`}
                             {staff.isSuperAdmin && <span className={styles.superBadge}>Super Admin</span>}
                         </h1>
                         <p className={styles.profileEmail}>{staff.user.email}</p>
@@ -272,11 +322,46 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
                     </div>
                     <div className={styles.metaItem}>
                         <span className={styles.metaLabel}>Status</span>
-                        <span className={`badge ${staff.isActive ? 'badge-success' : 'badge-danger'}`}>
-                            {staff.isActive ? 'Active' : 'Inactive'}
-                        </span>
+                        {!staff.isActive ? (
+                            <span className="badge badge-danger"><X size={12} /> Deactivated</span>
+                        ) : !staff.setupCompleted ? (
+                            <span className="badge badge-warning"><Clock size={12} /> Pending Setup</span>
+                        ) : (
+                            <span className="badge badge-success"><UserCheck size={12} /> Active</span>
+                        )}
                     </div>
+                    {!staff.setupCompleted && staff.inviteTokenExpiresAt && (
+                        <div className={styles.metaItem}>
+                            <span className={styles.metaLabel}>Invite Expires</span>
+                            <span className={styles.metaValue}>
+                                {new Date(staff.inviteTokenExpiresAt) < new Date()
+                                    ? <span style={{ color: 'var(--accent-danger)' }}>Expired</span>
+                                    : formatDate(staff.inviteTokenExpiresAt)}
+                            </span>
+                        </div>
+                    )}
                 </div>
+
+                {/* Resend Invite Banner */}
+                {!staff.setupCompleted && staff.isActive && (
+                    <div className={styles.inviteBanner}>
+                        <div className={styles.inviteBannerContent}>
+                            <Mail size={18} />
+                            <div>
+                                <strong>Setup Pending</strong>
+                                <p>This staff member hasn&apos;t completed their account setup yet.</p>
+                            </div>
+                        </div>
+                        <button
+                            className={styles.resendButton}
+                            onClick={handleResendInvite}
+                            disabled={resending}
+                        >
+                            <RefreshCw size={14} className={resending ? styles.spinning : ''} />
+                            {resending ? 'Sending...' : 'Resend Invite'}
+                        </button>
+                    </div>
+                )}
             </div>
 
             <div className={styles.twoColumn}>
