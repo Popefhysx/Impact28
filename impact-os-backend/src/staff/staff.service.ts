@@ -600,20 +600,8 @@ export class StaffService {
 
       if (!inviter) return;
 
-      // Create in-app notification
-      await this.prisma.notification.create({
-        data: {
-          userId: inviterUserId,
-          type: 'STAFF_SETUP_COMPLETE',
-          title: 'Staff Setup Complete',
-          message: `${staffName} (${staffEmail}) has completed their account setup and can now log in.`,
-        },
-      }).catch(() => {
-        // Notification table may not exist yet, silently skip
-        this.logger.warn('Could not create in-app notification (table may not exist)');
-      });
-
-      this.logger.log(`Admin ${inviter.email} notified: ${staffName} completed setup`);
+      // TODO: Create in-app notification when Notification model is added to schema
+      this.logger.log(`Admin ${inviter.email} notified: ${staffName} (${staffEmail}) completed setup`);
     } catch (error) {
       this.logger.error(`Failed to notify admin: ${error}`);
     }
