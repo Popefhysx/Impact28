@@ -237,3 +237,94 @@
     color: var(--text-secondary);
     margin: 0;
 }
+
+/* ─── Mobile Responsiveness ──────────────────────────────────── */
+
+@media (max-width: 520px) {
+    .container {
+        padding: var(--space-md);
+        align-items: flex-start;
+        padding-top: var(--space-xl);
+    }
+
+    .card {
+        padding: var(--space-lg);
+        border-radius: var(--radius-md);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .header {
+        margin-bottom: var(--space-lg);
+    }
+
+    .logo {
+        width: 56px;
+        height: 56px;
+    }
+
+    .title {
+        font-size: 20px;
+    }
+
+    .subtitle {
+        font-size: 13px;
+    }
+
+    .section {
+        padding: var(--space-md);
+    }
+
+    .fieldRow,
+    .pinRow {
+        flex-direction: column;
+        gap: var(--space-sm);
+    }
+
+    .pinInput {
+        letter-spacing: 6px;
+        font-size: 18px;
+    }
+
+    .successTitle {
+        font-size: 20px;
+    }
+
+    .successBtn {
+        display: block;
+        text-align: center;
+        padding: var(--space-md);
+    }
+
+    .invalidTitle {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 380px) {
+    .container {
+        padding: var(--space-sm);
+        padding-top: var(--space-lg);
+    }
+
+    .card {
+        padding: var(--space-md);
+    }
+
+    .title {
+        font-size: 18px;
+    }
+
+    .sectionTitle {
+        font-size: 12px;
+    }
+
+    .input {
+        padding: var(--space-sm) var(--space-md);
+        font-size: 15px;
+    }
+
+    .submitBtn {
+        font-size: 15px;
+        padding: var(--space-md);
+    }
+}
