@@ -456,12 +456,6 @@
         width: 100%;
     }
 
-    .saveButton,
-    .deactivateButton {
-        flex: 1;
-        justify-content: center;
-    }
-
     .profileMain {
         flex-direction: column;
         text-align: center;
@@ -470,4 +464,22 @@
     .profileName {
         flex-direction: column;
     }
+}
+
+/* Confirmation Modal */
+.modalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-sm);
+}
+
+.modalText {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.modalText strong {
+    color: var(--text-primary);
 }

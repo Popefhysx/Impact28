@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Save, Shield, UserCheck, Eye, UserMinus, Check, X, ChevronDown, ChevronUp, RefreshCw, Clock, AlertTriangle, Mail } from 'lucide-react';
+import { Button, Modal } from '@/components/ui';
 import { useToast } from '@/components/admin/Toast';
 import styles from './page.module.css';
 
@@ -66,6 +67,7 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [resending, setResending] = useState(false);
+    const [showDeactivateModal, setShowDeactivateModal] = useState(false);
     const [capabilityGroups, setCapabilityGroups] = useState<Record<string, CapabilityGroup>>({});
     const [availableCohorts, setAvailableCohorts] = useState<Cohort[]>([]);
 
@@ -211,7 +213,8 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
     };
 
     const handleDeactivate = async () => {
-        if (!staff || !confirm('Are you sure you want to deactivate this staff member?')) return;
+        if (!staff) return;
+        setShowDeactivateModal(false);
         try {
             const response = await fetch(`${API_BASE}/staff/${staff.id}`, {
                 method: 'DELETE',
@@ -279,16 +282,26 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
                 </Link>
                 <div className={styles.headerActions}>
                     {hasChanges && (
-                        <button className={styles.saveButton} onClick={handleSave} disabled={saving}>
-                            <Save size={16} />
+                        <Button
+                            variant="gold"
+                            size="sm"
+                            icon={<Save size={14} />}
+                            onClick={handleSave}
+                            disabled={saving}
+                            loading={saving}
+                        >
                             {saving ? 'Saving...' : 'Save Changes'}
-                        </button>
+                        </Button>
                     )}
                     {!staff.isSuperAdmin && (
-                        <button className={styles.deactivateButton} onClick={handleDeactivate}>
-                            <UserMinus size={16} />
+                        <Button
+                            variant="danger"
+                            size="sm"
+                            icon={<UserMinus size={14} />}
+                            onClick={() => setShowDeactivateModal(true)}
+                        >
                             Deactivate
-                        </button>
+                        </Button>
                     )}
                 </div>
             </div>
@@ -456,6 +469,38 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
                     )}
                 </div>
             </div>
+
+            {/* Deactivate Confirmation Modal */}
+            <Modal
+                isOpen={showDeactivateModal}
+                onClose={() => setShowDeactivateModal(false)}
+                title="Deactivate Staff Member"
+                size="sm"
+                footer={
+                    <div className={styles.modalActions}>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setShowDeactivateModal(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="danger"
+                            size="sm"
+                            icon={<UserMinus size={14} />}
+                            onClick={handleDeactivate}
+                        >
+                            Deactivate
+                        </Button>
+                    </div>
+                }
+            >
+                <p className={styles.modalText}>
+                    Are you sure you want to deactivate <strong>{staff.user.email}</strong>?
+                    They will lose access to the system immediately.
+                </p>
+            </Modal>
         </div>
     );
 }
