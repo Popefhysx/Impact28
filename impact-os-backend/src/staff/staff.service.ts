@@ -69,9 +69,14 @@ export class StaffService {
       });
     }
 
-    // Determine capabilities from template or custom list
+    // Determine capabilities based on category and template
     let capabilities: string[] = [];
-    if (dto.templateId && dto.templateId in CAPABILITY_TEMPLATES) {
+
+    if (dto.category === 'ADMIN') {
+      // ADMIN gets all capabilities automatically
+      capabilities = Object.values(CAPABILITIES);
+    } else if (dto.templateId && dto.templateId in CAPABILITY_TEMPLATES) {
+      // STAFF/OBSERVER: resolve from template
       capabilities = [
         ...CAPABILITY_TEMPLATES[dto.templateId as CapabilityTemplateId]
           .capabilities,
