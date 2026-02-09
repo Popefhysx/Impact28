@@ -9,10 +9,11 @@ import {
     ChevronsLeft, Menu, X, Settings, LogOut, ChevronUp,
     UserCog, BookOpen, HeartHandshake, Send, MessageSquareQuote,
     Handshake, UserCircle, KeyRound,
-    Shield, Bell, Layers, Calendar, Sliders
+    Shield, Layers, Calendar, Sliders
 } from 'lucide-react';
 import styles from './layout.module.css';
 import { ToastProvider } from '@/components/admin/Toast';
+import { NotificationHeader } from '@/components/ui/NotificationHeader';
 
 // ─── Route → Page Title mapping ────────────────────────────────────
 const routeTitles: Record<string, string> = {
@@ -131,12 +132,14 @@ export default function AdminLayout({
     }, [pathname]);
 
     // Auth check — redirect to login if no token
+    // Skip auth for /admin/setup routes (staff invite setup pages)
     useEffect(() => {
+        if (pathname.startsWith('/admin/setup')) return;
         const token = localStorage.getItem('auth_token');
         if (!token) {
             router.push('/login');
         }
-    }, [router]);
+    }, [router, pathname]);
 
     // Check if any item in a group is active
     const isGroupActive = (items: { href: string }[]) => {
@@ -274,9 +277,7 @@ export default function AdminLayout({
                     </div>
                     <div className={styles.topBarRight}>
                         <span className={styles.greeting}>{getGreeting()}</span>
-                        <button className={styles.notificationBtn} title="Notifications">
-                            <Bell size={18} />
-                        </button>
+                        <NotificationHeader variant="admin" />
                     </div>
                 </div>
                 <ToastProvider>

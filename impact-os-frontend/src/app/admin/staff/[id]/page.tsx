@@ -365,14 +365,16 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
                                 <p>This staff member hasn&apos;t completed their account setup yet.</p>
                             </div>
                         </div>
-                        <button
-                            className={styles.resendButton}
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            icon={<RefreshCw size={14} />}
                             onClick={handleResendInvite}
                             disabled={resending}
+                            loading={resending}
                         >
-                            <RefreshCw size={14} className={resending ? styles.spinning : ''} />
                             {resending ? 'Sending...' : 'Resend Invite'}
-                        </button>
+                        </Button>
                     </div>
                 )}
             </div>

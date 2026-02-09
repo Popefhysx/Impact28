@@ -570,6 +570,7 @@ export class EmailService {
 
     // Get admin email from config or use default
     const adminEmail = this.configService.get<string>('ADMIN_ALERT_EMAIL') || 'c28@diranx.com';
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://app.cycle28.org';
 
     const html = `
       <div style="font-family: 'Jost', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px;">
@@ -596,7 +597,7 @@ export class EmailService {
             </tr>
             ` : ''}
           </table>
-          <a href="https://app.cycle28.org/admin/applicants/${applicantId}" 
+          <a href="${frontendUrl}/admin/applicants/${applicantId}" 
              style="display: inline-block; background: #C4A052; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">
             Review Application →
           </a>
