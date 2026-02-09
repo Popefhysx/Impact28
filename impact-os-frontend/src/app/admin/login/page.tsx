@@ -45,8 +45,8 @@ export default function AdminLoginPage() {
             }
 
             // Store admin token
-            localStorage.setItem('impact_os_admin_token', data.token);
-            localStorage.setItem('impact_os_admin_user', JSON.stringify(data.user));
+            localStorage.setItem('auth_token', data.token);
+            localStorage.setItem('admin_user', JSON.stringify(data.user));
 
             // Redirect to admin dashboard
             router.push('/admin');

@@ -122,6 +122,7 @@ export default function AdminLayout({
 
     const handleLogout = () => {
         localStorage.removeItem('auth_token');
+        localStorage.removeItem('admin_user');
         localStorage.removeItem('user');
         router.push('/');
     };
