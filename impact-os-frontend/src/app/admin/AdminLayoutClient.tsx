@@ -157,6 +157,12 @@ export default function AdminLayout({
         return pathname === href || pathname.startsWith(href + '/');
     };
 
+    // For unauthenticated pages (setup, login), render without sidebar/nav
+    const isPublicRoute = pathname.startsWith('/admin/setup') || pathname.startsWith('/admin/login');
+    if (isPublicRoute) {
+        return <>{children}</>;
+    }
+
     return (
         <div className={styles.container}>
             {/* Mobile header */}
