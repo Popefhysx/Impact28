@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { Search, Filter, UserPlus, Eye, MoreHorizontal, Shield, UserCheck, UserMinus, ChevronDown, Users, X, Clock, AlertTriangle, RefreshCw } from 'lucide-react';
-import { Select } from '@/components/ui';
+import { Select, Button } from '@/components/ui';
 import { useToast } from '@/components/admin/Toast';
 import styles from './page.module.css';
 
@@ -388,13 +387,14 @@ export default function StaffPage() {
                                             {formatDate(staff.user.lastLoginAt)}
                                         </td>
                                         <td>
-                                            <Link
+                                            <Button
                                                 href={`/admin/staff/${staff.id}`}
-                                                className={styles.viewButton}
+                                                variant="primary"
+                                                size="sm"
+                                                icon={<Eye size={14} />}
                                             >
-                                                <Eye size={16} />
                                                 Manage
-                                            </Link>
+                                            </Button>
                                         </td>
                                     </tr>
                                 );
@@ -451,9 +451,15 @@ export default function StaffPage() {
                                 </div>
                             </div>
                             <div className={styles.cardFooter}>
-                                <Link href={`/admin/staff/${staff.id}`} className={styles.viewButton}>
-                                    <Eye size={16} /> Manage
-                                </Link>
+                                <Button
+                                    href={`/admin/staff/${staff.id}`}
+                                    variant="primary"
+                                    size="sm"
+                                    icon={<Eye size={14} />}
+                                    fullWidth
+                                >
+                                    Manage
+                                </Button>
                             </div>
                         </div>
                     ))
