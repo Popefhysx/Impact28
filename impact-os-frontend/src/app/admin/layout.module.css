@@ -476,6 +476,9 @@
         width: 280px;
         left: auto;
         right: 0;
+        top: 56px;
+        height: calc(100vh - 56px);
+        height: calc(100dvh - 56px);
     }
 
     .sidebar.mobileOpen {
@@ -521,7 +524,12 @@
     }
 
     .sidebar.mobileOpen {
-        padding-top: var(--space-lg);
+        padding-top: var(--space-sm);
+    }
+
+    .nav {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .roleTag {
