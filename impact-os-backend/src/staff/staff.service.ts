@@ -10,6 +10,7 @@ import { EmailService } from '../email';
 import { StaffCategory } from '@prisma/client';
 import { InviteStaffDto, UpdateStaffDto } from './dto';
 import {
+  CAPABILITIES,
   CAPABILITY_TEMPLATES,
   CAPABILITY_GROUPS,
   CapabilityTemplateId,

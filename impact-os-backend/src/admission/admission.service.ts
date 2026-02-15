@@ -81,20 +81,24 @@ export class AdmissionService {
 
   /**
    * Handle full admission - send personalized offer email
+   * Accepts optional pre-calculated stats for bulk send accuracy
    */
-  private async handleAdmission(applicant: {
-    id: string;
-    email: string;
-    firstName: string;
-    skillTrack: string | null;
-    offerType: string | null;
-    triadTechnical: number | null;
-    triadSoft: number | null;
-    triadCommercial: number | null;
-    primaryFocus: string | null;
-    receivesStipend: boolean | null;
-    kpiTargets: any;
-  }): Promise<void> {
+  private async handleAdmission(
+    applicant: {
+      id: string;
+      email: string;
+      firstName: string;
+      skillTrack: string | null;
+      offerType: string | null;
+      triadTechnical: number | null;
+      triadSoft: number | null;
+      triadCommercial: number | null;
+      primaryFocus: string | null;
+      receivesStipend: boolean | null;
+      kpiTargets: any;
+    },
+    batchStats?: { totalApplicants: number; admittedCount: number },
+  ): Promise<void> {
     // Generate secure offer token
     const offerToken = randomBytes(32).toString('hex');
     const expiresAt = new Date();
@@ -112,13 +116,20 @@ export class AdmissionService {
     const acceptLink = `${this.baseUrl}/apply/accept/${offerToken}`;
     const declineLink = `${this.baseUrl}/apply/decline/${offerToken}`;
 
-    // Fetch admission statistics for the celebratory email
-    const [totalApplicants, admittedCount] = await Promise.all([
-      this.prisma.applicant.count(),
-      this.prisma.applicant.count({
-        where: { status: ApplicantStatus.ADMITTED },
-      }),
-    ]);
+    // Use batch stats if provided, otherwise fetch live
+    let totalApplicants: number;
+    let admittedCount: number;
+    if (batchStats) {
+      totalApplicants = batchStats.totalApplicants;
+      admittedCount = batchStats.admittedCount;
+    } else {
+      [totalApplicants, admittedCount] = await Promise.all([
+        this.prisma.applicant.count(),
+        this.prisma.applicant.count({
+          where: { status: ApplicantStatus.ADMITTED },
+        }),
+      ]);
+    }
 
     // Send personalized offer email with Skill Triad
     const offerData: OfferEmailData = {
@@ -140,6 +151,78 @@ export class AdmissionService {
     this.logger.log(
       `Sent personalized offer email to ${applicant.email} (token: ${offerToken.substring(0, 8)}..., stats: ${admittedCount}/${totalApplicants})`,
     );
+  }
+
+  /**
+   * Bulk send all pending offer emails for ADMITTED applicants
+   * who haven't received their offer yet (no offerToken).
+   * Calculates accurate stats once from the final batch.
+   */
+  async sendPendingOfferEmails(): Promise<{
+    sent: number;
+    failed: number;
+    total: number;
+  }> {
+    // Find all ADMITTED applicants without an offer token (not yet emailed)
+    const pendingApplicants = await this.prisma.applicant.findMany({
+      where: {
+        status: ApplicantStatus.ADMITTED,
+        offerToken: null,
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        skillTrack: true,
+        offerType: true,
+        triadTechnical: true,
+        triadSoft: true,
+        triadCommercial: true,
+        primaryFocus: true,
+        receivesStipend: true,
+        kpiTargets: true,
+      },
+    });
+
+    if (pendingApplicants.length === 0) {
+      this.logger.log('No pending offer emails to send');
+      return { sent: 0, failed: 0, total: 0 };
+    }
+
+    // Calculate batch-wide stats ONCE — this is the whole point of two-phase
+    const [totalApplicants, admittedCount] = await Promise.all([
+      this.prisma.applicant.count(),
+      this.prisma.applicant.count({
+        where: { status: ApplicantStatus.ADMITTED },
+      }),
+    ]);
+
+    const batchStats = { totalApplicants, admittedCount };
+
+    this.logger.log(
+      `Starting bulk offer send: ${pendingApplicants.length} pending, stats: ${admittedCount}/${totalApplicants}`,
+    );
+
+    let sent = 0;
+    let failed = 0;
+
+    for (const applicant of pendingApplicants) {
+      try {
+        await this.handleAdmission(applicant, batchStats);
+        sent++;
+      } catch (error) {
+        failed++;
+        this.logger.error(
+          `Failed to send offer to ${applicant.email}: ${error}`,
+        );
+      }
+    }
+
+    this.logger.log(
+      `Bulk offer send complete: ${sent} sent, ${failed} failed out of ${pendingApplicants.length}`,
+    );
+
+    return { sent, failed, total: pendingApplicants.length };
   }
 
 

@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { ScoringService } from '../scoring/scoring.service';
+import { AdmissionService } from '../admission/admission.service';
 import {
   ApplicantStatus,
   IdentityLevel,
@@ -28,6 +29,7 @@ export class AdminController {
   constructor(
     private adminService: AdminService,
     private scoringService: ScoringService,
+    private admissionService: AdmissionService,
   ) { }
 
   // ===== DASHBOARD =====
@@ -112,6 +114,13 @@ export class AdminController {
       customMessage,
       isCapacityRejection,
     });
+  }
+
+  @Post('applicants/send-offers')
+  @RequireCapability('admissions.manage')
+  @RequireCategory('ADMIN')
+  async sendAllOfferEmails() {
+    return this.admissionService.sendPendingOfferEmails();
   }
 
   @Post('applicants/:id/rescore')
