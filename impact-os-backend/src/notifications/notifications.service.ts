@@ -38,7 +38,7 @@ export class NotificationsService {
      * Get detailed counts of all pending items
      */
     async getPendingCounts(): Promise<PendingCounts> {
-        const [testimonials, partners, applications, income] = await Promise.all([
+        const [testimonials, partnerInquiries, sponsorInquiries, applications, income] = await Promise.all([
             // Pending testimonials
             this.prisma.testimonial.count({
                 where: { status: TestimonialStatus.PENDING },
@@ -46,13 +46,15 @@ export class NotificationsService {
             // New partner inquiries
             this.prisma.partnerInquiry.count({
                 where: { status: InquiryStatus.NEW },
-            }).catch(() => 0), // May not exist
+            }).catch(() => 0),
+            // New sponsor inquiries
+            this.prisma.sponsorInquiry.count({
+                where: { status: InquiryStatus.NEW },
+            }).catch(() => 0),
             // Pending + scored applications awaiting admin decision
-            // .catch(() => 0) for resilience: SCORED enum may not exist until migrations are applied
             this.prisma.applicant.count({
                 where: { status: { in: [ApplicantStatus.PENDING, ApplicantStatus.SCORED] } },
             }).catch(() => {
-                // Fallback: count only PENDING if SCORED enum doesn't exist
                 return this.prisma.applicant.count({
                     where: { status: ApplicantStatus.PENDING },
                 }).catch(() => 0);
@@ -62,6 +64,8 @@ export class NotificationsService {
                 where: { status: VerificationStatus.SUBMITTED },
             }),
         ]);
+
+        const partners = partnerInquiries + sponsorInquiries;
 
         return {
             testimonials,
@@ -151,6 +155,46 @@ export class NotificationsService {
                 read: false,
                 createdAt: income.submittedAt || new Date(),
                 link: '/admin/income',
+            });
+        }
+
+        // Get new partner inquiries as notifications
+        const newPartners = await this.prisma.partnerInquiry.findMany({
+            where: { status: InquiryStatus.NEW },
+            orderBy: { createdAt: 'desc' },
+            take: 5,
+            select: { id: true, organizationName: true, contactName: true, createdAt: true },
+        }).catch(() => [] as any[]);
+
+        for (const partner of newPartners) {
+            notifications.push({
+                id: `partner-${partner.id}`,
+                type: 'partner',
+                title: 'New Partner Inquiry',
+                message: `${partner.organizationName || partner.contactName || 'Unknown'} submitted a partnership inquiry`,
+                read: false,
+                createdAt: partner.createdAt,
+                link: '/admin/partners',
+            });
+        }
+
+        // Get new sponsor inquiries as notifications
+        const newSponsors = await this.prisma.sponsorInquiry.findMany({
+            where: { status: InquiryStatus.NEW },
+            orderBy: { createdAt: 'desc' },
+            take: 5,
+            select: { id: true, name: true, email: true, interestType: true, createdAt: true },
+        }).catch(() => [] as any[]);
+
+        for (const sponsor of newSponsors) {
+            notifications.push({
+                id: `sponsor-${sponsor.id}`,
+                type: 'partner',
+                title: 'New Sponsor Inquiry',
+                message: `${sponsor.name || sponsor.email} is interested in sponsoring`,
+                read: false,
+                createdAt: sponsor.createdAt,
+                link: '/admin/partners',
             });
         }
 

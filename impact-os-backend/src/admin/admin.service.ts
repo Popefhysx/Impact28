@@ -164,7 +164,10 @@ export class AdminService {
     const [scoredCount, pendingTestimonials, pendingPartners, staffStats] = await Promise.all([
       this.prisma.applicant.count({ where: { status: ApplicantStatus.SCORED } }).catch(() => 0),
       this.prisma.testimonial.count({ where: { status: TestimonialStatus.PENDING } }).catch(() => 0),
-      this.prisma.partner.count({ where: { status: { in: ['LEAD', 'QUALIFIED'] } } }).catch(() => 0),
+      Promise.all([
+        this.prisma.partnerInquiry.count({ where: { status: 'NEW' as any } }).catch(() => 0),
+        this.prisma.sponsorInquiry.count({ where: { status: 'NEW' as any } }).catch(() => 0),
+      ]).then(([p, s]) => p + s),
       // Staff stats
       Promise.all([
         this.prisma.staff.count(),
@@ -703,12 +706,20 @@ export class AdminService {
 
     this.logger.log(`Applicant ${applicantId} decision: ${decision}`);
 
-    // Trigger email sending via AdmissionService
-    try {
-      await this.admissionService.processAdmission(applicantId);
-      this.logger.log(`Admission email sent for ${applicantId}`);
-    } catch (error) {
-      this.logger.error(`Failed to send admission email: ${error}`);
+    // Only send immediate emails for REJECTED/WAITLIST.
+    // ADMITTED applicants get their offer emails via the bulk "Send All Offers" action,
+    // which ensures accurate stats (total applicants, admitted count) across the batch.
+    if (decision !== 'ADMITTED') {
+      try {
+        await this.admissionService.processAdmission(applicantId);
+        this.logger.log(`Admission email sent for ${applicantId}`);
+      } catch (error) {
+        this.logger.error(`Failed to send admission email: ${error}`);
+      }
+    } else {
+      this.logger.log(
+        `Applicant ${applicantId} marked ADMITTED — offer email deferred until bulk send`,
+      );
     }
 
     return {
@@ -716,7 +727,10 @@ export class AdminService {
       applicantId,
       decision,
       status: updated.status,
-      message: `Applicant has been ${decision.toLowerCase()}`,
+      message:
+        decision === 'ADMITTED'
+          ? 'Applicant has been admitted. Use "Send All Offers" to dispatch the offer email.'
+          : `Applicant has been ${decision.toLowerCase()}`,
     };
   }
 

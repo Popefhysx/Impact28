@@ -207,7 +207,6 @@ export default function AdminPartnersPage() {
     const getInterestType = (p: PartnerInquiry) => p.partnershipType || p.interestType || '';
     const getMessage = (p: PartnerInquiry) => p.description || p.message || '';
 
-    const newCount = partners.filter(p => p.status === 'NEW').length;
 
     if (loading) {
         return (
@@ -228,9 +227,6 @@ export default function AdminPartnersPage() {
                         Manage partnership inquiries from the marketing website
                     </p>
                 </div>
-                {newCount > 0 && (
-                    <span className={styles.newBadge}>{newCount} new</span>
-                )}
             </div>
 
             {/* Toolbar */}
